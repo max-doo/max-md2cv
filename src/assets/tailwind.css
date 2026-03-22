@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* =========================================================================
+   1. 设计系统变量 (The Digital Curator / Soft Minimalist)
+   ========================================================================= */
 @theme {
   --color-error-container: #ffdad6;
   --color-inverse-primary: #c2c1ff;
@@ -57,9 +60,63 @@
   --radius-lg: 2rem;
   --radius-xl: 3rem;
   --radius-full: 9999px;
+
+  /* Ambient Shadow 映射 */
+  --shadow-ambient: 0 20px 40px rgba(76, 73, 204, 0.06);
 }
 
-/* Map Element Plus Variables to Tailwind Theme */
+/* =========================================================================
+   2. 全局基础重置 (Base)
+   ========================================================================= */
+@layer base {
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-surface);
+    color: var(--color-on-surface);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* =========================================================================
+   3. 通用组件抽象 (Components)
+   ========================================================================= */
+@layer components {
+  /* No-Line 软卡片 */
+  .card-soft {
+    @apply bg-surface-container-lowest rounded-2xl;
+  }
+  
+  /* 幽灵边框 Fallback */
+  .ghost-border {
+    border: 1px solid color-mix(in srgb, var(--color-outline-variant) 15%, transparent);
+  }
+
+  /* The Digital Curator 专属主按钮 */
+  .btn-primary {
+    @apply flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-primary-container text-white rounded-full font-bold shadow-ambient hover:shadow-lg active:scale-95 transition-all text-xs;
+  }
+  .btn-primary:disabled {
+    @apply opacity-50 cursor-not-allowed active:scale-100;
+  }
+
+  /* 轻量化滚动条 */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-surface-variant);
+    border-radius: 10px;
+  }
+}
+
+/* =========================================================================
+   4. Element Plus 魔改 (Overrides)
+   ========================================================================= */
 :root {
   --el-color-primary: var(--color-primary);
   --el-color-primary-light-3: var(--color-primary-container);
@@ -76,33 +133,30 @@
   --el-text-color-primary: var(--color-on-surface);
   --el-text-color-regular: var(--color-on-surface-variant);
   --el-text-color-secondary: var(--color-outline);
-  --el-border-color: var(--color-outline-variant);
-  --el-border-color-light: var(--color-surface-variant);
+  
+  /* 贯彻 No-Line Rule：去除默认浅灰边框 */
+  --el-border-color: transparent;
+  --el-border-color-light: transparent;
+  
   --el-fill-color-light: var(--color-surface-container);
   --el-fill-color-lighter: var(--color-surface-container-high);
 
   --el-border-radius-base: var(--radius-DEFAULT);
   --el-border-radius-small: 0.5rem;
   --el-border-radius-round: var(--radius-full);
+  
+  /* 覆盖悬浮阴影为你定制的 Ambient Shadow */
+  --el-box-shadow: var(--shadow-ambient);
+  --el-box-shadow-light: var(--shadow-ambient);
+}
+/* -------------------------------------------------------------------------
+   5. el-color-picker 精简：隐藏 Clear / OK 按钮，保留 Hex 输入框
+   ------------------------------------------------------------------------- */
+.el-color-dropdown__btns .el-color-footer__link-btn,
+.el-color-dropdown__btns .el-color-footer__btn {
+  display: none !important;
+}
+.el-color-dropdown__btns {
+  justify-content: center !important;
 }
 
-body {
-  font-family: var(--font-body);
-  background-color: var(--color-surface);
-  color: var(--color-on-surface);
-  margin: 0;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Custom Utilities for Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--color-surface-variant);
-  border-radius: 10px;
-}

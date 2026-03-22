@@ -1,0 +1,47 @@
+/* @name: 现代简约 */
+
+.resume-document {
+  color: var(--cv-text-color, var(--color-on-surface));
+  line-height: var(--cv-line-height, 1.6);
+  font-family: var(--cv-font-family, var(--font-body));
+}
+
+.resume-document h1 {
+  font-size: var(--cv-h1-size, 1.875rem); 
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin-bottom: 0.5rem;
+  border-bottom: 2px solid var(--cv-theme-color, var(--color-primary));
+  padding-bottom: 1.5rem;
+  color: var(--cv-theme-color, inherit);
+}
+
+.resume-document h2 {
+  font-size: var(--cv-h2-size, 0.75rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--cv-theme-color, var(--color-primary));
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.resume-document h3 {
+  font-size: var(--cv-h3-size, 1.125rem);
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  color: var(--cv-theme-color, inherit);
+}
+
+.resume-document ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--color-on-surface-variant);
+  margin-bottom: 1rem;
+}
+
+.resume-document p {
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}

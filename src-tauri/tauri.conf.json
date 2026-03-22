@@ -13,8 +13,10 @@
     "windows": [
       {
         "title": "max-md2cv-app",
-        "width": 800,
-        "height": 600
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600
       }
     ],
     "security": {
@@ -24,6 +26,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "resources": {
+      "../src/assets/templates/*.css": "templates/"
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

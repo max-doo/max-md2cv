@@ -15,6 +15,7 @@ onMounted(() => {
     doc: store.markdownContent,
     extensions: [
       basicSetup,
+      EditorView.lineWrapping,
       markdown(),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
@@ -73,31 +74,48 @@ const insertSyntax = (prefix: string, suffix: string = '') => {
 </script>
 
 <template>
-  <section class="flex flex-col bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/20 overflow-hidden">
+  <section class="flex flex-col card-soft ghost-border shadow-ambient overflow-hidden h-full relative">
+    <!-- Empty State Overlay -->
+    <transition name="fade">
+      <div v-if="!store.activeFilePath" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-surface-container-lowest/80 backdrop-blur-sm">
+        <div class="p-8 rounded-[2rem] bg-surface-container-high text-on-surface-variant/40 mb-4 ring-1 ring-outline-variant/10 shadow-inner border border-white/5">
+          <span class="material-symbols-outlined text-4xl">edit_note</span>
+        </div>
+        <p class="text-on-surface text-sm font-semibold tracking-wide">选择或创建一个文件</p>
+        <p class="text-[11px] text-on-surface-variant/60 mt-2 font-medium">开启你的简历编辑之旅</p>
+      </div>
+    </transition>
+
     <!-- Toolbar -->
-    <div class="h-14 border-b border-outline-variant/10 flex items-center px-6 justify-between bg-surface-container-lowest/50 backdrop-blur-sm shrink-0">
+    <div 
+      class="h-14 border-b border-outline-variant/10 flex items-center px-6 justify-between bg-surface-container-lowest/50 backdrop-blur-sm shrink-0 transition-all duration-300"
+      :class="{ 'opacity-20 grayscale pointer-events-none': !store.activeFilePath }"
+    >
       <div class="flex items-center gap-3">
-        <button @click="insertSyntax('**', '**')" class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors" title="加粗">
-          <span class="material-symbols-outlined text-xl">format_bold</span>
+        <button @click="insertSyntax('**', '**')" class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors group" title="加粗">
+          <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">format_bold</span>
         </button>
-        <button @click="insertSyntax('*', '*')" class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors" title="斜体">
-          <span class="material-symbols-outlined text-xl">format_italic</span>
+        <button @click="insertSyntax('*', '*')" class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors group" title="斜体">
+          <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">format_italic</span>
         </button>
-        <button @click="insertSyntax('- ')" class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors" title="列表">
-          <span class="material-symbols-outlined text-xl">format_list_bulleted</span>
+        <button @click="insertSyntax('- ')" class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors group" title="列表">
+          <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">format_list_bulleted</span>
         </button>
-        <button @click="insertSyntax('[', '](url)')" class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors" title="链接">
-          <span class="material-symbols-outlined text-xl">link</span>
+        <button @click="insertSyntax('[', '](url)')" class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors group" title="链接">
+          <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">link</span>
         </button>
         <div class="h-5 w-[1px] bg-outline-variant/20 mx-1"></div>
-        <button @click="insertSyntax('> ')" class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors" title="引用">
-          <span class="material-symbols-outlined text-xl">format_quote</span>
+        <button @click="insertSyntax('> ')" class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors group" title="引用">
+          <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">format_quote</span>
         </button>
       </div>
       <div class="text-[10px] font-bold uppercase tracking-widest text-outline/60 bg-surface-container-low px-2 py-1 rounded">Markdown</div>
     </div>
     <!-- Editor Area -->
-    <div class="flex-1 w-full bg-transparent overflow-hidden">
+    <div 
+      class="flex-1 w-full bg-transparent overflow-hidden transition-opacity duration-300"
+      :class="{ 'opacity-0': !store.activeFilePath }"
+    >
       <!-- CodeMirror 6 Mount Point -->
       <div ref="editorContainer" class="h-full w-full custom-scrollbar"></div>
     </div>
