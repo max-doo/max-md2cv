@@ -27,7 +27,7 @@ tauri-plugin-shell = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-persisted-scope = "2"
 trash = "5.2.5"
+base64 = "0.22"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.55"
-

@@ -2,12 +2,30 @@
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { EditorView, basicSetup } from 'codemirror'
 import { markdown } from '@codemirror/lang-markdown'
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
+import { tags } from '@lezer/highlight'
 import { useResumeStore } from '../stores/resume'
 
 const editorContainer = ref<HTMLElement | null>(null)
 const store = useResumeStore()
 let view: EditorView | null = null
 let autoSaveTimer: ReturnType<typeof setTimeout> | null = null
+const markdownHighlightStyle = HighlightStyle.define([
+  {
+    tag: [
+      tags.heading,
+      tags.heading1,
+      tags.heading2,
+      tags.heading3,
+      tags.heading4,
+      tags.heading5,
+      tags.heading6,
+    ],
+    color: 'var(--color-primary)',
+    fontWeight: '600',
+    textDecoration: 'none',
+  },
+])
 /** 标志位：当前 dispatch 是由外部（watch/openFile）触发的，不应触发自动保存 */
 let isExternalUpdate = false
 
@@ -31,6 +49,7 @@ onMounted(() => {
       basicSetup,
       EditorView.lineWrapping,
       markdown(),
+      syntaxHighlighting(markdownHighlightStyle),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           store.markdownContent = update.state.doc.toString()
@@ -149,4 +168,3 @@ const insertSyntax = (prefix: string, suffix: string = '') => {
     </div>
   </section>
 </template>
-

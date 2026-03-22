@@ -3,7 +3,7 @@ import { ref, shallowRef, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { marked } from 'marked'
 import { Previewer } from 'pagedjs'
-import { useResumeStore } from '../stores/resume'
+import { useResumeStore, type ResumeStyle } from '../stores/resume'
 import { useDebounceFn } from '@vueuse/core'
 import { enhanceResumeHtml } from '../utils/resumeParser'
 
@@ -88,7 +88,7 @@ onMounted(async () => {
     previewContainer.value.addEventListener('click', (e) => {
       const target = e.target as HTMLElement
       if (target.closest('.resume-photo-wrapper')) {
-        photoInput.value?.click()
+        store.importIdPhoto()
       } else if (target.closest('.job-intention')) {
         jobColorInput.value?.click()
       }
@@ -97,29 +97,191 @@ onMounted(async () => {
 })
 
 // ─── CSS Parsing ──────────────────────────────────────────────────────────────
-const extractCssProp = (css: string, selector: string, prop: string, fallback: string): string => {
-  const escapedSel = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const re = new RegExp(escapedSel + '\\s*\\{([^}]*)\\}')
-  const blockMatch = css.match(re)
-  if (!blockMatch) return fallback
-  const propMatch = blockMatch[1].match(new RegExp(prop + '\\s*:\\s*([^;]+)'))
-  return propMatch ? propMatch[1].trim() : fallback
+const getCssBlocks = (css: string, selector: string): string[] => {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const selectorRe = new RegExp(`${escapedSelector}\\s*\\{`, 'g')
+  const blocks: string[] = []
+
+  while (selectorRe.exec(css) !== null) {
+    const blockStart = selectorRe.lastIndex - 1
+    let depth = 1
+    let cursor = blockStart + 1
+
+    while (cursor < css.length && depth > 0) {
+      const char = css[cursor]
+      if (char === '{') depth += 1
+      if (char === '}') depth -= 1
+      cursor += 1
+    }
+
+    if (depth !== 0) break
+
+    blocks.push(css.slice(blockStart + 1, cursor - 1))
+    selectorRe.lastIndex = cursor
+  }
+
+  return blocks
 }
+
+const extractTopLevelProp = (block: string, prop: string): string | null => {
+  let depth = 0
+  let flattened = ''
+
+  for (const char of block) {
+    if (char === '{') {
+      depth += 1
+      continue
+    }
+    if (char === '}') {
+      depth = Math.max(0, depth - 1)
+      continue
+    }
+    if (depth === 0) {
+      flattened += char
+    }
+  }
+
+  const escapedProp = prop.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const matches = [...flattened.matchAll(new RegExp(`${escapedProp}\\s*:\\s*([^;]+)`, 'g'))]
+  return matches.length > 0 ? matches[matches.length - 1][1].trim() : null
+}
+
+const extractCssProp = (css: string, selector: string, prop: string, fallback: string): string => {
+  const blocks = getCssBlocks(css, selector)
+  for (let i = blocks.length - 1; i >= 0; i -= 1) {
+    const value = extractTopLevelProp(blocks[i], prop)
+    if (value) return value
+  }
+  return fallback
+}
+
+const buildPreviewStyles = (cvStyle: ResumeStyle): string => `
+  @page {
+    size: A4;
+    margin: ${cvStyle.marginV}mm ${cvStyle.marginH}mm;
+    @bottom-right {
+      content: counter(page) " / " counter(pages);
+      font-size: 10px;
+      color: #c7c4d6;
+      font-family: 'Manrope', sans-serif;
+      letter-spacing: 0.1em;
+    }
+  }
+  .resume-document {
+    --cv-photo-width: 90px;
+    --cv-photo-height: 120px;
+    --cv-photo-gap: 18px;
+    --cv-photo-radius: 8px;
+    --cv-photo-reserve: calc(var(--cv-photo-width) + var(--cv-photo-gap));
+    font-family: ${cvStyle.fontFamily} !important;
+    font-size: ${cvStyle.fontSize}px !important;
+    line-height: ${cvStyle.lineHeight} !important;
+    position: relative !important;
+    ${cvStyle.dateWeight ? `--cv-date-weight: ${cvStyle.dateWeight};` : ''}
+    ${cvStyle.dateSize ? `--cv-date-size: ${cvStyle.dateSize}px;` : ''}
+  }
+  .resume-document > .resume-photo-wrapper {
+    position: absolute !important;
+    top: 0;
+    right: 0;
+    width: var(--cv-photo-width);
+    height: var(--cv-photo-height);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    cursor: pointer;
+    z-index: 10;
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .resume-document > .resume-photo-wrapper.is-empty {
+    background-color: #f8f9fa;
+    border: 1px dashed #ced4da;
+    border-radius: var(--cv-photo-radius);
+    overflow: hidden;
+  }
+  .resume-document > .resume-photo-wrapper.is-empty:hover {
+    border-color: ${cvStyle.themeColor};
+    background-color: color-mix(in srgb, ${cvStyle.themeColor} 5%, #f8f9fa);
+  }
+  .resume-document > .resume-photo-wrapper.has-photo {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+    box-shadow: none;
+  }
+  .resume-document > .resume-photo-wrapper.has-photo:hover {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+  .resume-document > .resume-photo-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    filter: none !important;
+    clip-path: none !important;
+    background: transparent;
+  }
+  .resume-document > .resume-photo-wrapper.has-photo img {
+    position: absolute;
+    inset: 0;
+  }
+  .resume-document > .resume-photo-wrapper .photo-placeholder-text {
+    color: #adb5bd;
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+  .resume-document > .resume-photo-wrapper + *,
+  .resume-document > .resume-photo-wrapper + * + *,
+  .resume-document > .resume-photo-wrapper + * + * + * {
+    padding-right: var(--cv-photo-reserve) !important;
+    box-sizing: border-box;
+  }
+  .resume-document h1 {
+    font-size: ${cvStyle.h1Size}px !important;
+    color: ${cvStyle.themeColor} !important;
+    border-color: ${cvStyle.themeColor} !important;
+  }
+  .resume-document h2 {
+    font-size: ${cvStyle.h2Size}px !important;
+    color: ${cvStyle.themeColor} !important;
+  }
+  .resume-document h3 {
+    font-size: ${cvStyle.h3Size}px !important;
+    color: ${cvStyle.themeColor} !important;
+  }
+`
 
 const syncDefaultsFromTemplate = () => {
   const tpl = store.availableTemplates.find(t => t.id === store.activeTemplate)
   const css = tpl?.css ?? ''
 
-  const lineHeightRaw = extractCssProp(css, '\.resume-document', 'line-height', '1.6')
+  const lineHeightRaw = extractCssProp(css, '.resume-document', 'line-height', '1.6')
   const lineHeight = parseFloat(lineHeightRaw)
 
-  const fontFamily = extractCssProp(css, '\.resume-document', 'font-family',
+  const fontFamily = extractCssProp(css, '.resume-document', 'font-family',
     '"PingFang SC", "Microsoft YaHei", sans-serif')
 
   // Parse heading sizes from the template
-  const h1Raw = extractCssProp(css, '\.resume-document h1', 'font-size', '28px')
-  const h2Raw = extractCssProp(css, '\.resume-document h2', 'font-size', '20px')
-  const h3Raw = extractCssProp(css, '\.resume-document h3', 'font-size', '16px')
+  const h1Raw = extractCssProp(css, '.resume-document h1', 'font-size', '28px')
+  const h2Raw = extractCssProp(css, '.resume-document h2', 'font-size', '20px')
+  const h3Raw = extractCssProp(css, '.resume-document h3', 'font-size', '16px')
 
   // Convert rem → px (assume 16px base) or strip px
   const toNum = (v: string, fallback: number) => {
@@ -154,10 +316,10 @@ const syncDefaultsFromTemplate = () => {
   store.resumeStyle.fontSize = toNum(bodyFontRaw, 14)
 
   // Page margins from @page rule
-  const pageMarginRaw = extractCssProp(css, '@page', 'margin', '10mm 15mm')
+  const pageMarginRaw = extractCssProp(css, '@page', 'margin', '10mm 12mm')
   const marginParts = pageMarginRaw.match(/([\d.]+)/g) ?? []
   store.resumeStyle.marginV = marginParts.length >= 1 ? parseFloat(marginParts[0] as string) : 10
-  store.resumeStyle.marginH = marginParts.length >= 2 ? parseFloat(marginParts[1] as string) : store.resumeStyle.marginV
+  store.resumeStyle.marginH = marginParts.length >= 2 ? parseFloat(marginParts[1] as string) : 12
 }
 
 // ─── Render ───────────────────────────────────────────────────────────────────
@@ -173,32 +335,11 @@ const renderPdfPreview = async (markdownText: string) => {
 
   const cvStyle = store.resumeStyle
 
-  // Concrete CSS overrides — avoid :root vars since Paged.js isolates the document
-  const injectCss = `
-    @page {
-      margin: ${cvStyle.marginV}mm ${cvStyle.marginH}mm;
-    }
-    .resume-document {
-      font-family: ${cvStyle.fontFamily} !important;
-      font-size: ${cvStyle.fontSize}px !important;
-      line-height: ${cvStyle.lineHeight} !important;
-      ${cvStyle.dateWeight ? `--cv-date-weight: ${cvStyle.dateWeight};` : ''}
-      ${cvStyle.dateSize ? `--cv-date-size: ${cvStyle.dateSize}px;` : ''}
-    }
-    .resume-document h1 {
-      font-size: ${cvStyle.h1Size}px !important;
-      color: ${cvStyle.themeColor} !important;
-      border-color: ${cvStyle.themeColor} !important;
-    }
-    .resume-document h2 {
-      font-size: ${cvStyle.h2Size}px !important;
-      color: ${cvStyle.themeColor} !important;
-    }
-    .resume-document h3 {
-      font-size: ${cvStyle.h3Size}px !important;
-      color: ${cvStyle.themeColor} !important;
-    }
-  `
+  const injectCss = buildPreviewStyles(cvStyle)
+  const stylesheetSources = [
+    { [`${window.location.href}#template-${store.activeTemplate}`]: cssText },
+    { [`${window.location.href}#runtime-preview`]: injectCss }
+  ]
 
   const photoHtml = `
     <div class="resume-photo-wrapper" title="点击上传证件照 (最大1MB)">
@@ -209,13 +350,15 @@ const renderPdfPreview = async (markdownText: string) => {
   let finalHtml = enhanceResumeHtml(htmlContent, store.resumeStyle)
 
   const sourceDiv = document.createElement('div')
-  sourceDiv.innerHTML = `<style>${cssText}</style><style>${injectCss}</style><div class="resume-document">${photoHtml}${finalHtml}</div>`
+  sourceDiv.innerHTML = `<div class="resume-document">${photoHtml}${finalHtml}</div>`
+  const photoWrapper = sourceDiv.querySelector('.resume-photo-wrapper')
+  photoWrapper?.classList.add(store.photoBase64 ? 'has-photo' : 'is-empty')
 
   previewContainer.value.innerHTML = ''
   paged = new Previewer()
 
   try {
-    await paged.preview(sourceDiv, [], previewContainer.value)
+    await paged.preview(sourceDiv, stylesheetSources, previewContainer.value)
     // Count rendered pages
     totalPages.value = previewContainer.value?.querySelectorAll('.pagedjs_page').length ?? 0
   } catch (err) {
@@ -524,17 +667,6 @@ watch(() => store.resumeStyle, () => {
   background-color: var(--color-paper);
   box-shadow: 0 10px 30px rgba(0,0,0,0.05);
   flex-shrink: 0;
-}
-
-@page {
-  size: A4;
-  @bottom-right {
-    content: counter(page) " / " counter(pages);
-    font-size: 10px;
-    color: #c7c4d6;
-    font-family: 'Manrope', sans-serif;
-    letter-spacing: 0.1em;
-  }
 }
 
 

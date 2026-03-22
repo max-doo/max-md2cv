@@ -26,6 +26,7 @@
     "element-plus": "^2.13.6",
     "highlight.js": "^11.11.1",
     "marked": "^17.0.5",
+    "material-symbols": "^0.42.3",
     "pagedjs": "^0.4.3",
     "pinia": "^3.0.4",
     "vue": "^3.5.13",

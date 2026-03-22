@@ -1,5 +1,9 @@
 /* @name: 现代简约 */
 
+@page {
+  margin: 10mm 12mm;
+}
+
 .resume-document {
   color: #333;
   line-height: var(--cv-line-height, 1.6);
@@ -94,8 +98,6 @@
   font-weight: bold;
   font-size: 1.05rem;
   margin-bottom: 0.5rem;
-  padding-right: 100px;
-  /* Space for photo */
 }
 
 /* Detailed Info block */
@@ -106,45 +108,4 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  padding-right: 100px;
-  /* Space for photo */
-}
-
-/* Photo Wrapper overrides */
-.resume-photo-wrapper {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 90px;
-  height: 120px;
-  background-color: #f8f9fa;
-  border: 1px dashed #ced4da;
-  border-radius: 4px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  overflow: hidden;
-  transition: all 0.2s ease;
-  z-index: 10;
-}
-
-.resume-photo-wrapper:hover {
-  border-color: var(--cv-theme-color, #3b82f6);
-  background-color: color-mix(in srgb, var(--cv-theme-color, #3b82f6) 5%, #f8f9fa);
-}
-
-.resume-photo-wrapper img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.photo-placeholder-text {
-  color: #adb5bd;
-  font-size: 12px;
-  text-align: center;
-  line-height: 1.2;
 }

@@ -1,25 +1,48 @@
 <script setup lang="ts">
 import { useResumeStore } from '../stores/resume';
 import { invoke } from '@tauri-apps/api/core';
-import { save } from '@tauri-apps/plugin-dialog';
-import { ElMessage } from 'element-plus';
+import { join } from '@tauri-apps/api/path';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import 'element-plus/es/components/message/style/css';
+import 'element-plus/es/components/message-box/style/css';
 
 const store = useResumeStore();
 
 const handleExport = async () => {
+  if (!store.activeFilePath || !store.workspacePath) {
+    ElMessage.error("未找到当前打开的文件或工作区");
+    return;
+  }
+
   store.isExporting = true;
   try {
-    const filePath = await save({
-      filters: [{ name: 'PDF', extensions: ['pdf'] }],
-      defaultPath: '简历.pdf'
-    });
+    // 获取当前 Markdown 的文件名，例如 "我的简历.md"
+    const fileNameWithExt = store.activeFilePath.split(/[/\\]/).pop() || '简历.md';
+    const documentTitle = fileNameWithExt.replace(/\.[^/.]+$/, "");
+    const targetPdfName = `${documentTitle}.pdf`;
     
-    if (!filePath) return;
-    
-    // Extract filename for PDF metadata title
-    const fileName = filePath.split(/[/\\]/).pop() || '简历.pdf';
-    const documentTitle = fileName.replace(/\.[^/.]+$/, "");
+    // 目标 PDF 的绝对路径
+    const targetPdfPath = await join(store.workspacePath, targetPdfName);
+
+    // 检查是否存在同名 PDF
+    const exists = store.pdfFileList.some(file => file.name === targetPdfName);
+    if (exists) {
+      try {
+        await ElMessageBox.confirm(
+          `工作区已存在名为 "${targetPdfName}" 的文件，是否覆盖？`,
+          '导出确认',
+          {
+            confirmButtonText: '覆盖',
+            cancelButtonText: '取消',
+            type: 'warning',
+          }
+        );
+      } catch {
+        // 用户取消覆盖
+        store.isExporting = false;
+        return;
+      }
+    }
     
     const pagesContainer = document.querySelector('.pagedjs_pages');
     if (!pagesContainer) {
@@ -65,9 +88,13 @@ const handleExport = async () => {
       </html>
     `;
     
-    await invoke('export_pdf_command', { htmlContent, outputPath: filePath });
+    await invoke('export_pdf_command', { htmlContent, outputPath: targetPdfPath });
+
+    if (store.workspacePath) {
+      await store.refreshPdfList(store.workspacePath);
+    }
     
-    ElMessage.success(`导出成功`);
+    ElMessage.success(`导出成功：${targetPdfName}`);
     
   } catch (error: any) {
     console.error("导出失败:", error);
@@ -88,7 +115,7 @@ const handleExport = async () => {
           @click="store.isSidebarOpen = true"
           class="flex items-center justify-center w-10 h-10 rounded-xl hover:bg-surface-variant transition-colors group cursor-pointer"
         >
-          <span class="material-symbols-outlined text-on-surface text-2xl group-hover:text-primary transition-colors">menu</span>
+          <i class="bi bi-layout-sidebar text-on-surface text-[20px] group-hover:text-primary transition-colors"></i>
         </button>
       </div>
       <div class="flex items-center gap-4">

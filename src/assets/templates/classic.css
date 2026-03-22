@@ -1,5 +1,9 @@
 /* @name: 传统经典 */
 
+@page {
+  margin: 10mm 12mm;
+}
+
 .resume-document {
   color: #333333;
   line-height: var(--cv-line-height, 1.5);

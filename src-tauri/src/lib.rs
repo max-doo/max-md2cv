@@ -1,8 +1,11 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
+use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine as _};
 use serde::Serialize;
 use std::fs;
+use std::path::{Path, PathBuf};
 use tauri::Manager;
+use tauri_plugin_opener::OpenerExt;
 
 #[derive(Serialize, Clone)]
 pub struct TemplateInfo {
@@ -257,25 +260,203 @@ pub struct FileEntry {
     pub path: String,
 }
 
-#[tauri::command]
-async fn list_resumes(dir_path: String) -> Result<Vec<FileEntry>, String> {
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageEntry {
+    pub name: String,
+    pub path: String,
+    pub is_id_photo: bool,
+}
+
+const IMAGE_EXTENSIONS: [&str; 6] = ["png", "jpg", "jpeg", "webp", "bmp", "gif"];
+
+fn list_files_by_extension(dir_path: &str, extension: &str) -> Result<Vec<FileEntry>, String> {
     let mut files = Vec::new();
-    if let Ok(entries) = std::fs::read_dir(&dir_path) {
-        for entry in entries.flatten() {
-            if let Ok(file_type) = entry.file_type() {
-                if file_type.is_file() {
-                    let name = entry.file_name().to_string_lossy().to_string();
-                    if name.ends_with(".md") {
-                        files.push(FileEntry {
-                            name,
-                            path: entry.path().to_string_lossy().to_string(),
-                        });
-                    }
-                }
+    let entries = std::fs::read_dir(dir_path).map_err(|e| e.to_string())?;
+
+    for entry in entries.flatten() {
+        if let Ok(file_type) = entry.file_type() {
+            if !file_type.is_file() {
+                continue;
+            }
+
+            let path = entry.path();
+            let matches_extension = path
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .map(|ext| ext.eq_ignore_ascii_case(extension))
+                .unwrap_or(false);
+
+            if matches_extension {
+                files.push(FileEntry {
+                    name: entry.file_name().to_string_lossy().to_string(),
+                    path: path.to_string_lossy().to_string(),
+                });
             }
         }
     }
+
+    files.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
     Ok(files)
+}
+
+fn is_image_extension(extension: &str) -> bool {
+    IMAGE_EXTENSIONS
+        .iter()
+        .any(|allowed| allowed.eq_ignore_ascii_case(extension))
+}
+
+fn is_image_path(path: &Path) -> bool {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .map(is_image_extension)
+        .unwrap_or(false)
+}
+
+fn is_id_photo_name(file_name: &str) -> bool {
+    let stem = Path::new(file_name)
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+
+    if stem == "idphoto" {
+        return true;
+    }
+
+    stem.strip_prefix("idphoto-")
+        .map(|suffix| !suffix.is_empty() && suffix.chars().all(|ch| ch.is_ascii_digit()))
+        .unwrap_or(false)
+}
+
+fn image_entry_from_path(path: &Path) -> ImageEntry {
+    let name = path
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or_default()
+        .to_string();
+
+    ImageEntry {
+        is_id_photo: is_id_photo_name(&name),
+        name,
+        path: path.to_string_lossy().to_string(),
+    }
+}
+
+fn build_unique_id_photo_path(workspace_path: &Path, extension: &str) -> PathBuf {
+    let normalized_ext = extension.to_ascii_lowercase();
+    let mut counter = 1usize;
+
+    loop {
+        let file_name = if counter == 1 {
+            format!("IDphoto.{}", normalized_ext)
+        } else {
+            format!("IDphoto-{}.{}", counter, normalized_ext)
+        };
+        let target = workspace_path.join(file_name);
+        if !target.exists() {
+            return target;
+        }
+        counter += 1;
+    }
+}
+
+fn mime_type_for_extension(extension: &str) -> &'static str {
+    match extension.to_ascii_lowercase().as_str() {
+        "png" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        "webp" => "image/webp",
+        "bmp" => "image/bmp",
+        "gif" => "image/gif",
+        _ => "application/octet-stream",
+    }
+}
+
+#[tauri::command]
+async fn list_resumes(dir_path: String) -> Result<Vec<FileEntry>, String> {
+    list_files_by_extension(&dir_path, "md")
+}
+
+#[tauri::command]
+async fn list_pdfs(dir_path: String) -> Result<Vec<FileEntry>, String> {
+    list_files_by_extension(&dir_path, "pdf")
+}
+
+#[tauri::command]
+async fn list_images(dir_path: String) -> Result<Vec<ImageEntry>, String> {
+    let mut files = Vec::new();
+    let entries = std::fs::read_dir(dir_path).map_err(|e| e.to_string())?;
+
+    for entry in entries.flatten() {
+        if let Ok(file_type) = entry.file_type() {
+            if !file_type.is_file() {
+                continue;
+            }
+
+            let path = entry.path();
+            if is_image_path(&path) {
+                files.push(image_entry_from_path(&path));
+            }
+        }
+    }
+
+    files.sort_by(|a, b| {
+        b.is_id_photo
+            .cmp(&a.is_id_photo)
+            .then_with(|| a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+    });
+
+    Ok(files)
+}
+
+#[tauri::command]
+async fn read_image_as_data_url(path: String) -> Result<String, String> {
+    let file_path = Path::new(&path);
+    if !file_path.exists() {
+        return Err("图片文件不存在".into());
+    }
+
+    if !is_image_path(file_path) {
+        return Err("仅支持读取图片文件".into());
+    }
+
+    let bytes = std::fs::read(file_path).map_err(|e| e.to_string())?;
+    let extension = file_path
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .unwrap_or_default();
+    let mime_type = mime_type_for_extension(extension);
+    let encoded = BASE64_STANDARD.encode(bytes);
+
+    Ok(format!("data:{};base64,{}", mime_type, encoded))
+}
+
+#[tauri::command]
+async fn import_id_photo(source_path: String, workspace_path: String) -> Result<ImageEntry, String> {
+    let source = Path::new(&source_path);
+    let workspace = Path::new(&workspace_path);
+
+    if !workspace.exists() {
+        return Err("当前工作文件夹不存在".into());
+    }
+
+    if !source.exists() {
+        return Err("所选图片不存在".into());
+    }
+
+    if !is_image_path(source) {
+        return Err("仅支持 PNG、JPG、JPEG、WEBP、BMP、GIF 图片".into());
+    }
+
+    let extension = source
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .ok_or_else(|| "图片缺少扩展名".to_string())?;
+
+    let target_path = build_unique_id_photo_path(workspace, extension);
+    fs::copy(source, &target_path).map_err(|e| e.to_string())?;
+
+    Ok(image_entry_from_path(&target_path))
 }
 
 #[tauri::command]
@@ -303,6 +484,29 @@ async fn duplicate_resume(path: String, new_path: String) -> Result<(), String> 
     std::fs::copy(path, new_path).map_err(|e| e.to_string()).map(|_| ())
 }
 
+#[tauri::command]
+async fn open_pdf(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    let file_path = std::path::Path::new(&path);
+
+    if !file_path.exists() {
+        return Err("PDF 文件不存在".into());
+    }
+
+    let is_pdf = file_path
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.eq_ignore_ascii_case("pdf"))
+        .unwrap_or(false);
+
+    if !is_pdf {
+        return Err("只允许打开 PDF 文件".into());
+    }
+
+    app.opener()
+        .open_path(&path, None::<&str>)
+        .map_err(|e| format!("打开 PDF 失败: {}", e))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -316,11 +520,16 @@ pub fn run() {
             list_templates, 
             save_template,
             list_resumes,
+            list_pdfs,
+            list_images,
+            read_image_as_data_url,
+            import_id_photo,
             read_resume,
             write_resume,
             delete_resume,
             rename_resume,
-            duplicate_resume
+            duplicate_resume,
+            open_pdf
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
