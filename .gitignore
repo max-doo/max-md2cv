@@ -1,0 +1,37 @@
+# Node
+node_modules
+dist
+dist-ssr
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Tauri & Rust
+src-tauri/target
+src-tauri/gen/schemas
+src-tauri/Cargo.lock
+
+# IDE & OS
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Vite / Frontend
+auto-imports.d.ts
+components.d.ts
+
+# Temporary / Temp
+/tmp
+*.temp
+max_md2cv_temp.html

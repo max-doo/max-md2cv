@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>智能简历 - 编辑器</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "error-container": "#ffdad6",
+              "inverse-primary": "#c2c1ff",
+              "tertiary-fixed": "#e1e1f0",
+              "on-secondary": "#ffffff",
+              "surface-dim": "#d8dae0",
+              "inverse-on-surface": "#eff0f6",
+              "surface-container-high": "#e7e8ee",
+              "surface-bright": "#f8f9ff",
+              "secondary-container": "#a6a5fd",
+              "on-primary-container": "#fffbff",
+              "surface-tint": "#4e4ccf",
+              "surface-variant": "#e1e2e8",
+              "inverse-surface": "#2e3135",
+              "surface-container-low": "#f2f3f9",
+              "on-primary-fixed": "#0c006a",
+              "on-tertiary-fixed": "#191b25",
+              "primary-fixed-dim": "#c2c1ff",
+              "on-tertiary-container": "#fffbff",
+              "on-secondary-container": "#393787",
+              "background": "#f8f9ff",
+              "surface-container-lowest": "#ffffff",
+              "on-primary": "#ffffff",
+              "outline-variant": "#c7c4d6",
+              "surface-container-highest": "#e1e2e8",
+              "on-error-container": "#93000a",
+              "on-secondary-fixed-variant": "#3e3d8d",
+              "secondary": "#5655a6",
+              "primary-container": "#6564e7",
+              "primary-fixed": "#e2dfff",
+              "on-secondary-fixed": "#0f0761",
+              "on-error": "#ffffff",
+              "secondary-fixed": "#e2dfff",
+              "secondary-fixed-dim": "#c2c1ff",
+              "error": "#ba1a1a",
+              "on-surface-variant": "#464554",
+              "surface": "#f8f9ff",
+              "outline": "#777585",
+              "on-background": "#191c20",
+              "on-surface": "#191c20",
+              "tertiary-container": "#727481",
+              "tertiary-fixed-dim": "#c5c5d4",
+              "surface-container": "#eceef3",
+              "tertiary": "#5a5b67",
+              "on-tertiary": "#ffffff",
+              "on-primary-fixed-variant": "#3530b6",
+              "primary": "#4c49cc",
+              "on-tertiary-fixed-variant": "#444652"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Manrope"],
+              "label": ["Manrope"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Manrope', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e7e8ee; border-radius: 10px; }
+        .pdf-zoom-container { transform-origin: top center; }
+        
+        /* 16:9 Aspect Ratio Container */
+        .aspect-16-9-container {
+            width: 100%;
+            max-width: 1600px;
+            aspect-ratio: 16 / 9;
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        @media (max-height: 900px) {
+            .aspect-16-9-container {
+                height: 100vh;
+                aspect-ratio: auto;
+            }
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased flex items-center justify-center min-h-screen">
+<div class="aspect-16-9-container bg-surface">
+<!-- TopNavBar -->
+<nav class="w-full z-50 bg-transparent font-['Manrope'] antialiased tracking-wide text-sm font-medium">
+<div class="flex justify-between items-center h-16 px-8">
+<div class="flex items-center gap-8">
+<!-- Graphical Icon Logo -->
+<div class="flex items-center justify-center w-10 h-10 bg-primary rounded-xl shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-white text-2xl" style="font-variation-settings: 'FILL' 1;">menu</span>
+</div>
+<div class="hidden md:flex items-center gap-6">
+<!-- Tabs removed as per request -->
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-primary-container text-white rounded-full font-bold shadow-lg hover:shadow-primary/20 active:scale-95 transition-all text-xs">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">download</span>
+<span>导出为 PDF</span>
+</button>
+</div>
+</div>
+</nav>
+<main class="flex-1 flex overflow-hidden px-6 pb-6 pt-2 gap-4">
+<!-- Card 1: Markdown Editor (2/5 of width = 40%) -->
+<section class="w-[40%] flex flex-col bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/20 overflow-hidden">
+<!-- Toolbar -->
+<div class="h-14 border-b border-outline-variant/10 flex items-center px-6 justify-between bg-surface-container-lowest/50 backdrop-blur-sm">
+<div class="flex items-center gap-3">
+<button class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors" title="加粗">
+<span class="material-symbols-outlined text-xl">format_bold</span>
+</button>
+<button class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors" title="斜体">
+<span class="material-symbols-outlined text-xl">format_italic</span>
+</button>
+<button class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors" title="列表">
+<span class="material-symbols-outlined text-xl">format_list_bulleted</span>
+</button>
+<button class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors" title="链接">
+<span class="material-symbols-outlined text-xl">link</span>
+</button>
+<div class="h-5 w-[1px] bg-outline-variant/20 mx-1"></div>
+<button class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors" title="引用">
+<span class="material-symbols-outlined text-xl">format_quote</span>
+</button>
+</div>
+<div class="text-[10px] font-bold uppercase tracking-widest text-outline/60 bg-surface-container-low px-2 py-1 rounded">Markdown</div>
+</div>
+<!-- Textarea -->
+<textarea class="flex-1 w-full p-8 resize-none border-none focus:ring-0 text-on-surface-variant font-mono text-sm leading-relaxed bg-transparent custom-scrollbar" placeholder="在此输入 Markdown 内容..."># 张晓明 (Xiao Ming Zhang)
+Product Designer | 上海市
+
+## 联系方式
+- 电话: 138-0000-0000
+- 邮箱: xiaoming.z@email.com
+- 网站: portfolio.xiaoming.com
+
+## 工作经历
+### 智能科技有限责任公司 | 资深产品设计师 | 2021.06 - 至今
+- 负责公司核心 AI 产品的 UI/UX 设计，提升了 40% 的用户留存率。
+- 建立并维护跨平台的设计系统，减少了 30% 的开发交付时间。
+- 协调多方团队进行用户调研，深度洞察用户需求。
+
+### 未来实验室 | UI 设计师 | 2018.05 - 2021.05
+- 主导了移动端 App 3.0 版本的重构，获得苹果应用商店推荐。
+- 优化了入职流程体验，转化率提高 15%。
+
+## 教育背景
+### 同济大学 | 工业设计 | 学士学位 | 2014 - 2018
+
+## 专业技能
+- **设计工具**: Figma, Adobe Creative Suite, Framer
+- **前端知识**: HTML/CSS, Tailwind CSS, Javascript
+- **语言能力**: 中文 (母语), 英语 (专业)</textarea>
+</section>
+<!-- Card 2: PDF Preview (3/5 of width = 60%) -->
+<section class="w-[60%] flex flex-col bg-surface-container rounded-2xl shadow-sm border border-outline-variant/20 overflow-hidden">
+<!-- Preview Controls -->
+<div class="h-14 flex items-center px-6 justify-between bg-surface-container-high/40 backdrop-blur-sm border-b border-outline-variant/10">
+<div class="flex items-center gap-2">
+<div class="relative group">
+<select class="appearance-none bg-surface-container-high/60 border border-outline-variant/20 rounded-lg pl-3 pr-10 py-1.5 text-xs font-bold text-on-surface-variant tracking-wider focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none cursor-pointer transition-all">
+<option>现代简约 (默认)</option>
+<option>经典商务</option>
+<option>创意极简</option>
+<option>学术论文</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant text-base pointer-events-none">expand_more</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-surface-container-highest rounded-lg text-on-surface-variant transition-colors" title="放大">
+<span class="material-symbols-outlined text-xl">zoom_in</span>
+</button>
+<button class="p-2 hover:bg-surface-container-highest rounded-lg text-on-surface-variant transition-colors" title="缩小">
+<span class="material-symbols-outlined text-xl">zoom_out</span>
+</button>
+</div>
+</div>
+<!-- Scrollable Preview Area -->
+<div class="flex-1 overflow-auto custom-scrollbar p-10 bg-[#e7e8ee]/40 flex justify-center">
+<!-- The "Page" Document -->
+<div class="bg-white w-[595px] min-h-[842px] h-fit shrink-0 shadow-[0_10px_30px_rgba(0,0,0,0.05)] p-12 text-[#191c20] relative mb-10">
+<!-- Resume Content -->
+<header class="border-b-2 border-primary pb-6 mb-8">
+<h1 class="text-3xl font-extrabold tracking-tight mb-2">张晓明 (Xiao Ming Zhang)</h1>
+<div class="flex flex-wrap gap-4 text-sm text-[#464554]">
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base">location_on</span> 上海市</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base">call</span> 138-0000-0000</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base">mail</span> xiaoming.z@email.com</span>
+</div>
+</header>
+<div class="space-y-8">
+<section>
+<h2 class="text-xs font-black uppercase tracking-[0.2em] text-primary mb-4">工作经历</h2>
+<div class="space-y-6">
+<div>
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-bold text-lg">资深产品设计师</h3>
+<span class="text-sm text-outline">2021.06 - 至今</span>
+</div>
+<p class="text-sm font-medium text-on-surface-variant mb-2">智能科技有限责任公司</p>
+<ul class="text-[13px] text-[#464554] space-y-1.5 list-disc ml-4">
+<li>负责公司核心 AI 产品的 UI/UX 设计，提升了 40% 的用户留存率。</li>
+<li>建立并维护跨平台的设计系统，减少了 30% 的开发交付时间。</li>
+<li>协调多方团队进行用户调研，深度洞察用户需求。</li>
+</ul>
+</div>
+<div>
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-bold text-lg">UI 设计师</h3>
+<span class="text-sm text-outline">2018.05 - 2021.05</span>
+</div>
+<p class="text-sm font-medium text-on-surface-variant mb-2">未来实验室</p>
+<ul class="text-[13px] text-[#464554] space-y-1.5 list-disc ml-4">
+<li>主导了移动端 App 3.0 版本的重构，获得苹果应用商店推荐。</li>
+<li>优化了入职流程体验，转化率提高 15%。</li>
+</ul>
+</div>
+</div>
+</section>
+<section>
+<h2 class="text-xs font-black uppercase tracking-[0.2em] text-primary mb-4">教育背景</h2>
+<div class="flex justify-between items-baseline">
+<div>
+<h3 class="font-bold">同济大学</h3>
+<p class="text-sm text-on-surface-variant">工业设计 | 学士学位</p>
+</div>
+<span class="text-sm text-outline">2014 - 2018</span>
+</div>
+</section>
+<section>
+<h2 class="text-xs font-black uppercase tracking-[0.2em] text-primary mb-4">专业技能</h2>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-xs text-outline mb-1">设计工具</p>
+<p class="text-sm">Figma, Adobe Creative Suite, Framer</p>
+</div>
+<div>
+<p class="text-xs text-outline mb-1">前端知识</p>
+<p class="text-sm">HTML/CSS, Tailwind CSS, Javascript</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Page Num -->
+<div class="absolute bottom-8 right-12 text-[10px] text-outline-variant font-medium tracking-widest">PAGE 1 / 1</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+</body></html>

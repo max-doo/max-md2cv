@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@theme {
+  --color-error-container: #ffdad6;
+  --color-inverse-primary: #c2c1ff;
+  --color-tertiary-fixed: #e1e1f0;
+  --color-on-secondary: #ffffff;
+  --color-surface-dim: #d8dae0;
+  --color-inverse-on-surface: #eff0f6;
+  --color-surface-container-high: #e7e8ee;
+  --color-surface-bright: #f8f9ff;
+  --color-secondary-container: #a6a5fd;
+  --color-on-primary-container: #fffbff;
+  --color-surface-tint: #4e4ccf;
+  --color-surface-variant: #e1e2e8;
+  --color-inverse-surface: #2e3135;
+  --color-surface-container-low: #f2f3f9;
+  --color-on-primary-fixed: #0c006a;
+  --color-on-tertiary-fixed: #191b25;
+  --color-primary-fixed-dim: #c2c1ff;
+  --color-on-tertiary-container: #fffbff;
+  --color-on-secondary-container: #393787;
+  --color-background: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-primary: #ffffff;
+  --color-outline-variant: #c7c4d6;
+  --color-surface-container-highest: #e1e2e8;
+  --color-on-error-container: #93000a;
+  --color-on-secondary-fixed-variant: #3e3d8d;
+  --color-secondary: #5655a6;
+  --color-primary-container: #6564e7;
+  --color-primary-fixed: #e2dfff;
+  --color-on-secondary-fixed: #0f0761;
+  --color-on-error: #ffffff;
+  --color-secondary-fixed: #e2dfff;
+  --color-secondary-fixed-dim: #c2c1ff;
+  --color-error: #ba1a1a;
+  --color-on-surface-variant: #464554;
+  --color-surface: #f8f9ff;
+  --color-outline: #777585;
+  --color-on-background: #191c20;
+  --color-on-surface: #191c20;
+  --color-tertiary-container: #727481;
+  --color-tertiary-fixed-dim: #c5c5d4;
+  --color-surface-container: #eceef3;
+  --color-tertiary: #5a5b67;
+  --color-on-tertiary: #ffffff;
+  --color-on-primary-fixed-variant: #3530b6;
+  --color-primary: #4c49cc;
+  --color-on-tertiary-fixed-variant: #444652;
+
+  --font-headline: "Manrope", sans-serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Manrope", sans-serif;
+
+  --radius-DEFAULT: 1rem;
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
+  --radius-full: 9999px;
+}
+
+/* Map Element Plus Variables to Tailwind Theme */
+:root {
+  --el-color-primary: var(--color-primary);
+  --el-color-primary-light-3: var(--color-primary-container);
+  --el-color-primary-light-5: var(--color-secondary-container);
+  --el-color-primary-light-7: var(--color-secondary-fixed);
+  --el-color-primary-light-9: var(--color-primary-fixed-dim);
+  --el-color-success: #10b981;
+  --el-color-warning: #f59e0b;
+  --el-color-danger: var(--color-error);
+  --el-color-info: var(--color-tertiary);
+
+  --el-bg-color: var(--color-surface);
+  --el-bg-color-overlay: var(--color-surface-container-lowest);
+  --el-text-color-primary: var(--color-on-surface);
+  --el-text-color-regular: var(--color-on-surface-variant);
+  --el-text-color-secondary: var(--color-outline);
+  --el-border-color: var(--color-outline-variant);
+  --el-border-color-light: var(--color-surface-variant);
+  --el-fill-color-light: var(--color-surface-container);
+  --el-fill-color-lighter: var(--color-surface-container-high);
+
+  --el-border-radius-base: var(--radius-DEFAULT);
+  --el-border-radius-small: 0.5rem;
+  --el-border-radius-round: var(--radius-full);
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Utilities for Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-surface-variant);
+  border-radius: 10px;
+}
