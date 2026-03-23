@@ -6,6 +6,7 @@ import { join } from '@tauri-apps/api/path';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import 'element-plus/es/components/message/style/css';
 import 'element-plus/es/components/message-box/style/css';
+import { getInlinePingFangFontFaceCss } from '../utils/fontAssets';
 
 const store = useResumeStore();
 const currentFileName = computed(() => {
@@ -61,6 +62,8 @@ const handleExport = async () => {
       .map(el => el.outerHTML)
       .join('\n');
       
+    const inlinePingFangFontFaceCss = await getInlinePingFangFontFaceCss();
+
     const htmlContent = `
       <!DOCTYPE html>
       <html class="light" lang="zh-CN">
@@ -69,6 +72,7 @@ const handleExport = async () => {
         <title>${documentTitle}</title>
         ${styles}
         <style>
+          ${inlinePingFangFontFaceCss}
           body { 
             background: white !important; 
             margin: 0; padding: 0; 

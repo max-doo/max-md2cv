@@ -29,6 +29,7 @@ export interface ResumeStyle {
   themeColor: string;
   fontFamily: string;
   fontSize: number;
+  paragraphSpacing: number;
   h1Size: number;
   h2Size: number;
   h3Size: number;
@@ -63,11 +64,12 @@ const createDefaultResumeStyle = (): ResumeStyle => ({
   themeColor: "#4c49cc",
   fontFamily: '"PingFang SC", "Microsoft YaHei", sans-serif',
   fontSize: 14,
+  paragraphSpacing: 8,
   h1Size: 28,
   h2Size: 20,
   h3Size: 16,
   dateSize: 14,
-  dateWeight: "",
+  dateWeight: "400",
   lineHeight: 1.6,
   marginV: 10,
   marginH: 12,
@@ -354,6 +356,19 @@ export const useResumeStore = defineStore("resume", () => {
     }
   };
 
+  const openWorkspaceDirectory = async () => {
+    if (!workspacePath.value) {
+      return;
+    }
+
+    try {
+      await invoke("open_directory", { path: workspacePath.value });
+    } catch (error) {
+      console.error("Failed to open directory:", error);
+      ElMessage.error("打开文件夹失败");
+    }
+  };
+
   const openFile = async (path: string) => {
     try {
       const content = await invoke<string>("read_resume", { path });
@@ -527,7 +542,7 @@ export const useResumeStore = defineStore("resume", () => {
     const style = resumeStyle.value;
     const marker = "/* @user-overrides */";
     const baseCss = template.css.split(marker)[0].trimEnd();
-    const patchCss = `\n\n${marker}\n.resume-document {\n  font-family: ${style.fontFamily};\n  font-size: ${style.fontSize}px;\n  line-height: ${style.lineHeight};\n  --cv-contact-render: ${style.personalInfoMode || "text"};\n}\n.resume-document h1 { font-size: ${style.h1Size}px; }\n.resume-document h2 { font-size: ${style.h2Size}px; }\n.resume-document h3 { font-size: ${style.h3Size}px; }\n@page { margin: ${style.marginV}mm ${style.marginH}mm; }\n.resume-document h2 { border-left-color: ${style.themeColor}; background-color: color-mix(in srgb, ${style.themeColor} 10%, transparent); }\n`;
+    const patchCss = `\n\n${marker}\n.resume-document {\n  font-family: ${style.fontFamily};\n  font-size: ${style.fontSize}px;\n  line-height: ${style.lineHeight};\n  --cv-font-size: ${style.fontSize}px;\n  --cv-paragraph-spacing: ${style.paragraphSpacing}px;\n  --cv-contact-render: ${style.personalInfoMode || "text"};\n}\n.resume-document h1 { font-size: ${style.h1Size}px; }\n.resume-document h2 { font-size: ${style.h2Size}px; }\n.resume-document h3 { font-size: ${style.h3Size}px; }\n.resume-document p,\n.resume-document ul,\n.resume-document ol,\n.resume-document .job-intention + p,\n.resume-document .contact-info--icon,\n.resume-document .contact-info-item { font-size: var(--cv-font-size); }\n.resume-document blockquote { font-size: calc(var(--cv-font-size) * 0.9); }\n.resume-document p,\n.resume-document ul,\n.resume-document ol,\n.resume-document blockquote { margin-bottom: var(--cv-paragraph-spacing); }\n@page { margin: ${style.marginV}mm ${style.marginH}mm; }\n.resume-document h2 { border-left-color: ${style.themeColor}; background-color: color-mix(in srgb, ${style.themeColor} 10%, transparent); }\n`;
     const newCss = baseCss + patchCss;
 
     try {
@@ -633,6 +648,7 @@ export const useResumeStore = defineStore("resume", () => {
     currentPhotoPath,
     editorJumpRequest,
     selectWorkspace,
+    openWorkspaceDirectory,
     openFile,
     saveCurrentFile,
     replaceMarkdownFromOutline,

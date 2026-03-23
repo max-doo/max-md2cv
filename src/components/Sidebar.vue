@@ -15,6 +15,10 @@ const handleSelectWorkspace = async () => {
   await store.selectWorkspace()
 }
 
+const handleOpenWorkspaceDirectory = async () => {
+  await store.openWorkspaceDirectory()
+}
+
 const openCreateFile = () => {
   isCreating.value = true
 }
@@ -77,9 +81,18 @@ const handleCreateFile = async () => {
       </div>
 
       <div class="flex flex-col gap-3 border-t border-black/5 bg-surface-container-lowest px-6 pb-5 pt-3 shrink-0">
+        <button
+          v-if="store.workspacePath"
+          type="button"
+          class="flex min-h-[1.5rem] w-full cursor-pointer rounded-xl px-2 py-1 text-left text-xs leading-5 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
+          :title="store.workspacePath"
+          @click="handleOpenWorkspaceDirectory"
+        >
+          <span class="break-all">{{ workspaceDisplayText }}</span>
+        </button>
         <div
+          v-else
           class="min-h-[1.5rem] break-all px-1 text-xs leading-5 text-on-surface-variant"
-          :title="store.workspacePath || undefined"
         >
           {{ workspaceDisplayText }}
         </div>

@@ -7,10 +7,12 @@ import { useResumeStore, type ResumeStyle } from '../stores/resume'
 import { useDebounceFn } from '@vueuse/core'
 import { enhanceResumeHtml } from '../utils/resumeParser'
 import { renderManualPageBreaks } from '../utils/manualPageBreak'
+import { pingFangFontFaceCss } from '../utils/fontAssets'
 
 const store = useResumeStore()
 const previewContainer = ref<HTMLElement | null>(null)
 const previewScrollContainer = ref<HTMLElement | null>(null)
+const isTemplateDropdownOpen = ref(false)
 let paged: any = null
 let activeRenderPromise: Promise<void> | null = null
 let pendingRenderRequest: PreviewRenderRequest | null = null
@@ -202,6 +204,7 @@ const resolveCssFallbackValue = (raw: string, fallback: string): string => {
 }
 
 const buildPreviewStyles = (cvStyle: ResumeStyle): string => `
+  ${pingFangFontFaceCss}
   @page {
     size: A4;
     margin: ${cvStyle.marginV}mm ${cvStyle.marginH}mm;
@@ -219,6 +222,8 @@ const buildPreviewStyles = (cvStyle: ResumeStyle): string => `
     --cv-photo-gap: 18px;
     --cv-photo-radius: 8px;
     --cv-photo-reserve: calc(var(--cv-photo-width) + var(--cv-photo-gap));
+    --cv-font-size: ${cvStyle.fontSize}px;
+    --cv-paragraph-spacing: ${cvStyle.paragraphSpacing}px;
     font-family: ${cvStyle.fontFamily} !important;
     font-size: ${cvStyle.fontSize}px !important;
     line-height: ${cvStyle.lineHeight} !important;
@@ -312,6 +317,23 @@ const buildPreviewStyles = (cvStyle: ResumeStyle): string => `
     font-size: ${cvStyle.h3Size}px !important;
     color: ${cvStyle.themeColor} !important;
   }
+  .resume-document p,
+  .resume-document ul,
+  .resume-document ol,
+  .resume-document .job-intention + p,
+  .resume-document .contact-info--icon,
+  .resume-document .contact-info-item {
+    font-size: var(--cv-font-size) !important;
+  }
+  .resume-document blockquote {
+    font-size: calc(var(--cv-font-size) * 0.9) !important;
+  }
+  .resume-document p,
+  .resume-document ul,
+  .resume-document ol,
+  .resume-document blockquote {
+    margin-bottom: var(--cv-paragraph-spacing);
+  }
   .resume-document .manual-page-break {
     break-before: page;
     page-break-before: always;
@@ -370,8 +392,35 @@ const syncDefaultsFromTemplate = () => {
   store.resumeStyle.themeColor = parseColor(themeColorRaw, '#4c49cc')
 
   // Body font size
-  const bodyFontRaw = extractCssProp(css, '.resume-document', 'font-size', '14px')
+  const bodyFontRaw = resolveCssFallbackValue(
+    extractCssProp(
+      css,
+      '.resume-document',
+      '--cv-font-size',
+      extractCssProp(css, '.resume-document p', 'font-size', extractCssProp(css, '.resume-document', 'font-size', '14px'))
+    ),
+    '14px'
+  )
   store.resumeStyle.fontSize = toNum(bodyFontRaw, 14)
+
+  const dateWeightRaw = resolveCssFallbackValue(
+    extractCssProp(
+      css,
+      '.resume-document .experience-date',
+      'font-weight',
+      extractCssProp(css, '.resume-document', '--cv-date-weight', '400')
+    ),
+    '400'
+  ).toLowerCase()
+  store.resumeStyle.dateWeight = ['bold', 'bolder', '700', '800', '900'].includes(dateWeightRaw) ? '700' : '400'
+
+  const paragraphSpacingRaw = extractCssProp(
+    css,
+    '.resume-document',
+    '--cv-paragraph-spacing',
+    extractCssProp(css, '.resume-document p', 'margin-bottom', '0.5rem')
+  )
+  store.resumeStyle.paragraphSpacing = toNum(paragraphSpacingRaw, 8)
 
   // Page margins from @page rule
   const pageMarginRaw = extractCssProp(css, '@page', 'margin', '10mm 12mm')
@@ -519,12 +568,13 @@ watch(() => store.resumeStyle, () => {
     />
 
     <!-- Preview Controls -->
-    <div class="h-14 shrink-0 flex items-center px-6 justify-between bg-surface-container-high/40 backdrop-blur-sm border-b border-outline-variant/10 z-10">
+    <div class="preview-toolbar flex h-16 shrink-0 items-center justify-between border-b border-outline-variant/10 bg-surface-container-high/35 px-5 backdrop-blur-sm z-10">
       <div class="flex items-center gap-2">
-        <el-dropdown trigger="click" @command="(cmd: string) => store.activeTemplate = cmd">
-          <span class="text-xs font-bold text-on-surface-variant tracking-wider cursor-pointer flex items-center gap-1 hover:text-primary transition-colors focus:outline-none bg-surface-container-lowest border border-outline-variant/30 rounded-full px-3 py-1.5">
-            {{ store.availableTemplates.find(t => t.id === store.activeTemplate)?.name || '未知模板' }}
-            <span class="material-symbols-outlined text-[14px]">expand_more</span>
+        <el-dropdown trigger="click" @command="(cmd: string) => store.activeTemplate = cmd" @visible-change="(visible: boolean) => isTemplateDropdownOpen = visible">
+          <span :class="['preview-toolbar-pill', 'preview-template-trigger', 'min-w-[108px]', 'max-w-[160px]', 'cursor-pointer', 'justify-between', { 'is-open': isTemplateDropdownOpen }]">
+            <i class="bi bi-palette-fill"></i>
+            <span class="preview-toolbar-label">{{ store.availableTemplates.find(t => t.id === store.activeTemplate)?.name || '未知模板' }}</span>
+            <span class="material-symbols-outlined text-[16px] text-on-surface-variant/70">expand_more</span>
           </span>
           <template #dropdown>
             <el-dropdown-menu class="min-w-[120px] rounded-xl overflow-hidden py-1 border-none shadow-ambient">
@@ -542,9 +592,9 @@ watch(() => store.resumeStyle, () => {
       </div>
 
       <!-- Style Controls -->
-      <div class="flex flex-1 items-center justify-center gap-3">
+      <div class="preview-toolbar-center flex flex-1 items-center justify-center gap-3">
         <!-- Font Selection -->
-        <el-select v-model="store.resumeStyle.fontFamily" size="small" style="width: 130px" placeholder="字体">
+        <el-select v-model="store.resumeStyle.fontFamily" size="small" style="width: 108px" placeholder="字体">
           <el-option
             v-for="f in FONT_OPTIONS"
             :key="f.value"
@@ -556,7 +606,7 @@ watch(() => store.resumeStyle, () => {
         <!-- Custom Theme Color Picker (Replaces el-color-picker) -->
         <el-popover placement="bottom" trigger="click" :width="240">
           <template #reference>
-            <div class="h-8 rounded-md border border-outline-variant/30 bg-surface-container-lowest px-2 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest transition-colors" title="主题色">
+            <div class="preview-toolbar-icon cursor-pointer" title="主题色">
               <div 
                 class="w-4 h-4 rounded-full border border-outline-variant/50 shadow-inner"
                 :style="{ backgroundColor: store.resumeStyle.themeColor }"
@@ -613,7 +663,7 @@ watch(() => store.resumeStyle, () => {
 
         <!-- Font Size Dropdown -->
         <el-dropdown trigger="click" :hide-on-click="false">
-          <button class="px-2 py-1.5 hover:bg-surface-container-highest rounded-md text-on-surface-variant transition-colors flex items-center justify-center cursor-pointer text-xs gap-1 border border-outline-variant/30 bg-surface-container-lowest h-8" title="字号">
+          <button class="preview-toolbar-icon cursor-pointer" title="字号">
             <span class="material-symbols-outlined text-[14px]">format_size</span>
           </button>
           <template #dropdown>
@@ -623,28 +673,28 @@ watch(() => store.resumeStyle, () => {
                 <span>H1 标题大小</span>
                 <span class="text-primary">{{ Math.round(store.resumeStyle.h1Size) }}px</span>
               </div>
-              <el-slider v-model="store.resumeStyle.h1Size" :min="12" :max="60" :step="1" :show-tooltip="false" />
+              <el-slider v-model="store.resumeStyle.h1Size" :min="24" :max="34" :step="1" :show-tooltip="false" />
 
               <!-- H2 -->
               <div class="text-xs font-bold text-on-surface-variant mt-4 mb-2 flex justify-between">
                 <span>H2 标题大小</span>
                 <span class="text-primary">{{ Math.round(store.resumeStyle.h2Size) }}px</span>
               </div>
-              <el-slider v-model="store.resumeStyle.h2Size" :min="10" :max="40" :step="1" :show-tooltip="false" />
+              <el-slider v-model="store.resumeStyle.h2Size" :min="14" :max="22" :step="1" :show-tooltip="false" />
 
               <!-- H3 -->
               <div class="text-xs font-bold text-on-surface-variant mt-4 mb-2 flex justify-between">
                 <span>H3 标题大小</span>
                 <span class="text-primary">{{ Math.round(store.resumeStyle.h3Size) }}px</span>
               </div>
-              <el-slider v-model="store.resumeStyle.h3Size" :min="10" :max="30" :step="1" :show-tooltip="false" />
+              <el-slider v-model="store.resumeStyle.h3Size" :min="12" :max="18" :step="1" :show-tooltip="false" />
 
               <!-- Body -->
               <div class="text-xs font-bold text-on-surface-variant mt-4 mb-2 flex justify-between">
                 <span>正文大小</span>
                 <span class="text-primary">{{ store.resumeStyle.fontSize }}px</span>
               </div>
-              <el-slider v-model="store.resumeStyle.fontSize" :min="10" :max="20" :step="1" :show-tooltip="false" />
+              <el-slider v-model="store.resumeStyle.fontSize" :min="11" :max="16" :step="1" :show-tooltip="false" />
               
               <div class="h-[1px] w-full bg-outline-variant/20 my-4"></div>
 
@@ -653,24 +703,38 @@ watch(() => store.resumeStyle, () => {
                 <span>日期大小</span>
                 <span class="text-primary">{{ store.resumeStyle.dateSize }}px</span>
               </div>
-              <el-slider v-model="store.resumeStyle.dateSize" :min="10" :max="20" :step="1" :show-tooltip="false" />
+              <el-slider v-model="store.resumeStyle.dateSize" :min="11" :max="16" :step="1" :show-tooltip="false" />
               
               <div class="text-xs font-bold text-on-surface-variant mt-4 mb-2">日期粗细</div>
-              <el-select v-model="store.resumeStyle.dateWeight" size="small" style="width: 100%">
-                <el-option label="默认 (由模板决定)" value="" />
-                <el-option label="极细 (Lighter)" value="300" />
-                <el-option label="常规 (Normal)" value="400" />
-                <el-option label="中等 (Medium)" value="500" />
-                <el-option label="加粗 (Bold)" value="700" />
-                <el-option label="黑体 (Bolder)" value="900" />
-              </el-select>
+              <div class="flex items-center gap-2 rounded-full bg-surface-container p-1">
+                <button
+                  type="button"
+                  class="flex-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors"
+                  :class="store.resumeStyle.dateWeight === '400'
+                    ? 'bg-surface-container-lowest text-on-surface shadow-sm'
+                    : 'text-on-surface-variant hover:text-on-surface'"
+                  @click="store.resumeStyle.dateWeight = '400'"
+                >
+                  不加粗
+                </button>
+                <button
+                  type="button"
+                  class="flex-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors"
+                  :class="store.resumeStyle.dateWeight === '700'
+                    ? 'bg-surface-container-lowest text-primary shadow-sm'
+                    : 'text-on-surface-variant hover:text-on-surface'"
+                  @click="store.resumeStyle.dateWeight = '700'"
+                >
+                  加粗
+                </button>
+              </div>
             </div>
           </template>
         </el-dropdown>
 
         <!-- Spacing Dropdown -->
         <el-dropdown trigger="click" :hide-on-click="false">
-          <button class="px-2 py-1.5 hover:bg-surface-container-highest rounded-md text-on-surface-variant transition-colors flex items-center justify-center cursor-pointer text-xs gap-1 border border-outline-variant/30 bg-surface-container-lowest h-8" title="间距">
+          <button class="preview-toolbar-icon cursor-pointer" title="间距">
             <span class="material-symbols-outlined text-[14px]">format_line_spacing</span>
           </button>
           <template #dropdown>
@@ -680,6 +744,12 @@ watch(() => store.resumeStyle, () => {
                 <span class="text-primary">{{ store.resumeStyle.lineHeight }}</span>
               </div>
               <el-slider v-model="store.resumeStyle.lineHeight" :min="1.0" :max="2.5" :step="0.1" :show-tooltip="false" />
+
+              <div class="text-xs font-bold text-on-surface-variant mt-4 mb-2 flex justify-between">
+                <span>段落间距</span>
+                <span class="text-primary">{{ store.resumeStyle.paragraphSpacing }}px</span>
+              </div>
+              <el-slider v-model="store.resumeStyle.paragraphSpacing" :min="0" :max="24" :step="1" :show-tooltip="false" />
               
               <div class="text-xs font-bold text-on-surface-variant mt-4 mb-2 flex justify-between">
                 <span>上下页边距</span>
@@ -697,19 +767,19 @@ watch(() => store.resumeStyle, () => {
         </el-dropdown>
       </div>
       
-      <div class="flex items-center gap-1 bg-surface-container-lowest/50 backdrop-blur rounded-lg px-1.5 py-1">
-        <button @click="zoomOut" class="p-1 hover:bg-surface-container-highest rounded-md text-on-surface-variant transition-colors flex items-center justify-center cursor-pointer" title="缩小">
+      <div class="preview-toolbar-group preview-toolbar-zoom">
+        <button @click="zoomOut" class="text-on-surface-variant transition-colors flex items-center justify-center cursor-pointer" title="缩小">
           <span class="material-symbols-outlined text-base">remove_circle_outline</span>
         </button>
         <span class="text-[11px] font-bold text-on-surface-variant w-9 text-center select-none">{{ zoomLevel }}%</span>
-        <button @click="zoomIn" class="p-1 hover:bg-surface-container-highest rounded-md text-on-surface-variant transition-colors flex items-center justify-center cursor-pointer" title="放大">
+        <button @click="zoomIn" class="text-on-surface-variant transition-colors flex items-center justify-center cursor-pointer" title="放大">
           <span class="material-symbols-outlined text-base">add_circle_outline</span>
         </button>
       </div>
     </div>
     
     <!-- Scrollable Preview Area -->
-    <div ref="previewScrollContainer" class="flex-1 overflow-auto custom-scrollbar p-10 bg-surface-variant/70 flex justify-center">
+    <div ref="previewScrollContainer" class="flex flex-1 justify-center overflow-auto custom-scrollbar bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.92),_rgba(225,226,232,0.86)_52%,_rgba(236,238,243,0.92)_100%)] px-8 py-9">
       <!-- Paged.js Render Container -->
       <div ref="previewContainer" class="pagedjs-wrapper overflow-visible transition-transform duration-200" :style="{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }"></div>
     </div>
@@ -781,4 +851,130 @@ watch(() => store.resumeStyle, () => {
 }
 
 
+</style>
+
+<style scoped>
+.preview-template-trigger {
+  gap: 0.5rem;
+  padding-inline: 0.875rem 0.75rem;
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.preview-template-trigger .preview-toolbar-label {
+  min-width: 0;
+  flex: 1;
+}
+
+.preview-template-trigger .bi {
+  font-size: 0.875rem;
+  color: color-mix(in srgb, var(--color-primary) 78%, white);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.preview-template-trigger .material-symbols-outlined {
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.preview-template-trigger:hover,
+.preview-template-trigger.is-open {
+  transform: translateY(-1px);
+  color: var(--color-on-surface);
+  background-color: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface-container-lowest));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 16%, transparent),
+    0 10px 24px rgba(76, 73, 204, 0.08);
+}
+
+.preview-template-trigger:hover .bi,
+.preview-template-trigger.is-open .bi {
+  color: var(--color-primary);
+  transform: rotate(-10deg) scale(1.03);
+}
+
+.preview-template-trigger:hover .material-symbols-outlined,
+.preview-template-trigger.is-open .material-symbols-outlined {
+  color: var(--color-primary);
+}
+
+.preview-template-trigger.is-open .material-symbols-outlined {
+  transform: rotate(180deg);
+}
+
+.preview-toolbar-center {
+  gap: 0.625rem;
+}
+
+.preview-toolbar-center :deep(.el-select) {
+  width: 108px !important;
+}
+
+.preview-toolbar-center :deep(.el-select .el-select__wrapper) {
+  min-height: 2.25rem;
+  border-radius: 999px;
+  padding-inline: 0.75rem 0.625rem;
+  background-color: color-mix(in srgb, var(--color-surface-container-lowest) 92%, white);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-outline-variant) 22%, transparent);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.preview-toolbar-center :deep(.el-select:hover .el-select__wrapper),
+.preview-toolbar-center :deep(.el-select.is-focus .el-select__wrapper) {
+  background-color: var(--color-surface-container-high);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.preview-toolbar-center :deep(.el-select .el-select__selected-item),
+.preview-toolbar-center :deep(.el-select .el-select__placeholder) {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-on-surface-variant);
+}
+
+.preview-toolbar-center :deep(.el-select .el-select__caret) {
+  font-size: 1rem;
+  color: color-mix(in srgb, var(--color-on-surface-variant) 72%, white);
+}
+
+.preview-toolbar-center :deep(button),
+.preview-toolbar-center > div[title] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--color-surface-container-lowest) 92%, white);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-outline-variant) 22%, transparent);
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.preview-toolbar-center :deep(button:hover),
+.preview-toolbar-center > div[title]:hover {
+  background-color: var(--color-surface-container-high);
+  color: var(--color-on-surface);
+}
+
+.preview-toolbar-zoom {
+  height: 2.25rem;
+  padding-block: 0;
+  padding-inline: 0.75rem;
+  gap: 0.625rem;
+}
+
+.preview-toolbar-zoom button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  background: transparent;
+  box-shadow: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.preview-toolbar-zoom button:hover {
+  color: var(--color-on-surface);
+  transform: scale(1.04);
+}
 </style>

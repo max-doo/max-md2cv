@@ -445,7 +445,6 @@ watch(
         <button @click="insertManualPageBreak" class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors group" :title="`插入分页 ${MANUAL_PAGE_BREAK_MARKER}`">
           <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">insert_page_break</span>
         </button>
-        <div class="h-5 w-[1px] bg-outline-variant/20 mx-1"></div>
         <button @click="toggleLinePrefix('> ')" class="p-2 hover:bg-surface-container-low rounded-lg text-on-surface-variant transition-colors group" title="引用">
           <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">format_quote</span>
         </button>

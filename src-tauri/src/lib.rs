@@ -507,6 +507,23 @@ async fn open_pdf(app: tauri::AppHandle, path: String) -> Result<(), String> {
         .map_err(|e| format!("打开 PDF 失败: {}", e))
 }
 
+#[tauri::command]
+async fn open_directory(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    let dir_path = Path::new(&path);
+
+    if !dir_path.exists() {
+        return Err("Directory does not exist".into());
+    }
+
+    if !dir_path.is_dir() {
+        return Err("Path is not a directory".into());
+    }
+
+    app.opener()
+        .open_path(&path, None::<&str>)
+        .map_err(|e| format!("Failed to open directory: {}", e))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -529,7 +546,8 @@ pub fn run() {
             delete_resume,
             rename_resume,
             duplicate_resume,
-            open_pdf
+            open_pdf,
+            open_directory
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

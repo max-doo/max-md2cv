@@ -15,8 +15,8 @@
         "title": "max-md2cv-app",
         "width": 1200,
         "height": 800,
-        "minWidth": 800,
-        "minHeight": 600,
+        "minWidth": 1200,
+        "minHeight": 800,
         "dragDropEnabled": false
       }
     ],

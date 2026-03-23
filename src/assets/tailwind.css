@@ -150,6 +150,40 @@
   .outline-drag-handle {
     @apply flex h-8 w-8 shrink-0 cursor-grab items-center justify-center rounded-xl text-on-surface-variant transition-colors duration-200 hover:bg-surface-container-low hover:text-on-surface active:cursor-grabbing;
   }
+
+  .preview-toolbar-group {
+    @apply flex items-center gap-2 rounded-full px-2 py-1;
+    background-color: color-mix(in srgb, var(--color-surface-container-lowest) 82%, transparent);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-outline-variant) 14%, transparent),
+      0 12px 24px rgba(15, 23, 42, 0.04);
+  }
+
+  .preview-toolbar-pill {
+    @apply flex h-9 items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full px-3 text-xs font-semibold text-on-surface-variant transition-all duration-200;
+    background-color: color-mix(in srgb, var(--color-surface-container-lowest) 92%, white);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-outline-variant) 22%, transparent);
+  }
+
+  .preview-toolbar-pill:hover {
+    background-color: var(--color-surface-container-high);
+    color: var(--color-on-surface);
+  }
+
+  .preview-toolbar-icon {
+    @apply flex h-9 w-9 items-center justify-center overflow-hidden whitespace-nowrap rounded-full px-0 text-xs font-semibold text-on-surface-variant transition-all duration-200;
+    background-color: color-mix(in srgb, var(--color-surface-container-lowest) 92%, white);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-outline-variant) 22%, transparent);
+  }
+
+  .preview-toolbar-icon:hover {
+    background-color: var(--color-surface-container-high);
+    color: var(--color-on-surface);
+  }
+
+  .preview-toolbar-label {
+    @apply truncate text-xs font-semibold tracking-[0.02em];
+  }
 }
 
 /* =========================================================================
