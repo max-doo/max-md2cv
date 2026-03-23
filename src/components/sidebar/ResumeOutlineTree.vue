@@ -38,7 +38,8 @@ const handleEnd = (event: { oldIndex?: number; newIndex?: number }) => {
     return
   }
 
-  const movedNode = localNodes.value[event.newIndex]
+  // localNodes is still in the pre-drop order here, so oldIndex points at the dragged node.
+  const movedNode = localNodes.value[event.oldIndex]
   if (!movedNode) {
     return
   }
@@ -69,12 +70,29 @@ const handleDragStart = (nodeId: string, event: DragEvent) => {
   }
 }
 
+const markAsDropTarget = (event: DragEvent) => {
+  event.preventDefault()
+  event.stopPropagation()
+
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move'
+  }
+}
+
+const handleDragEnter = (targetNodeId: string, event: DragEvent) => {
+  if (!draggingNodeId.value || draggingNodeId.value === targetNodeId) {
+    return
+  }
+
+  markAsDropTarget(event)
+}
+
 const handleDragOver = (targetNodeId: string, event: DragEvent) => {
   if (!draggingNodeId.value || draggingNodeId.value === targetNodeId) {
     return
   }
 
-  event.preventDefault()
+  markAsDropTarget(event)
 
   const currentTarget = event.currentTarget as HTMLElement | null
   if (!currentTarget) {
@@ -96,7 +114,7 @@ const handleDrop = (targetNodeId: string, event: DragEvent) => {
     return
   }
 
-  event.preventDefault()
+  markAsDropTarget(event)
 
   const currentIndex = localNodes.value.findIndex((node) => node.id === draggingNodeId.value)
   const targetIndex = localNodes.value.findIndex((node) => node.id === targetNodeId)
@@ -120,10 +138,47 @@ const handleDrop = (targetNodeId: string, event: DragEvent) => {
   })
   clearDragState()
 }
+
+const handleListDragOver = (event: DragEvent) => {
+  if (!draggingNodeId.value || localNodes.value.length === 0) {
+    return
+  }
+
+  markAsDropTarget(event)
+
+  const lastNode = localNodes.value[localNodes.value.length - 1]
+  if (!lastNode) {
+    return
+  }
+
+  dropTarget.value = {
+    nodeId: lastNode.id,
+    insertAfter: true,
+  }
+}
+
+const handleListDrop = (event: DragEvent) => {
+  if (!draggingNodeId.value || localNodes.value.length === 0) {
+    clearDragState()
+    return
+  }
+
+  const lastNode = localNodes.value[localNodes.value.length - 1]
+  if (!lastNode) {
+    clearDragState()
+    return
+  }
+
+  handleDrop(lastNode.id, event)
+}
 </script>
 
 <template>
-  <ul class="space-y-2">
+  <ul
+    class="space-y-2"
+    @dragover="handleListDragOver"
+    @drop="handleListDrop"
+  >
     <li v-for="node in localNodes" :key="node.id" class="outline-sortable-item list-none space-y-2">
       <div
         class="flex items-center gap-2"
@@ -132,6 +187,7 @@ const handleDrop = (targetNodeId: string, event: DragEvent) => {
           'outline-drop-after': dropTarget?.nodeId === node.id && dropTarget.insertAfter,
         }"
         :style="{ paddingLeft: `${props.depth * 14}px` }"
+        @dragenter="handleDragEnter(node.id, $event)"
         @dragover="handleDragOver(node.id, $event)"
         @drop="handleDrop(node.id, $event)"
       >

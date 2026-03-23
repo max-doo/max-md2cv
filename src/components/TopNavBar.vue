@@ -127,7 +127,7 @@ const handleExport = async () => {
         </button>
         <div
           v-if="currentFileName"
-          class="max-w-[20rem] truncate text-sm font-semibold tracking-[0.02em] text-on-surface"
+          class="max-w-[20rem] truncate text-base font-semibold tracking-[0.02em] text-on-surface"
           :title="currentFileName"
         >
           {{ currentFileName }}
