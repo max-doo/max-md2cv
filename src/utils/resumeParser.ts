@@ -25,6 +25,12 @@ export const REGEX_PATTERNS = {
   DATE_RANGE: /(\d{4}[./-年]\d{1,2}(?:月)?(?:\s*(?:-|–|—|至)\s*(?:\d{4}[./-年]\d{1,2}(?:月)?|至今|今))?)$/,
 }
 
+const DATE_VALUE_SOURCE = String.raw`(?:\d{4}[./-年]\d{1,2}(?:月)?|YYYY\.MM)`
+const DATE_END_SOURCE = String.raw`(?:${DATE_VALUE_SOURCE}|至今|今)`
+const DATE_SPAN_SOURCE = String.raw`(${DATE_VALUE_SOURCE}(?:\s*(?:-|–|—|至)\s*${DATE_END_SOURCE})?)`
+const DATE_BRACKETED_PATTERN = new RegExp(String.raw`\[${DATE_SPAN_SOURCE}\]`)
+const DATE_RANGE_PATTERN = new RegExp(`${DATE_SPAN_SOURCE}$`)
+
 function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, '')
 }
@@ -68,11 +74,24 @@ function resolveContactType(label: string): ContactFieldType | null {
 }
 
 function normalizeContactText(rawText: string): string {
-  return stripHtml(rawText)
+  return stripHtml(rawText.replace(/<br\s*\/?>/gi, '\n'))
     .replace(/&nbsp;/gi, ' ')
     .replace(/\u00a0/g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/\r\n?/g, '\n')
+    .replace(/[^\S\r\n]+/g, ' ')
+    .replace(/\s*\n\s*/g, '\n')
     .trim()
+}
+
+function splitNormalizedContactSegments(text: string): string[] {
+  if (!text.includes('\n')) {
+    return splitContactSegments(text)
+  }
+
+  return text
+    .split(/\s*(?:\r?\n|[|｜丨])\s*/)
+    .map((segment) => segment.trim())
+    .filter(Boolean)
 }
 
 function splitContactSegments(text: string): string[] {
@@ -141,7 +160,7 @@ function parseContactFields(rawText: string): ContactField[] {
   const text = normalizeContactText(rawText)
   if (!text) return []
 
-  const segments = splitContactSegments(text)
+  const segments = splitNormalizedContactSegments(text)
   const items: ContactField[] = []
 
   for (const segment of segments) {
@@ -268,6 +287,96 @@ function enhanceModernContactInfo(html: string): string {
   )
 }
 
+function collectContactParagraphs(jobIntentionElement: Element): HTMLParagraphElement[] {
+  const paragraphs: HTMLParagraphElement[] = []
+  let current = jobIntentionElement.nextElementSibling
+
+  while (current?.tagName === 'P') {
+    const paragraph = current as HTMLParagraphElement
+    const parsedFields = parseContactFields(paragraph.innerHTML)
+
+    if (parsedFields.length === 0) {
+      break
+    }
+
+    paragraphs.push(paragraph)
+    current = paragraph.nextElementSibling
+  }
+
+  return paragraphs
+}
+
+function renderTextContactInfo(paragraphs: HTMLParagraphElement[]): string {
+  return `
+    <div class="contact-info contact-info--text">
+      ${paragraphs
+        .map((paragraph) => `<p class="contact-info-text-line">${paragraph.innerHTML}</p>`)
+        .join('')}
+    </div>
+  `.trim()
+}
+
+function enhanceContactInfo(html: string, styleConfig: ResumeStyle, templateId?: string): string {
+  if (typeof document === 'undefined') {
+    return templateId === 'modern' && styleConfig.personalInfoMode === 'icon'
+      ? enhanceModernContactInfo(html)
+      : html
+  }
+
+  const container = document.createElement('div')
+  container.innerHTML = html
+
+  const isModernIconMode = templateId === 'modern' && styleConfig.personalInfoMode === 'icon'
+
+  container.querySelectorAll('p.job-intention').forEach((jobIntentionElement) => {
+    const paragraphs = collectContactParagraphs(jobIntentionElement)
+    if (paragraphs.length === 0) {
+      return
+    }
+
+    const replacementHtml = (() => {
+      if (!isModernIconMode) {
+        return renderTextContactInfo(paragraphs)
+      }
+
+      const fields = parseContactFields(paragraphs.map((paragraph) => paragraph.innerHTML).join('\n'))
+      if (fields.length < 2) {
+        return renderTextContactInfo(paragraphs)
+      }
+
+      return `<div class="contact-info contact-info--icon">${fields.map(renderContactField).join('')}</div>`
+    })()
+
+    const replacementWrapper = document.createElement('div')
+    replacementWrapper.innerHTML = replacementHtml
+    const replacementElement = replacementWrapper.firstElementChild
+
+    if (!replacementElement) {
+      return
+    }
+
+    paragraphs[0].before(replacementElement)
+    paragraphs.forEach((paragraph) => paragraph.remove())
+  })
+
+  return container.innerHTML
+}
+
+function renderExperienceLine(
+  tag: string,
+  attrs: string,
+  titleHtml: string,
+  dateText: string,
+): string {
+  const lineHtml = `<span class="experience-title">${titleHtml}</span><span class="experience-date">${dateText}</span>`
+
+  if (tag === 'li') {
+    return `<${tag}${attrs}><div class="experience-line">${lineHtml}</div></${tag}>`
+  }
+
+  return `<${tag}${attrs} class="experience-line">${lineHtml}</${tag}>`
+}
+
 export function enhanceResumeHtml(rawHtml: string, styleConfig: ResumeStyle, templateId?: string): string {
   let html = rawHtml
 
@@ -278,22 +387,22 @@ export function enhanceResumeHtml(rawHtml: string, styleConfig: ResumeStyle, tem
     }
   )
 
-  if (templateId === 'modern' && styleConfig.personalInfoMode === 'icon') {
-    html = enhanceModernContactInfo(html)
-  }
+  html = enhanceContactInfo(html, styleConfig, templateId)
 
   html = html.replace(/<(h[1-6]|p|li)([^>]*)>([\s\S]*?)<\/\1>/g, (match, tag, attrs, content) => {
     if (content.includes('experience-date')) return match
 
     const plainText = stripHtml(content).trim()
-    const bracketedMatch = plainText.match(REGEX_PATTERNS.DATE_BRACKETED)
-    if (!bracketedMatch) return match
+    const bracketedMatch = plainText.match(DATE_BRACKETED_PATTERN)
+    const rangeMatch = bracketedMatch ? null : plainText.match(DATE_RANGE_PATTERN)
+    if (!bracketedMatch && !rangeMatch) return match
 
-    const dateText = bracketedMatch[1]
-    const rawCleaned = content.replace(REGEX_PATTERNS.DATE_BRACKETED, '').trim()
+    const dateText = bracketedMatch?.[1] ?? rangeMatch?.[1] ?? ''
+    const datePattern = bracketedMatch ? DATE_BRACKETED_PATTERN : DATE_RANGE_PATTERN
+    const rawCleaned = content.replace(datePattern, '').trim()
     const titleHtml = rawCleaned.replace(/[\s\-|–—:：,，]+$/, '').trim()
 
-    return `<${tag}${attrs} class="experience-line"><span class="experience-title">${titleHtml}</span><span class="experience-date">${dateText}</span></${tag}>`
+    return renderExperienceLine(tag, attrs, titleHtml, dateText)
   })
 
   return html

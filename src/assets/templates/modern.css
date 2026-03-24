@@ -122,6 +122,23 @@
   gap: 1rem;
 }
 
+.resume-document .contact-info--text {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+}
+
+.resume-document .contact-info-text-line {
+  max-width: 100%;
+  margin-bottom: 0.35rem;
+}
+
+.resume-document .contact-info-text-line:last-child {
+  margin-bottom: 0;
+}
+
 .resume-document .contact-info--icon {
   font-size: 0.85rem;
   line-height: 1.6;

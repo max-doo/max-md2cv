@@ -16,8 +16,8 @@
   line-height: 1.2;
   text-align: center;
   margin-bottom: 0.5rem;
-    color: #000000;
-  padding-bottom: 1rem;
+  color: #000000;
+  padding-bottom: 0.5rem;
 }
 
 .resume-document .job-intention {
@@ -26,10 +26,28 @@
 }
 
 .resume-document .job-intention + p,
+.resume-document .contact-info--text,
+.resume-document .contact-info-text-line,
 .resume-document .contact-info--icon,
 .resume-document .contact-info-item {
   line-height: 1.2;
   text-align: center;
+}
+
+.resume-document .contact-info--text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.resume-document .contact-info-text-line {
+  max-width: 100%;
+  margin-bottom: 0.25rem;
+}
+
+.resume-document .contact-info-text-line:last-child {
+  margin-bottom: 0;
 }
 
 .resume-document h2 {
@@ -38,7 +56,7 @@
   color: #000;
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--cv-theme-color, #000);
 }
 
 .resume-document h3 {
@@ -46,6 +64,28 @@
   font-weight: bold;
   color: #000000;
   margin-bottom: 0.25rem;
+}
+
+.resume-document .experience-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.resume-document .experience-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.resume-document .experience-date {
+  font-size: var(--cv-date-size, inherit);
+  font-weight: var(--cv-date-weight, 400);
+  color: #000;
+  flex-shrink: 0;
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .resume-document h4 {
@@ -79,4 +119,3 @@
   font-size: inherit;
   color: inherit;
 }
-

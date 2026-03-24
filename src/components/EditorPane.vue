@@ -699,7 +699,7 @@ const toggleLinkSyntax = () => {
 }
 
 const insertDateSyntax = () => {
-  insertWrappedSyntax('[', ']')
+  insertWrappedSyntax('[', ']', 'YYYY.MM - YYYY.MM')
 }
 
 const insertEmphasisSyntax = () => {

@@ -174,15 +174,40 @@ const buildPreviewStyles = (cvStyle: ResumeStyle): string => `
   .resume-document h2 {
     font-size: ${cvStyle.h2Size}px !important;
     color: ${cvStyle.themeColor} !important;
+    border-bottom-color: ${cvStyle.themeColor} !important;
+    border-left-color: ${cvStyle.themeColor} !important;
   }
   .resume-document h3 {
     font-size: ${cvStyle.h3Size}px !important;
     color: ${cvStyle.themeColor} !important;
   }
+  .resume-document .experience-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .resume-document h3.experience-line {
+    align-items: flex-end;
+  }
+  .resume-document .experience-title {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .resume-document .experience-date {
+    font-size: var(--cv-date-size, inherit);
+    font-weight: var(--cv-date-weight, inherit);
+    flex-shrink: 0;
+    margin-left: auto;
+    text-align: right;
+    white-space: nowrap;
+  }
   .resume-document p,
   .resume-document ul,
   .resume-document ol,
   .resume-document .job-intention + p,
+  .resume-document .contact-info--text,
+  .resume-document .contact-info-text-line,
   .resume-document .contact-info--icon,
   .resume-document .contact-info-item {
     font-size: var(--cv-font-size) !important;
