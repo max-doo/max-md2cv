@@ -448,5 +448,24 @@ export function enhanceResumeHtml(rawHtml: string, styleConfig: ResumeStyle, tem
     return renderExperienceLine(finalTag, finalAttrs, titleHtml, dateText)
   })
 
+  // DOM-based fallback: ensure all h2 elements have section classes
+  // Catches cases where the regex fails after DOM roundtrip in enhanceContactInfo
+  if (typeof document !== 'undefined') {
+    const sectionContainer = document.createElement('div')
+    sectionContainer.innerHTML = html
+    let patched = false
+    sectionContainer.querySelectorAll('h2').forEach((h2) => {
+      const hasSection = Array.from(h2.classList).some((c) => c.startsWith('section-'))
+      if (hasSection) return
+      const plainText = (h2.textContent ?? '').trim()
+      const sectionDef = resolveSectionType(plainText)
+      h2.classList.add(sectionDef ? `section-${sectionDef.key}` : 'section-default')
+      patched = true
+    })
+    if (patched) {
+      html = sectionContainer.innerHTML
+    }
+  }
+
   return html
 }

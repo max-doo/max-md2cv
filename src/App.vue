@@ -5,6 +5,9 @@ import PreviewPane from './components/PreviewPane.vue'
 import Sidebar from './components/Sidebar.vue'
 import { useResumeStore } from './stores/resume'
 
+import logo from './assets/logo.png'
+import welcomeBg from './source/welcome-bg.png'
+
 const store = useResumeStore()
 </script>
 
@@ -13,16 +16,21 @@ const store = useResumeStore()
     
     <!-- Workspace Selection Overlay -->
     <transition name="fade-overlay">
-      <div v-if="store.shouldShowWorkspaceDialog" class="absolute inset-0 z-[100] flex items-center justify-center bg-surface/10 backdrop-blur-xl">
-        <div class="max-w-md w-full p-12 card-soft shadow-ambient text-center flex flex-col items-center gap-8 border border-primary/10 animate-in fade-in zoom-in duration-500">
-           <div class="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
-             <span class="material-symbols-outlined text-4xl">folder_managed</span>
+      <div 
+        v-if="store.shouldShowWorkspaceDialog" 
+        class="absolute inset-0 z-[100] flex items-center justify-center bg-cover bg-center bg-no-repeat"
+        :style="{ backgroundImage: `url(${welcomeBg})` }"
+      >
+        <div class="relative max-w-md w-full p-12 text-center flex flex-col items-center gap-8 rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.25)] border border-white/50 animate-in fade-in zoom-in duration-700" 
+             style="background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);">
+           <div class="w-24 h-24 flex items-center justify-center">
+             <img :src="logo" alt="Logo" class="w-20 h-20 object-contain drop-shadow-sm" />
            </div>
            
            <div class="space-y-2">
-             <h2 class="text-2xl font-bold text-on-surface tracking-tight">开启你的简历编辑之旅</h2>
+             <h2 class="text-2xl font-bold text-on-surface tracking-tight">小简帮你开启简历编辑之旅</h2>
              <p class="text-on-surface-variant text-sm leading-relaxed px-4">
-               欢迎使用 Max-MD2CV。在开始编辑之前，请选择一个文件夹作为你的简历工作空间。
+               请选择一个文件夹作为你的简历工作空间
              </p>
            </div>
 

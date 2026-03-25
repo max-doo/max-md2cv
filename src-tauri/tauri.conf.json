@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "小简-简历编辑器",
+  "productName": "小简-MD2CV简历工作台",
   "version": "0.1.0",
   "identifier": "com.dmx.max-md2cv-app",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "小简-简历编辑器",
+        "title": "小简-MD2CV简历工作台",
         "width": 1200,
         "height": 800,
         "minWidth": 1200,
@@ -26,7 +26,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis"],
     "resources": {
       "../src/assets/templates/*.css": "templates/"
     },
@@ -36,6 +36,12 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "nsis": {
+        "displayLanguageSelector": false,
+        "installMode": "perMachine"
+      }
+    }
   }
 }
