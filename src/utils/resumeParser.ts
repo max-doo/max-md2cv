@@ -220,46 +220,15 @@ function parseContactFields(rawText: string): ContactField[] {
   return items
 }
 
-function renderBootstrapIcon(paths: Array<{ d: string; fillRule?: 'evenodd' }>): string {
-  return `<svg viewBox="0 0 16 16" aria-hidden="true">${paths
-    .map((path) => `<path fill="currentColor"${path.fillRule ? ` fill-rule="${path.fillRule}"` : ''} d="${path.d}"></path>`)
-    .join('')}</svg>`
-}
-
-function renderMaterialIcon(name: string): string {
-  return `<span class="material-symbols-outlined" aria-hidden="true">${name}</span>`
-}
-
-function renderContactIcon(type: ContactFieldType): string {
-  switch (type) {
-    case 'phone':
-      return renderMaterialIcon('call')
-    case 'email':
-      return renderMaterialIcon('mail')
-    case 'github':
-      return renderBootstrapIcon([
-        {
-          d: 'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8',
-        },
-      ])
-    case 'location':
-      return renderMaterialIcon('location_on')
-    case 'age':
-      return renderMaterialIcon('cake')
-    case 'website':
-      return renderMaterialIcon('link_2')
-    case 'wechat':
-      return renderBootstrapIcon([
-        {
-          d: 'M11.176 14.429c-2.665 0-4.826-1.8-4.826-4.018 0-2.22 2.159-4.02 4.824-4.02S16 8.191 16 10.411c0 1.21-.65 2.301-1.666 3.036a.32.32 0 0 0-.12.366l.218.81a.6.6 0 0 1 .029.117.166.166 0 0 1-.162.162.2.2 0 0 1-.092-.03l-1.057-.61a.5.5 0 0 0-.256-.074.5.5 0 0 0-.142.021 5.7 5.7 0 0 1-1.576.22M9.064 9.542a.647.647 0 1 0 .557-1 .645.645 0 0 0-.646.647.6.6 0 0 0 .09.353Zm3.232.001a.646.646 0 1 0 .546-1 .645.645 0 0 0-.644.644.63.63 0 0 0 .098.356',
-        },
-        {
-          d: 'M0 6.826c0 1.455.781 2.765 2.001 3.656a.385.385 0 0 1 .143.439l-.161.6-.1.373a.5.5 0 0 0-.032.14.19.19 0 0 0 .193.193q.06 0 .111-.029l1.268-.733a.6.6 0 0 1 .308-.088q.088 0 .171.025a6.8 6.8 0 0 0 1.625.26 4.5 4.5 0 0 1-.177-1.251c0-2.936 2.785-5.02 5.824-5.02l.15.002C10.587 3.429 8.392 2 5.796 2 2.596 2 0 4.16 0 6.826m4.632-1.555a.77.77 0 1 1-1.54 0 .77.77 0 0 1 1.54 0m3.875 0a.77.77 0 1 1-1.54 0 .77.77 0 0 1 1.54 0',
-        },
-      ])
-    case 'experience':
-      return renderMaterialIcon('work')
-  }
+const CONTACT_ICON_MAP: Record<ContactFieldType, string> = {
+  phone: 'call',
+  email: 'mail',
+  github: 'github',
+  location: 'location_on',
+  age: 'cake',
+  website: 'link_2',
+  wechat: 'wechat',
+  experience: 'work',
 }
 
 function renderContactField(field: ContactField): string {
@@ -280,12 +249,7 @@ function renderContactField(field: ContactField): string {
     valueHtml = `<a class="contact-info-value contact-info-link" href="${safeHref}" target="_blank" rel="noopener noreferrer">${safeValue}</a>`
   }
 
-  return `
-    <span class="contact-info-item contact-info-item--${field.type}">
-      <span class="contact-info-icon" aria-hidden="true">${renderContactIcon(field.type)}</span>
-      ${valueHtml}
-    </span>
-  `.trim()
+  return `<span class="contact-info-item contact-info-item--${field.type}" data-icon="${CONTACT_ICON_MAP[field.type]}">${valueHtml}</span>`
 }
 
 function enhanceModernContactInfo(html: string): string {
@@ -311,7 +275,7 @@ function collectContactParagraphs(jobIntentionElement: Element): HTMLParagraphEl
     const paragraph = current as HTMLParagraphElement
     const parsedFields = parseContactFields(paragraph.innerHTML)
 
-    if (parsedFields.length === 0) {
+    if (parsedFields.length < 2) {
       break
     }
 
@@ -344,7 +308,9 @@ function enhanceContactInfo(html: string, styleConfig: ResumeStyle, _templateId?
 
   const isIconMode = styleConfig.personalInfoMode === 'icon'
 
-  container.querySelectorAll('p.job-intention').forEach((jobIntentionElement) => {
+  const jobIntentions = container.querySelectorAll('p.job-intention')
+
+  jobIntentions.forEach((jobIntentionElement) => {
     const paragraphs = collectContactParagraphs(jobIntentionElement)
     if (paragraphs.length === 0) {
       return
@@ -355,7 +321,8 @@ function enhanceContactInfo(html: string, styleConfig: ResumeStyle, _templateId?
         return renderTextContactInfo(paragraphs)
       }
 
-      const fields = parseContactFields(paragraphs.map((paragraph) => paragraph.innerHTML).join('\n'))
+      const joinedHtml = paragraphs.map((paragraph) => paragraph.innerHTML).join('\n')
+      const fields = parseContactFields(joinedHtml)
       if (fields.length < 2) {
         return renderTextContactInfo(paragraphs)
       }
@@ -371,7 +338,13 @@ function enhanceContactInfo(html: string, styleConfig: ResumeStyle, _templateId?
       return
     }
 
-    paragraphs[0].before(replacementElement)
+    // Wrap job-intention + contact-info in a personal-header container
+    // to prevent Paged.js from breaking their sibling layout relationship
+    const headerWrapper = document.createElement('div')
+    headerWrapper.className = 'personal-header'
+    jobIntentionElement.before(headerWrapper)
+    headerWrapper.appendChild(jobIntentionElement)
+    headerWrapper.appendChild(replacementElement)
     paragraphs.forEach((paragraph) => paragraph.remove())
   })
 
@@ -407,7 +380,7 @@ export function enhanceResumeHtml(rawHtml: string, styleConfig: ResumeStyle, tem
           .filter(Boolean)
         const itemsHtml = segments
           .map((seg: string) => `<span class="job-intention-item">${seg}</span>`)
-          .join('<span class="job-intention-sep">|</span>')
+          .join('<span class="job-intention-sep"> | </span>')
         return `<p class="job-intention" style="color: ${styleConfig.themeColor};">${itemsHtml}</p>`
       }
       return `<p class="job-intention" style="color: ${styleConfig.themeColor};">${text}</p>`
@@ -447,25 +420,6 @@ export function enhanceResumeHtml(rawHtml: string, styleConfig: ResumeStyle, tem
 
     return renderExperienceLine(finalTag, finalAttrs, titleHtml, dateText)
   })
-
-  // DOM-based fallback: ensure all h2 elements have section classes
-  // Catches cases where the regex fails after DOM roundtrip in enhanceContactInfo
-  if (typeof document !== 'undefined') {
-    const sectionContainer = document.createElement('div')
-    sectionContainer.innerHTML = html
-    let patched = false
-    sectionContainer.querySelectorAll('h2').forEach((h2) => {
-      const hasSection = Array.from(h2.classList).some((c) => c.startsWith('section-'))
-      if (hasSection) return
-      const plainText = (h2.textContent ?? '').trim()
-      const sectionDef = resolveSectionType(plainText)
-      h2.classList.add(sectionDef ? `section-${sectionDef.key}` : 'section-default')
-      patched = true
-    })
-    if (patched) {
-      html = sectionContainer.innerHTML
-    }
-  }
 
   return html
 }

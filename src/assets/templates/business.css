@@ -34,6 +34,7 @@
   text-transform: none;
   display: flex;
   align-items: center;
+  padding-right: 0 !important;
 }
 
 .resume-document h2::before {
@@ -166,37 +167,35 @@
   color: inherit;
 }
 
+/* Personal Header Container - Unified flow */
+.resume-document .personal-header {
+  display: block;
+}
+
 /* Job Intention Title */
 .resume-document .job-intention {
-  font-weight: normal;
-  font-size: 15.2px;
-  line-height: 2;
-  margin-bottom: 12px;
-  display: inline-block;
-  vertical-align: top;
-  width: 30%;
-  padding-right: 0 !important;
+  font-weight: bold;
+  font-size: 16.8px;
+  line-height: 1.6;
+  margin-bottom: 8px;
   color: var(--cv-theme-color) !important;
 }
 
 .resume-document .job-intention .job-intention-item {
-  display: block;
-  line-height: 1.8;
-}
-
-.resume-document .job-intention .job-intention-item:first-child {
-  font-weight: normal;
+  display: inline;
 }
 
 .resume-document .job-intention .job-intention-sep {
-  display: none;
+  display: inline;
+  margin: 0 8px;
+  color: #ccc;
 }
 
 /* Detailed Info block */
 .resume-document .job-intention+p {
-  font-size: 14.4px;
-  line-height: 1.8;
-  margin-bottom: 12px;
+  font-size: 13.6px;
+  line-height: 1.6;
+  margin-bottom: 24px;
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
@@ -205,9 +204,6 @@
 .resume-document .contact-info--text {
   font-size: 14.4px;
   line-height: 1.8;
-  display: inline-block;
-  vertical-align: top;
-  width: 69%;
   margin-bottom: 12px;
   padding-right: var(--cv-photo-reserve);
   box-sizing: border-box;
@@ -223,17 +219,13 @@
 }
 
 .resume-document .contact-info--icon {
-  font-size: 14.4px;
-  line-height: 1.8;
+  font-size: 13.6px;
+  line-height: 1.6;
   margin-bottom: 24px;
-  display: inline-grid;
-  grid-template-columns: 1fr 1fr;
-  row-gap: 9.6px;
-  column-gap: 16px;
-  vertical-align: top;
-  width: 69%;
-  padding-right: var(--cv-photo-reserve);
-  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9.6px 16px;
 }
 
 .resume-document .contact-info-item {
@@ -243,26 +235,14 @@
   line-height: 1.6;
 }
 
+.resume-document .contact-info-item::before {
+  background-color: #222222 !important;
+}
+
 .resume-document .contact-info-link,
 .resume-document .contact-info-link:visited {
   color: inherit;
   text-decoration: underline;
   text-decoration-thickness: 0.06em;
   text-underline-offset: 0.14em;
-}
-
-.resume-document .contact-info-icon {
-  width: 15.2px;
-  height: 15.2px;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--cv-theme-color);
-}
-
-.resume-document .contact-info-icon svg {
-  width: 100%;
-  height: 100%;
-  display: block;
 }
