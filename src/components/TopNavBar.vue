@@ -106,7 +106,7 @@ const handleExport = async () => {
           }
         </style>
       </head>
-      <body>
+      <body class="resume-document">
         <div class="pagedjs-wrapper">
           ${exportedPagesContainer.outerHTML}
         </div>
