@@ -20,7 +20,7 @@ Max-MD2CV（小简）是依托现代前端架构、Rust 桌面环境打造的纯
 拒绝“排版变形”带来的挫败感。小简的导出功能致力于做到“屏幕上看到什么，导出的文件就是什么”。它能忠实地输出高保真、文本可复制的 PDF 文件，确保 HR 或面试官在打开简历的那一刻，看到的就是你精心打磨的最终形态。
 
 ### 🎨 模板臻选，内置三款精心设计样式
-*   **🏆 商务专业 (Business)**：稳重蓝调主题，采用 `Material Symbols` 圆环图标装饰标题，Header 支持左右双栏布局，专为正式商务与大厂求职打造。
+*   **🏆 商务专业 (Business)**：稳重蓝调主题，采用 `Material Symbols` 圆环图标装饰标题，专为正式商务与大厂求职打造。
 *   **🖋️ 传统经典 (Classic)**：衬线体美学，内容平铺居中对齐，舍弃图标干扰，极致简约黑白，适配学术、法律及严肃传统行业投递。
 *   **⚡ 现代简约 (Modern)**：默认模板，采用小简标志性的优雅的紫色主题，通过侧边色块强调标题，搭配轻量化图标，在屏幕阅读与 A4 打印间取得完美平衡。
 
@@ -47,26 +47,46 @@ Max-MD2CV（小简）是依托现代前端架构、Rust 桌面环境打造的纯
 
 ```text
 max-md2cv/
-├── src-tauri/             # Rust 后端与 Tauri 配置层
-│   ├── src/               # Rust 源文件 (包含无头浏览器导出命令: lib.rs)
-│   ├── tauri.conf.json    # Tauri 本地权限与窗口配置
-│   └── Cargo.toml         # Rust 包管理配置
-├── src/                   # Vue 3 前端代码层
-│   ├── assets/            # Tailwind v4 样式映射与模板 CSS (`templates/`)
-│   ├── components/        # 核心交互组件
-│   │   ├── EditorPane.vue # CodeMirror 6 Markdown 编辑器
-│   │   ├── PreviewPane.vue# Paged.js A4 打印预览容器
-│   │   ├── Sidebar.vue    # 工作空间与文件浏览器侧边栏
-│   │   └── TopNavBar.vue  # 样式控制与导出面板
-│   ├── stores/            # Pinia 全局状态 (含工作空间逻辑: resume.ts)
-│   ├── App.vue            # 根布局与工作空间初始化交互
-│   ├── main.ts            # Vue 应用入口与环境初始化
-│   └── vite-env.d.ts      # TypeScript 类型声明补丁
-├── index.html             # 承载 Google Fonts (Manrope) 及 Material Symbols
-├── package.json           # Node 依赖清单与脚本
-├── vite.config.ts         # Vite 与自动按需注册组件 (unplugin) 配置
-├── task.md                # (Dev) 迭代进度追踪与任务拆解
-└── README.md              # 项目文档说明
+├── src-tauri/                         # Rust 后端与 Tauri 桌面壳
+│   ├── src/                           # Tauri 命令与应用入口
+│   │   ├── lib.rs
+│   │   └── main.rs
+│   ├── capabilities/                 # Tauri 权限声明
+│   ├── gen/                          # Tauri 生成的 schema 文件
+│   ├── icons/                        # 应用图标资源
+│   ├── templates/                    # 安装器模板
+│   ├── build.rs                      # Rust 构建脚本
+│   ├── Cargo.toml                    # Rust 包配置
+│   └── tauri.conf.json               # Tauri 窗口与打包配置
+├── src/                               # Vue 3 前端源码
+│   ├── assets/                        # 样式、字体与内置模板资源
+│   │   ├── fonts/
+│   │   ├── templates/
+│   │   └── tailwind.css
+│   ├── components/                    # 页面主组件与分层子组件
+│   │   ├── editor/
+│   │   ├── preview/
+│   │   ├── shared/
+│   │   ├── sidebar/
+│   │   ├── EditorPane.vue
+│   │   ├── PreviewPane.vue
+│   │   ├── Sidebar.vue
+│   │   └── TopNavBar.vue
+│   ├── source/                        # 前端静态图片资源
+│   ├── stores/                        # Pinia 状态管理
+│   │   └── resume.ts
+│   ├── utils/                         # Markdown、分页、导出相关工具
+│   ├── App.vue
+│   ├── main.ts
+│   └── vite-env.d.ts
+├── public/                            # Vite 公共静态资源
+├── design/                            # 设计稿与设计系统文档
+├── doc/                               # 项目说明与打包/模板文档
+├── index.html                         # 应用 HTML 入口
+├── package.json                       # Node 依赖与脚本
+├── tsconfig.json                      # TypeScript 配置
+├── vite.config.ts                     # Vite 配置
+└── README.md                          # 项目文档
 ```
 
 ## 🚀 启动指引
