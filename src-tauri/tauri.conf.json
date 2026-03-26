@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "MAX-MD2CV",
+        "title": "小简-MD2CV简历工作台",
         "width": 1200,
         "height": 800,
         "minWidth": 1200,
@@ -40,7 +40,9 @@
     "windows": {
       "nsis": {
         "displayLanguageSelector": false,
-        "installMode": "perMachine"
+        "installMode": "perMachine",
+        "installerHooks": "./installer-hooks.nsi",
+        "languages": ["SimpChinese", "English"]
       }
     }
   }

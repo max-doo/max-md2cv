@@ -35,3 +35,7 @@ components.d.ts
 /tmp
 *.temp
 max_md2cv_temp.html
+
+# AGENTS
+
+.claude
