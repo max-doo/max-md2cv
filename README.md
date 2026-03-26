@@ -1,6 +1,6 @@
 # 小简-MD2CV简历工作台
 
-[![GitHub release downloads](https://img.shields.io/github/downloads/max-doo/max-md2cv/latest/total?label=%E6%9C%80%E6%96%B0%E7%89%88%E4%B8%8B%E8%BD%BD%E9%87%8F)](https://github.com/max-doo/max-md2cv/releases/latest)
+[![GitHub tag](https://img.shields.io/github/v/tag/max-doo/max-md2cv?label=%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC&sort=semver)](https://github.com/max-doo/max-md2cv/tags)
 [![GitHub all releases](https://img.shields.io/github/downloads/max-doo/max-md2cv/total?label=%E7%B4%AF%E8%AE%A1%E4%B8%8B%E8%BD%BD%E9%87%8F)](https://github.com/max-doo/max-md2cv/releases)
 
 Max-MD2CV（小简）是依托现代前端架构、Rust 桌面环境打造的纯本地桌面工具，作为轻量化、极速且极具设计感的**基于Markdown的简历编辑+PDF导出+管理工作台**，为求职者提供无缝的「所见即所得」简历编辑与排版体验。产品全程仅需编辑 Markdown 纯文本，无需耗费精力处理复杂排版调整；解决求职海投场景下，内容微调引发布局错位、简历副本杂乱、版本管理混乱的痛点，彻底消除格式焦虑，让求职者回归核心 —— 专注打磨自身真实经历与能力，而非钻研排版软件的使用技巧。
