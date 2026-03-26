@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "MAX-MD2CV",
+  "productName": "小简-MD2CV简历工作台",
   "version": "0.1.1",
   "identifier": "com.dmx.max-md2cv-app",
   "build": {
@@ -39,10 +39,10 @@
     ],
     "windows": {
       "nsis": {
-        "displayLanguageSelector": false,
+        "displayLanguageSelector": true,
         "installMode": "perMachine",
-        "installerHooks": "./installer-hooks.nsi",
-        "languages": ["SimpChinese", "English"]
+        "languages": ["SimpChinese", "English"],
+        "template": "./templates/installer.nsi"
       }
     }
   }

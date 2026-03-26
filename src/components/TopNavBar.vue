@@ -6,6 +6,7 @@ import { join } from '@tauri-apps/api/path'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import 'element-plus/es/components/message/style/css'
 import 'element-plus/es/components/message-box/style/css'
+import { buildSelfContainedExportStyles } from '../utils/exportStyles'
 import { getInlinePingFangFontFaceCss } from '../utils/fontAssets'
 
 const store = useResumeStore()
@@ -66,10 +67,7 @@ const handleExport = async () => {
       throw new Error('预览内容尚未准备好，请稍后重试。')
     }
 
-    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-      .map((element) => element.outerHTML)
-      .join('\n')
-
+    const styles = await buildSelfContainedExportStyles()
     const inlinePingFangFontFaceCss = await getInlinePingFangFontFaceCss()
 
     const exportedPagesContainer = pagesContainer.cloneNode(true) as HTMLElement

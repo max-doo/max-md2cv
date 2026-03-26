@@ -121,3 +121,9 @@
   font-size: inherit;
   color: inherit;
 }
+
+.resume-document a,
+.resume-document .contact-info-link {
+  color: inherit;
+  text-decoration: none;
+}
