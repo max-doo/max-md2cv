@@ -35,6 +35,32 @@ const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null;
 };
 
+const hasValidCssColor = (value: string) => {
+  if (typeof CSS === "undefined" || typeof CSS.supports !== "function") {
+    return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(value.trim());
+  }
+
+  return CSS.supports("color", value.trim());
+};
+
+const normalizeResumeStyle = (
+  style: Partial<ResumeStyle> | null | undefined,
+  templateId: string,
+): ResumeStyle => {
+  const fallback = getDefaultResumeStyle(templateId);
+  const normalized = cloneResumeStyle(style ?? fallback);
+
+  if (!normalized.fontFamily?.trim()) {
+    normalized.fontFamily = fallback.fontFamily;
+  }
+
+  if (!normalized.themeColor?.trim() || !hasValidCssColor(normalized.themeColor)) {
+    normalized.themeColor = fallback.themeColor;
+  }
+
+  return normalized;
+};
+
 const migrateDraft = (raw: unknown): WebPlaygroundDraft | null => {
   if (!isRecord(raw)) {
     return null;
@@ -50,10 +76,11 @@ const migrateDraft = (raw: unknown): WebPlaygroundDraft | null => {
     markdown:
       typeof raw.markdown === "string" ? raw.markdown : DEFAULT_RESUME_MARKDOWN,
     templateId,
-    resumeStyle: cloneResumeStyle(
+    resumeStyle: normalizeResumeStyle(
       isRecord(raw.resumeStyle)
         ? (raw.resumeStyle as Partial<ResumeStyle>)
         : getDefaultResumeStyle(templateId),
+      templateId,
     ),
     photoBase64:
       typeof raw.photoBase64 === "string" ? raw.photoBase64 : null,
@@ -140,14 +167,14 @@ export const usePlaygroundStore = defineStore("web-playground", () => {
     }
 
     templateId.value = nextTemplateId;
-    resumeStyle.value = getDefaultResumeStyle(nextTemplateId);
+    resumeStyle.value = normalizeResumeStyle(undefined, nextTemplateId);
   };
 
   const patchResumeStyle = (patch: Partial<ResumeStyle>) => {
-    resumeStyle.value = cloneResumeStyle({
+    resumeStyle.value = normalizeResumeStyle({
       ...resumeStyle.value,
       ...patch,
-    });
+    }, templateId.value);
   };
 
   const updateMarkdown = (value: string) => {

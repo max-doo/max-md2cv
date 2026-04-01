@@ -27,7 +27,7 @@ const handleReorder = async (payload: { nodeId: string; targetIndex: number; par
 
     <div v-else class="flex h-full min-h-0 flex-col">
       <div class="shrink-0 px-1 pb-3">
-        <h3 class="truncate text-center text-base font-semibold text-on-surface">{{ store.activeFileName }}</h3>
+        <h3 class="sidebar-document-title truncate text-center text-base font-semibold text-on-surface">{{ store.activeFileName }}</h3>
       </div>
 
       <section

@@ -1,6 +1,8 @@
 import { computed, ref } from "vue";
-import { defineStore } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
+import { ElMessage } from "element-plus";
 import { usePlaygroundStore } from "./playground";
+import { buildPagedExportDocumentHtml } from "@desktop/utils/pagedExport";
 import {
   parseMarkdownOutline,
   reorderOutlineSiblings,
@@ -38,8 +40,33 @@ const buildDisplayNameFromMarkdown = (markdown: string) => {
   return titleMatch?.[1]?.trim() || "Web Playground";
 };
 
+const WEB_PRINT_SCRIPT = `
+  <script>
+    window.addEventListener('load', () => {
+      window.setTimeout(() => window.print(), 180);
+    });
+    window.addEventListener('afterprint', () => {
+      window.close();
+    });
+  </script>
+`;
+
+const getPreviewPagesContainer = () => {
+  return document.querySelector(".pagedjs_pages");
+};
+
+const buildWebPrintHtml = async (documentTitle: string, pagesContainer: HTMLElement) => {
+  const htmlContent = await buildPagedExportDocumentHtml({
+    documentTitle,
+    pagesContainer,
+  });
+
+  return htmlContent.replace("</body>", `${WEB_PRINT_SCRIPT}</body>`);
+};
+
 export const useResumeStore = defineStore("resume", () => {
   const playground = usePlaygroundStore();
+  const { photoBase64, resumeStyle } = storeToRefs(playground);
 
   if (!playground.hydrated) {
     playground.hydrate();
@@ -84,7 +111,7 @@ export const useResumeStore = defineStore("resume", () => {
   const outlineTree = computed<ResumeOutlineNode[]>(() => outlineResult.value.tree);
 
   const currentPhotoPath = computed(() => {
-    return playground.photoBase64 ? "web-photo" : null;
+    return photoBase64.value ? "web-photo" : null;
   });
 
   const loadTemplates = async () => {
@@ -127,7 +154,28 @@ export const useResumeStore = defineStore("resume", () => {
   const exportCurrentPdf = async () => {
     isExporting.value = true;
     try {
-      window.print();
+      const pagesContainer = getPreviewPagesContainer();
+      if (!(pagesContainer instanceof HTMLElement)) {
+        throw new Error("预览内容还在生成中，请稍后再试");
+      }
+
+      const documentTitle = activeFileName.value || "Web Playground";
+      const printWindow = window.open("", "_blank");
+
+      if (!printWindow) {
+        throw new Error("浏览器拦截了打印窗口，请允许弹窗后重试");
+      }
+
+      const htmlContent = await buildWebPrintHtml(documentTitle, pagesContainer);
+      printWindow.document.open();
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.focus();
+    } catch (error) {
+      console.error("Web PDF export failed:", error);
+      ElMessage.error(
+        error instanceof Error ? error.message : "导出失败，请稍后重试",
+      );
     } finally {
       isExporting.value = false;
     }
@@ -210,7 +258,7 @@ export const useResumeStore = defineStore("resume", () => {
     activeTemplate,
     isExporting,
     templatesLoaded,
-    resumeStyle: playground.resumeStyle,
+    resumeStyle,
     renderProfilesByFile: computed(() => ({})),
     workspacePath: computed(() => null),
     fileList,
@@ -228,7 +276,7 @@ export const useResumeStore = defineStore("resume", () => {
     isTemplateDialogVisible,
     currentPhotoPath,
     editorJumpRequest,
-    photoBase64: playground.photoBase64,
+    photoBase64,
     loadTemplates,
     saveCurrentTemplate,
     exportCurrentPdf,

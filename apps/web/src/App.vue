@@ -11,10 +11,13 @@ void store.loadTemplates();
 </script>
 
 <template>
-  <div class="bg-surface text-on-surface antialiased font-['Manrope'] w-full h-screen relative flex overflow-hidden">
-    <Sidebar mode="outline-only" />
+  <div
+    class="web-app-shell bg-surface text-on-surface antialiased font-['Manrope'] w-full h-screen relative flex overflow-hidden p-4"
+    :class="store.isSidebarOpen ? 'gap-4' : ''"
+  >
+    <Sidebar mode="outline-only" class="web-sidebar-shell" />
 
-    <div class="flex-1 flex flex-col h-full overflow-hidden bg-surface relative transition-all duration-700">
+    <div class="web-main-shell flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-surface relative transition-all duration-700">
       <WebTopNavBar />
 
       <main class="flex-1 flex min-w-0 overflow-hidden px-6 pb-6 pt-2 gap-4">

@@ -93,7 +93,7 @@ const handleThemeColorHexInput = (event: Event) => {
         />
       </SoftSelect>
 
-      <el-popover placement="bottom" trigger="click" :width="240">
+      <el-popover placement="bottom" trigger="click" :width="240" popper-class="preview-toolbar-popper preview-toolbar-theme-popper">
         <template #reference>
           <div class="preview-toolbar-icon cursor-pointer" title="主题色">
             <div
@@ -103,7 +103,7 @@ const handleThemeColorHexInput = (event: Event) => {
           </div>
         </template>
 
-        <div class="flex flex-col gap-3 font-sans">
+        <div class="preview-toolbar-panel flex flex-col gap-3 font-sans">
           <div class="flex items-center justify-between text-xs font-bold text-on-surface-variant">
             <span>主题颜色</span>
           </div>
@@ -152,12 +152,12 @@ const handleThemeColorHexInput = (event: Event) => {
         </div>
       </el-popover>
 
-      <el-dropdown trigger="click" :hide-on-click="false">
+      <el-dropdown trigger="click" :hide-on-click="false" popper-class="soft-dropdown-popper preview-toolbar-popper">
         <button class="preview-toolbar-icon cursor-pointer" title="字号">
           <span class="material-symbols-outlined text-[14px]">format_size</span>
         </button>
         <template #dropdown>
-          <div class="w-64 rounded-xl p-4 font-sans shadow-ambient">
+          <div class="preview-toolbar-panel w-64 rounded-xl p-4 font-sans shadow-ambient">
             <div class="mb-2 flex justify-between text-xs font-bold text-on-surface-variant">
               <span>H1 标题大小</span>
               <span class="text-primary">{{ Math.round(store.resumeStyle.h1Size) }}px</span>
@@ -217,12 +217,12 @@ const handleThemeColorHexInput = (event: Event) => {
         </template>
       </el-dropdown>
 
-      <el-dropdown trigger="click" :hide-on-click="false">
+      <el-dropdown trigger="click" :hide-on-click="false" popper-class="soft-dropdown-popper preview-toolbar-popper">
         <button class="preview-toolbar-icon cursor-pointer" title="间距">
           <span class="material-symbols-outlined text-[14px]">format_line_spacing</span>
         </button>
         <template #dropdown>
-          <div class="w-60 rounded-xl p-4 font-sans shadow-ambient">
+          <div class="preview-toolbar-panel w-60 rounded-xl p-4 font-sans shadow-ambient">
             <div class="mb-2 flex justify-between text-xs font-bold text-on-surface-variant">
               <span>行高</span>
               <span class="text-primary">{{ store.resumeStyle.lineHeight }}</span>

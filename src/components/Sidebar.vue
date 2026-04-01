@@ -99,11 +99,11 @@ const handleCreateFile = async () => {
 
 <template>
   <aside
-    class="relative z-20 flex h-full flex-shrink-0 flex-col overflow-hidden bg-surface-container-lowest transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)]"
+    class="sidebar-shell relative z-20 flex h-full flex-shrink-0 flex-col overflow-hidden bg-surface-container-lowest transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)]"
     :style="sidebarInlineStyle"
   >
-    <div class="absolute left-0 top-0 flex h-full w-80 flex-col font-['Manrope'] antialiased">
-      <div class="flex shrink-0 items-center gap-3 bg-surface-container-lowest px-4 py-5 pb-4">
+    <div class="sidebar-frame absolute left-0 top-0 flex h-full w-80 flex-col font-['Manrope'] antialiased">
+      <div class="sidebar-header flex shrink-0 items-center gap-3 bg-surface-container-lowest px-4 py-5 pb-4">
         <div class="min-w-0 flex-1">
           <div v-if="!isOutlineOnly" class="sidebar-segmented">
             <button
@@ -126,14 +126,14 @@ const handleCreateFile = async () => {
 
           <div
             v-else
-            class="flex h-11 items-center rounded-[1.35rem] bg-surface-container px-4 text-sm font-semibold text-on-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+            class="sidebar-outline-pill flex h-11 items-center rounded-[1.35rem] bg-surface-container px-4 text-sm font-semibold text-on-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
           >
             简历大纲
           </div>
         </div>
 
         <button
-          class="group flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-surface-variant"
+          class="sidebar-close-button group flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-surface-variant"
           @click="store.isSidebarOpen = false"
         >
           <span class="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-on-surface">close</span>

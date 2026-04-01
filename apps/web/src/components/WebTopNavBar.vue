@@ -1,27 +1,12 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { useResumeStore } from "@resume-store";
 
 const WEB_RELEASES_URL = "https://github.com/max-doo/max-md2cv/releases";
 const WEB_REPOSITORY_URL = "https://github.com/max-doo/max-md2cv";
+const PRODUCT_NAME = "小简-MD2CV简历工作台";
+const PRODUCT_TAGLINE = "Web Playground";
 
 const store = useResumeStore();
-
-const currentFileName = computed(() => {
-  return store.activeFileName ?? "";
-});
-
-const currentFileStatusLabel = computed(() => {
-  if (store.activeFileStatus === "missing") {
-    return "已删除";
-  }
-
-  if (store.activeFileStatus === "conflict") {
-    return "有冲突";
-  }
-
-  return "";
-});
 
 const handleExport = async () => {
   await store.exportCurrentPdf();
@@ -45,20 +30,18 @@ const handleExport = async () => {
           </span>
         </button>
 
-        <div v-if="currentFileName" class="flex min-w-0 flex-1 items-center gap-3">
-          <div
-            class="min-w-0 max-w-[20rem] truncate text-base font-semibold tracking-[0.02em] text-on-surface lg:max-w-[28rem]"
-            :title="currentFileName"
-          >
-            {{ currentFileName }}
+        <div class="flex min-w-0 flex-1 items-center gap-3">
+          <div class="min-w-0">
+            <div
+              class="truncate text-base font-semibold tracking-[0.02em] text-on-surface"
+              :title="PRODUCT_NAME"
+            >
+              {{ PRODUCT_NAME }}
+            </div>
+            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-on-surface-variant/70">
+              {{ PRODUCT_TAGLINE }}
+            </div>
           </div>
-
-          <span
-            v-if="currentFileStatusLabel"
-            class="rounded-full bg-error/10 px-2.5 py-1 text-xs font-semibold text-error"
-          >
-            {{ currentFileStatusLabel }}
-          </span>
         </div>
       </div>
 

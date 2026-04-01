@@ -479,7 +479,7 @@ watch(() => store.resumeStyle, () => {
 </script>
 
 <template>
-  <section class="flex flex-col card-soft ghost-border shadow-ambient overflow-hidden relative">
+  <section class="preview-pane-shell flex flex-col card-soft ghost-border shadow-ambient overflow-hidden relative">
     <!-- Preview Controls -->
     <PreviewToolbar :zoom-level="zoomLevel" @zoom-in="zoomIn" @zoom-out="zoomOut" />
 
@@ -490,7 +490,7 @@ watch(() => store.resumeStyle, () => {
     </div>
 
     <!-- Footer -->
-    <div class="h-10 shrink-0 flex items-center px-5 justify-between bg-surface-container-high/30 backdrop-blur-sm border-t border-outline-variant/10">
+    <div class="preview-footer h-10 shrink-0 flex items-center px-5 justify-between bg-surface-container-high/30 backdrop-blur-sm border-t border-outline-variant/10">
       <!-- Left: Reset -->
       <div class="flex items-center gap-3">
         <button
