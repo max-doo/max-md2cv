@@ -62,7 +62,7 @@ const handleExport = async () => {
       <div class="flex shrink-0 items-center gap-4">
         <button
           @click="handleExport"
-          :disabled="store.isExporting"
+          :disabled="store.isExporting || store.isPreviewRendering || !store.isPreviewReady"
           class="btn-primary shrink-0"
         >
           <span v-if="store.isExporting" class="material-symbols-outlined animate-spin text-base">refresh</span>

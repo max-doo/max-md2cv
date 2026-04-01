@@ -76,6 +76,8 @@ export const useResumeStore = defineStore("resume", () => {
     availableTemplates: ref<ResumeTemplate[]>([]),
     activeTemplate: ref(DEFAULT_TEMPLATE_ID),
     isExporting: ref(false),
+    isPreviewRendering: ref(false),
+    isPreviewReady: ref(false),
     templatesLoaded: ref(false),
     resumeStyle: ref<ResumeStyle>(createDefaultResumeStyle()),
     renderProfilesByFile: ref<Record<string, ResumeRenderProfile>>({}),
@@ -101,6 +103,8 @@ export const useResumeStore = defineStore("resume", () => {
     localMutationTimers: new Map<string, ReturnType<typeof setTimeout>>(),
     queuedWorkspacePaths: new Map<string, string>(),
     queuedWorkspaceRefreshTimer: null,
+    previewRenderPromise: null,
+    previewRenderToken: 0,
     workspaceChangedUnlisten: null,
     workspaceChangedListenerPromise: null,
     conflictPromptPromise: null,
@@ -111,6 +115,24 @@ export const useResumeStore = defineStore("resume", () => {
 
   const openTemplateDialog = () => {
     state.isTemplateDialogVisible.value = true;
+  };
+
+  const startPreviewRender = (promise: Promise<void>) => {
+    const token = ++runtime.previewRenderToken;
+    runtime.previewRenderPromise = promise;
+    state.isPreviewRendering.value = true;
+    state.isPreviewReady.value = false;
+    return token;
+  };
+
+  const finishPreviewRender = (token: number, isReady: boolean) => {
+    if (token !== runtime.previewRenderToken) {
+      return;
+    }
+
+    runtime.previewRenderPromise = null;
+    state.isPreviewRendering.value = false;
+    state.isPreviewReady.value = isReady;
   };
 
   const setLastOpenedPath = (path: string | null) => {
@@ -381,6 +403,8 @@ export const useResumeStore = defineStore("resume", () => {
     availableTemplates: state.availableTemplates,
     activeTemplate: state.activeTemplate,
     isExporting: state.isExporting,
+    isPreviewRendering: state.isPreviewRendering,
+    isPreviewReady: state.isPreviewReady,
     templatesLoaded: state.templatesLoaded,
     resumeStyle: state.resumeStyle,
     renderProfilesByFile: state.renderProfilesByFile,
@@ -430,6 +454,8 @@ export const useResumeStore = defineStore("resume", () => {
     moveOutlineNode,
     requestEditorJump,
     clearEditorJumpRequest,
+    startPreviewRender,
+    finishPreviewRender,
     photoBase64: state.photoBase64,
   };
 });

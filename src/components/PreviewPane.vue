@@ -15,6 +15,11 @@ const previewScrollContainer = ref<HTMLElement | null>(null)
 let paged: any = null
 let activeRenderPromise: Promise<void> | null = null
 let pendingRenderRequest: PreviewRenderRequest | null = null
+let renderDebounceTimer: ReturnType<typeof setTimeout> | null = null
+let pendingPreviewPromise: Promise<void> | null = null
+let resolvePendingPreviewPromise: (() => void) | null = null
+let pendingPreviewRenderToken: number | null = null
+let lastRenderSucceeded = false
 
 const waitForNextPaint = () =>
   new Promise<void>((resolve) => {
@@ -81,12 +86,38 @@ const createPreviewStagingContainer = () => {
   return stagingContainer
 }
 
+const beginPendingPreviewRender = () => {
+  if (pendingPreviewPromise && pendingPreviewRenderToken !== null) {
+    return pendingPreviewRenderToken
+  }
+
+  pendingPreviewPromise = new Promise<void>((resolve) => {
+    resolvePendingPreviewPromise = resolve
+  })
+  pendingPreviewRenderToken = store.startPreviewRender(pendingPreviewPromise)
+
+  return pendingPreviewRenderToken
+}
+
+const settlePendingPreviewRender = (token: number, isReady: boolean) => {
+  if (pendingPreviewRenderToken !== token) {
+    return
+  }
+
+  const resolve = resolvePendingPreviewPromise
+  pendingPreviewPromise = null
+  resolvePendingPreviewPromise = null
+  pendingPreviewRenderToken = null
+  resolve?.()
+  store.finishPreviewRender(token, isReady)
+}
+
 onMounted(async () => {
   if (!store.templatesLoaded) {
     await store.loadTemplates()
   }
   await waitForStablePreviewLayout()
-  debouncedRender(store.markdownContent)
+  queuePreviewRender(store.markdownContent)
 
   if (previewContainer.value) {
     previewContainer.value.addEventListener('click', (e) => {
@@ -348,7 +379,7 @@ const createPreviewRenderRequest = (markdownText: string): PreviewRenderRequest 
 }
 
 const renderPdfPreview = async (request: PreviewRenderRequest) => {
-  if (!previewContainer.value) return
+  if (!previewContainer.value) return false
 
   const scrollContainer = previewScrollContainer.value
   const preservedScrollTop = scrollContainer?.scrollTop ?? 0
@@ -421,7 +452,7 @@ const renderPdfPreview = async (request: PreviewRenderRequest) => {
 
     // Count rendered pages
     totalPages.value = previewContainer.value?.querySelectorAll('.pagedjs_page').length ?? 0
-    renderSucceeded = true
+    renderSucceeded = totalPages.value > 0
   } catch (err) {
     console.error('Paged.js rendering error:', err)
     totalPages.value = 0
@@ -446,6 +477,8 @@ const renderPdfPreview = async (request: PreviewRenderRequest) => {
       })
     }
   }
+
+  return renderSucceeded
 }
 
 const schedulePreviewRender = (markdownText: string) => {
@@ -460,11 +493,15 @@ const schedulePreviewRender = (markdownText: string) => {
   }
 
   activeRenderPromise = (async () => {
+    let latestRenderSucceeded = false
+
     while (pendingRenderRequest) {
       const request = pendingRenderRequest
       pendingRenderRequest = null
-      await renderPdfPreview(request)
+      latestRenderSucceeded = await renderPdfPreview(request)
     }
+
+    lastRenderSucceeded = latestRenderSucceeded
   })().finally(() => {
     activeRenderPromise = null
   })
@@ -472,29 +509,57 @@ const schedulePreviewRender = (markdownText: string) => {
   return activeRenderPromise
 }
 
-const debouncedRender = useDebounceFn((text: string) => {
-  schedulePreviewRender(text)
-}, 500)
+const queuePreviewRender = (text: string) => {
+  if (!store.templatesLoaded) {
+    return
+  }
+
+  const token = beginPendingPreviewRender()
+
+  if (renderDebounceTimer) {
+    clearTimeout(renderDebounceTimer)
+  }
+
+  renderDebounceTimer = setTimeout(() => {
+    renderDebounceTimer = null
+    const renderPromise = schedulePreviewRender(text)
+
+    if (!renderPromise) {
+      settlePendingPreviewRender(token, false)
+      return
+    }
+
+    void renderPromise.finally(() => {
+      queueMicrotask(() => {
+        if (renderDebounceTimer || activeRenderPromise || pendingRenderRequest) {
+          return
+        }
+
+        settlePendingPreviewRender(token, lastRenderSucceeded)
+      })
+    })
+  }, 500)
+}
 
 const persistRenderState = useDebounceFn(() => {
   void store.persistActiveFileRenderState()
 }, 400)
 
 watch(() => store.markdownContent, (newVal) => {
-  debouncedRender(newVal)
+  queuePreviewRender(newVal)
 })
 
 watch(() => store.photoBase64, () => {
-  debouncedRender(store.markdownContent)
+  queuePreviewRender(store.markdownContent)
 })
 
 watch(() => store.activeTemplate, () => {
-  debouncedRender(store.markdownContent)
+  queuePreviewRender(store.markdownContent)
   persistRenderState()
 })
 
 watch(() => store.resumeStyle, () => {
-  debouncedRender(store.markdownContent)
+  queuePreviewRender(store.markdownContent)
   persistRenderState()
 }, { deep: true })
 </script>
@@ -507,7 +572,7 @@ watch(() => store.resumeStyle, () => {
     <!-- Scrollable Preview Area -->
     <div ref="previewScrollContainer" class="preview-scroll-area flex flex-1 justify-center overflow-auto bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.92),_rgba(225,226,232,0.86)_52%,_rgba(236,238,243,0.92)_100%)] px-8 py-9">
       <!-- Paged.js Render Container -->
-      <div ref="previewContainer" class="pagedjs-wrapper overflow-visible transition-transform duration-200" :style="{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }"></div>
+      <div ref="previewContainer" data-preview-root="true" class="pagedjs-wrapper overflow-visible transition-transform duration-200" :style="{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }"></div>
     </div>
 
     <!-- Footer -->

@@ -23,6 +23,8 @@ export interface ResumeStoreState {
   availableTemplates: Ref<ResumeTemplate[]>;
   activeTemplate: Ref<string>;
   isExporting: Ref<boolean>;
+  isPreviewRendering: Ref<boolean>;
+  isPreviewReady: Ref<boolean>;
   templatesLoaded: Ref<boolean>;
   resumeStyle: Ref<ResumeStyle>;
   renderProfilesByFile: Ref<Record<string, ResumeRenderProfile>>;
@@ -48,6 +50,8 @@ export interface ResumeStoreRuntime {
   localMutationTimers: Map<string, ReturnType<typeof setTimeout>>;
   queuedWorkspacePaths: Map<string, string>;
   queuedWorkspaceRefreshTimer: ReturnType<typeof setTimeout> | null;
+  previewRenderPromise: Promise<void> | null;
+  previewRenderToken: number;
   workspaceChangedUnlisten: UnlistenFn | null;
   workspaceChangedListenerPromise: Promise<UnlistenFn> | null;
   conflictPromptPromise: Promise<void> | null;

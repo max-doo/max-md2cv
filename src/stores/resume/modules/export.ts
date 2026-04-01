@@ -6,7 +6,22 @@ interface ExportModuleContext extends ResumeStoreBaseContext {
 }
 
 export const createExportModule = (context: ExportModuleContext) => {
-  const { state, platform, ui } = context;
+  const { state, runtime, platform, ui } = context;
+
+  const waitForPreviewReady = async () => {
+    while (runtime.previewRenderPromise) {
+      const currentPromise = runtime.previewRenderPromise;
+      await currentPromise;
+
+      if (runtime.previewRenderPromise === currentPromise) {
+        break;
+      }
+    }
+
+    if (!state.isPreviewReady.value) {
+      throw new Error("预览内容尚未准备好，请稍后重试。");
+    }
+  };
 
   const exportCurrentPdf = async () => {
     if (!state.activeFilePath.value || !state.workspacePath.value) {
@@ -45,9 +60,17 @@ export const createExportModule = (context: ExportModuleContext) => {
         }
       }
 
-      const pagesContainer = platform.document?.querySelector(".pagedjs_pages");
+      await waitForPreviewReady();
+
+      const pagesContainer = platform.document?.querySelector(
+        '[data-preview-root="true"] > .pagedjs_pages',
+      );
       if (!pagesContainer) {
         throw new Error("预览内容尚未准备好，请稍后重试。");
+      }
+
+      if (!pagesContainer.querySelector(".pagedjs_page")) {
+        throw new Error("预览分页尚未完成，请稍后重试。");
       }
 
       const htmlContent = await buildPagedExportDocumentHtml({
