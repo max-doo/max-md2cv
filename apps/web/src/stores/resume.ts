@@ -8,6 +8,7 @@ import {
   reorderOutlineSiblings,
   type ResumeOutlineNode,
 } from "@desktop/utils/markdownOutline";
+import type { ResumeStyle } from "@resume-core";
 
 interface FileItem {
   name: string;
@@ -55,10 +56,15 @@ const getPreviewPagesContainer = () => {
   return document.querySelector(".pagedjs_pages");
 };
 
-const buildWebPrintHtml = async (documentTitle: string, pagesContainer: HTMLElement) => {
+const buildWebPrintHtml = async (
+  documentTitle: string,
+  pagesContainer: HTMLElement,
+  cvStyle: ResumeStyle,
+) => {
   const htmlContent = await buildPagedExportDocumentHtml({
     documentTitle,
     pagesContainer,
+    cvStyle,
   });
 
   return htmlContent.replace("</body>", `${WEB_PRINT_SCRIPT}</body>`);
@@ -74,6 +80,8 @@ export const useResumeStore = defineStore("resume", () => {
 
   const templatesLoaded = ref(true);
   const isExporting = ref(false);
+  const isPreviewRendering = ref(false);
+  const isPreviewReady = ref(false);
   const activeFileStatus = ref<ActiveFileStatus>("ready");
   const isDirty = ref(false);
   const isSidebarOpen = ref(false);
@@ -82,6 +90,7 @@ export const useResumeStore = defineStore("resume", () => {
   const isTemplateDialogVisible = ref(false);
   const editorJumpRequest = ref<{ line: number; token: number } | null>(null);
   const editorJumpToken = ref(0);
+  let previewRenderToken = 0;
 
   const fileList = ref<FileItem[]>([
     {
@@ -116,6 +125,22 @@ export const useResumeStore = defineStore("resume", () => {
 
   const loadTemplates = async () => {
     templatesLoaded.value = true;
+  };
+
+  const startPreviewRender = (_promise: Promise<void>) => {
+    const token = ++previewRenderToken;
+    isPreviewRendering.value = true;
+    isPreviewReady.value = false;
+    return token;
+  };
+
+  const finishPreviewRender = (token: number, ready: boolean) => {
+    if (token !== previewRenderToken) {
+      return;
+    }
+
+    isPreviewRendering.value = false;
+    isPreviewReady.value = ready;
   };
 
   const updateMarkdownContent = (content: string, markDirty = true) => {
@@ -166,7 +191,11 @@ export const useResumeStore = defineStore("resume", () => {
         throw new Error("浏览器拦截了打印窗口，请允许弹窗后重试");
       }
 
-      const htmlContent = await buildWebPrintHtml(documentTitle, pagesContainer);
+      const htmlContent = await buildWebPrintHtml(
+        documentTitle,
+        pagesContainer,
+        resumeStyle.value,
+      );
       printWindow.document.open();
       printWindow.document.write(htmlContent);
       printWindow.document.close();
@@ -257,6 +286,8 @@ export const useResumeStore = defineStore("resume", () => {
     availableTemplates,
     activeTemplate,
     isExporting,
+    isPreviewRendering,
+    isPreviewReady,
     templatesLoaded,
     resumeStyle,
     renderProfilesByFile: computed(() => ({})),
@@ -306,6 +337,8 @@ export const useResumeStore = defineStore("resume", () => {
     moveOutlineNode,
     requestEditorJump,
     clearEditorJumpRequest,
+    startPreviewRender,
+    finishPreviewRender,
     openTemplateDialog: () => {
       isTemplateDialogVisible.value = true;
     },

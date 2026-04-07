@@ -581,7 +581,7 @@ watch(() => store.resumeStyle, () => {
       <div class="flex items-center gap-3">
         <button
           @click="store.resetActiveFileRenderSettings()"
-          class="text-xs flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
+          class="preview-reset-button text-xs flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
           title="恢复模板默认属性"
         >
           <span class="material-symbols-outlined text-[14px]">restart_alt</span>

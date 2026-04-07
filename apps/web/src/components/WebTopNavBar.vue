@@ -68,7 +68,7 @@ const handleExport = async () => {
 
         <button
           @click="handleExport"
-          :disabled="store.isExporting"
+          :disabled="store.isExporting || store.isPreviewRendering || !store.isPreviewReady"
           class="btn-primary shrink-0"
         >
           <span

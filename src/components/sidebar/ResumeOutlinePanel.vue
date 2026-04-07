@@ -2,6 +2,12 @@
 import { useResumeStore } from '@resume-store'
 import ResumeOutlineTree from './ResumeOutlineTree.vue'
 
+withDefaults(defineProps<{
+  hideDocumentTitle?: boolean
+}>(), {
+  hideDocumentTitle: false,
+})
+
 const store = useResumeStore()
 
 const handleJump = (nodeId: string) => {
@@ -26,7 +32,7 @@ const handleReorder = async (payload: { nodeId: string; targetIndex: number; par
     </div>
 
     <div v-else class="flex h-full min-h-0 flex-col">
-      <div class="shrink-0 px-1 pb-3">
+      <div v-if="!hideDocumentTitle" class="shrink-0 px-1 pb-3">
         <h3 class="sidebar-document-title truncate text-center text-base font-semibold text-on-surface">{{ store.activeFileName }}</h3>
       </div>
 
@@ -42,15 +48,13 @@ const handleReorder = async (payload: { nodeId: string; targetIndex: number; par
       </section>
 
       <section v-else class="sidebar-panel-scroll flex-1 pb-2">
-        <div class="px-1">
-          <ResumeOutlineTree
-            :nodes="store.outlineTree"
-            :parent-id="null"
-            :depth="0"
-            @jump="handleJump"
-            @reorder="handleReorder"
-          />
-        </div>
+        <ResumeOutlineTree
+          :nodes="store.outlineTree"
+          :parent-id="null"
+          :depth="0"
+          @jump="handleJump"
+          @reorder="handleReorder"
+        />
       </section>
     </div>
   </div>

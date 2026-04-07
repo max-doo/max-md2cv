@@ -52,12 +52,16 @@ const handleThemeColorHexInput = (event: Event) => {
     store.resumeStyle.themeColor = `#${nextValue}`
   }
 }
+
+const isThemeColorSelected = (color: string) =>
+  store.resumeStyle.themeColor.toLowerCase() === color.toLowerCase()
 </script>
 
 <template>
   <div class="preview-toolbar flex h-16 shrink-0 items-center justify-between border-b border-outline-variant/10 bg-surface-container-high/35 px-5 backdrop-blur-sm z-10">
     <div class="flex items-center gap-2">
       <SoftSelect
+        class="preview-toolbar-template-select"
         :model-value="store.activeTemplate"
         width="130px"
         placeholder="模板"
@@ -82,6 +86,7 @@ const handleThemeColorHexInput = (event: Event) => {
 
     <div class="preview-toolbar-center flex flex-1 items-center justify-center gap-3">
       <SoftSelect
+        class="preview-toolbar-font-select"
         v-model="store.resumeStyle.fontFamily"
         width="108px"
         placeholder="字体"
@@ -98,53 +103,53 @@ const handleThemeColorHexInput = (event: Event) => {
         <template #reference>
           <div class="preview-toolbar-icon cursor-pointer" title="主题色">
             <div
-              class="h-4 w-4 rounded-full border border-outline-variant/50 shadow-inner"
+              class="preview-theme-trigger-indicator h-4 w-4 rounded-full border border-outline-variant/50 shadow-inner"
               :style="{ backgroundColor: store.resumeStyle.themeColor }"
             ></div>
           </div>
         </template>
 
-        <div class="preview-toolbar-panel flex flex-col gap-3 font-sans">
+        <div class="preview-toolbar-panel preview-theme-panel flex flex-col gap-3 font-sans">
           <div class="flex items-center justify-between text-xs font-bold text-on-surface-variant">
             <span>主题颜色</span>
           </div>
 
-          <div class="grid grid-cols-5 gap-2">
-            <div
+          <div class="preview-theme-grid">
+            <button
               v-for="color in THEME_COLORS"
               :key="color"
-              class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-outline-variant/20 shadow-sm transition-transform hover:scale-110"
+              type="button"
+              class="preview-theme-swatch"
+              :class="{ 'is-active': isThemeColorSelected(color) }"
               :style="{ backgroundColor: color }"
               @click="store.resumeStyle.themeColor = color"
             >
               <span
-                v-if="store.resumeStyle.themeColor.toLowerCase() === color.toLowerCase()"
+                v-if="isThemeColorSelected(color)"
                 class="material-symbols-outlined text-[16px] text-white drop-shadow-md"
               >
                 check
               </span>
-            </div>
+            </button>
           </div>
 
-          <div class="my-1 h-[1px] w-full bg-outline-variant/20"></div>
-
-          <div class="flex items-center gap-3">
-            <div class="relative h-8 w-8 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg border border-outline-variant/30 shadow-sm flex items-center justify-center">
-              <div class="absolute inset-0 z-0" :style="{ backgroundColor: store.resumeStyle.themeColor }"></div>
+          <div class="preview-theme-custom-row">
+            <label class="preview-theme-custom-trigger">
+              <div class="absolute inset-0 z-0 rounded-full" :style="{ backgroundColor: store.resumeStyle.themeColor }"></div>
               <span class="material-symbols-outlined pointer-events-none z-10 text-[18px] text-white/80 drop-shadow">colorize</span>
               <input
                 v-model="store.resumeStyle.themeColor"
                 type="color"
-                class="absolute inset-[-10px] z-20 h-12 w-12 cursor-pointer opacity-0"
+                class="preview-theme-native-input"
               />
-            </div>
+            </label>
 
-            <div class="flex flex-1 items-center rounded-md border border-outline-variant/30 bg-surface-container px-3 py-1.5">
+            <div class="preview-theme-hex-field">
               <span class="mr-1 font-mono text-xs text-on-surface-variant/50">#</span>
               <input
                 type="text"
                 :value="store.resumeStyle.themeColor.replace('#', '')"
-                class="w-full border-none bg-transparent font-mono text-xs uppercase text-on-surface-variant outline-none"
+                class="preview-theme-hex-input"
                 maxlength="6"
                 @input="handleThemeColorHexInput"
               />
@@ -345,24 +350,118 @@ const handleThemeColorHexInput = (event: Event) => {
 
 .preview-toolbar-zoom {
   height: 2.25rem;
-  padding-block: 0;
-  padding-inline: 0.75rem;
-  gap: 0.625rem;
+  padding: 0;
+  gap: 0.5rem;
+  background: transparent;
+  box-shadow: none;
 }
 
 .preview-toolbar-zoom button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: auto;
-  height: auto;
-  background: transparent;
-  box-shadow: none;
-  transition: color 0.2s ease, transform 0.2s ease;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--color-surface-container-lowest) 92%, white);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-outline-variant) 22%, transparent);
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .preview-toolbar-zoom button:hover {
+  background-color: var(--color-surface-container-high);
   color: var(--color-on-surface);
   transform: scale(1.04);
+}
+
+.preview-theme-panel {
+  gap: 0.875rem;
+  padding: 0.25rem;
+}
+
+.preview-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+.preview-theme-swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--color-outline-variant) 18%, transparent);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.26),
+    0 6px 14px rgba(15, 23, 42, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.preview-theme-swatch:hover {
+  transform: scale(1.06);
+}
+
+.preview-theme-swatch.is-active {
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.9),
+    0 0 0 4px color-mix(in srgb, var(--color-primary) 24%, transparent),
+    0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+.preview-theme-custom-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-outline-variant) 16%, transparent);
+}
+
+.preview-theme-custom-trigger {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.24),
+    0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+.preview-theme-native-input {
+  position: absolute;
+  inset: -0.5rem;
+  z-index: 20;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.preview-theme-hex-field {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-height: 2.5rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--color-surface-container) 92%, white);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-outline-variant) 18%, transparent);
+  padding-inline: 0.75rem;
+}
+
+.preview-theme-hex-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Consolas, monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  outline: none;
 }
 </style>

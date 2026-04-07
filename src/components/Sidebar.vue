@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, reactive, ref, watch, type CSSProperties } from 'vue'
+import { computed, defineAsyncComponent, reactive, ref, useAttrs, watch, type CSSProperties } from 'vue'
 import { useResumeStore } from '@resume-store'
 import ResumeOutlinePanel from './sidebar/ResumeOutlinePanel.vue'
+
+defineOptions({
+  inheritAttrs: false,
+})
 
 const props = withDefaults(defineProps<{
   mode?: 'full' | 'outline-only'
@@ -9,6 +13,7 @@ const props = withDefaults(defineProps<{
   mode: 'full',
 })
 
+const attrs = useAttrs()
 const store = useResumeStore()
 const ResumeLibraryPanel = defineAsyncComponent(() => import('./sidebar/ResumeLibraryPanel.vue'))
 
@@ -99,6 +104,7 @@ const handleCreateFile = async () => {
 
 <template>
   <aside
+    v-bind="attrs"
     class="sidebar-shell relative z-20 flex h-full flex-shrink-0 flex-col overflow-hidden bg-surface-container-lowest transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)]"
     :style="sidebarInlineStyle"
   >
@@ -141,7 +147,10 @@ const handleCreateFile = async () => {
       </div>
 
       <div class="min-h-0 flex-1 px-4 pb-6">
-        <ResumeOutlinePanel v-if="isOutlineOnly || store.sidebarPrimaryView === 'outline'" />
+        <ResumeOutlinePanel
+          v-if="isOutlineOnly || store.sidebarPrimaryView === 'outline'"
+          :hide-document-title="isOutlineOnly"
+        />
         <ResumeLibraryPanel v-else />
       </div>
 
