@@ -1,7 +1,48 @@
+export type PersonalInfoMode = "text" | "icon" | "chips";
+
+export type TemplateHeaderLayout = "stack" | "split" | "inline";
+
+export type TemplatePhotoPlacement =
+  | "hidden"
+  | "top-right"
+  | "top-left"
+  | "header-right";
+
+export type TemplateSectionTitlePreset =
+  | "accent-bar"
+  | "underline"
+  | "plain";
+
+export type TemplateEditableField =
+  | "fontFamily"
+  | "themeColor"
+  | "fontSize"
+  | "lineHeight"
+  | "spacing"
+  | "headerLayout"
+  | "personalInfoMode"
+  | "photoPlacement"
+  | "sectionTitlePreset";
+
+export interface TemplateLayoutConfig {
+  headerLayout: TemplateHeaderLayout;
+  personalInfoMode: PersonalInfoMode;
+  photoPlacement: TemplatePhotoPlacement;
+  sectionTitlePreset: TemplateSectionTitlePreset;
+}
+
+export interface TemplateManifest {
+  version: 1;
+  defaults?: Partial<ResumeStyle>;
+  layout?: Partial<TemplateLayoutConfig>;
+  editable?: TemplateEditableField[];
+}
+
 export interface ResumeTemplate {
   id: string;
   name: string;
   css: string;
+  manifest?: TemplateManifest;
 }
 
 export interface FileItem {
@@ -31,7 +72,7 @@ export interface ResumeStyle {
   lineHeight: number;
   marginV: number;
   marginH: number;
-  personalInfoMode?: "text" | "icon";
+  personalInfoMode?: PersonalInfoMode;
 }
 
 export type SidebarPrimaryView = "library" | "outline";

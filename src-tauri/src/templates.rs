@@ -1,4 +1,5 @@
 use serde::Serialize;
+use serde_json::Value;
 use std::fs;
 use std::path::Path;
 use tauri::Manager;
@@ -8,6 +9,7 @@ pub struct TemplateInfo {
     pub id: String,
     pub name: String,
     pub css: String,
+    pub manifest: Option<Value>,
 }
 
 /// Scan built-in resource templates and user-custom templates from appDataDir.
@@ -51,12 +53,13 @@ pub async fn list_templates(app: tauri::AppHandle) -> Result<Vec<TemplateInfo>, 
     Ok(templates)
 }
 
-/// Write (or overwrite) a template CSS file in the user's AppData/templates directory.
+/// Write (or overwrite) a legacy template CSS file in the user's AppData/templates directory.
 #[tauri::command]
 pub async fn save_template(
     app: tauri::AppHandle,
     id: String,
     css: String,
+    manifest: Option<Value>,
 ) -> Result<(), String> {
     let app_data_dir = app
         .path()
@@ -67,40 +70,44 @@ pub async fn save_template(
         fs::create_dir_all(&user_path)
             .map_err(|e| format!("Failed to create templates dir: {}", e))?;
     }
-    let file_path = user_path.join(format!("{}.css", id));
-    fs::write(&file_path, &css)
-        .map_err(|e| format!("Failed to write template {:?}: {}", file_path, e))?;
+
+    if let Some(manifest_value) = manifest {
+        let legacy_file_path = user_path.join(format!("{}.css", id));
+        if legacy_file_path.exists() {
+            fs::remove_file(&legacy_file_path).map_err(|e| {
+                format!(
+                    "Failed to remove legacy template file {:?}: {}",
+                    legacy_file_path, e
+                )
+            })?;
+        }
+
+        let template_dir = user_path.join(&id);
+        if !template_dir.exists() {
+            fs::create_dir_all(&template_dir)
+                .map_err(|e| format!("Failed to create template dir {:?}: {}", template_dir, e))?;
+        }
+
+        let css_path = template_dir.join("template.css");
+        fs::write(&css_path, &css)
+            .map_err(|e| format!("Failed to write template {:?}: {}", css_path, e))?;
+
+        let manifest_path = template_dir.join("manifest.json");
+        let manifest_content = serde_json::to_string_pretty(&manifest_value)
+            .map_err(|e| format!("Failed to serialize manifest {:?}: {}", manifest_path, e))?;
+        fs::write(&manifest_path, manifest_content)
+            .map_err(|e| format!("Failed to write manifest {:?}: {}", manifest_path, e))?;
+    } else {
+        let file_path = user_path.join(format!("{}.css", id));
+        fs::write(&file_path, &css)
+            .map_err(|e| format!("Failed to write template {:?}: {}", file_path, e))?;
+    }
+
     Ok(())
 }
 
 fn load_templates_from_dir(dir: &Path, templates: &mut Vec<TemplateInfo>) -> Result<(), String> {
-    let entries = fs::read_dir(dir).map_err(|e| format!("Failed to read dir {:?}: {}", dir, e))?;
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.extension().and_then(|e| e.to_str()) == Some("css") {
-            let css_content =
-                fs::read_to_string(&path).map_err(|e| format!("Failed to read {:?}: {}", path, e))?;
-            let name = extract_meta(&css_content, "name").unwrap_or_else(|| {
-                path.file_stem()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or("unknown")
-                    .to_string()
-            });
-            let id = path
-                .file_stem()
-                .and_then(|s| s.to_str())
-                .unwrap_or("unknown")
-                .to_string();
-            if !templates.iter().any(|template| template.id == id) {
-                templates.push(TemplateInfo {
-                    id,
-                    name,
-                    css: css_content,
-                });
-            }
-        }
-    }
-    Ok(())
+    load_templates(dir, templates, false)
 }
 
 /// Same as `load_templates_from_dir` but user entries *replace* any existing entry with the same id.
@@ -108,32 +115,113 @@ fn load_templates_overriding(
     dir: &Path,
     templates: &mut Vec<TemplateInfo>,
 ) -> Result<(), String> {
+    load_templates(dir, templates, true)
+}
+
+fn load_templates(
+    dir: &Path,
+    templates: &mut Vec<TemplateInfo>,
+    override_existing: bool,
+) -> Result<(), String> {
     let entries = fs::read_dir(dir).map_err(|e| format!("Failed to read dir {:?}: {}", dir, e))?;
+
     for entry in entries.flatten() {
         let path = entry.path();
-        if path.extension().and_then(|e| e.to_str()) == Some("css") {
-            let css_content =
-                fs::read_to_string(&path).map_err(|e| format!("Failed to read {:?}: {}", path, e))?;
-            let name = extract_meta(&css_content, "name").unwrap_or_else(|| {
-                path.file_stem()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or("unknown")
-                    .to_string()
-            });
-            let id = path
-                .file_stem()
-                .and_then(|s| s.to_str())
-                .unwrap_or("unknown")
-                .to_string();
-            templates.retain(|template| template.id != id);
-            templates.push(TemplateInfo {
-                id,
-                name,
-                css: css_content,
-            });
+
+        let template = if path.is_dir() {
+            read_directory_template(&path)?
+        } else if path.extension().and_then(|e| e.to_str()) == Some("css") {
+            Some(read_legacy_css_template(&path)?)
+        } else {
+            None
+        };
+
+        if let Some(template) = template {
+            insert_template(templates, template, override_existing);
         }
     }
+
     Ok(())
+}
+
+fn insert_template(
+    templates: &mut Vec<TemplateInfo>,
+    template: TemplateInfo,
+    override_existing: bool,
+) {
+    if override_existing {
+        templates.retain(|item| item.id != template.id);
+        templates.push(template);
+        return;
+    }
+
+    if !templates.iter().any(|item| item.id == template.id) {
+        templates.push(template);
+    }
+}
+
+fn read_legacy_css_template(path: &Path) -> Result<TemplateInfo, String> {
+    let css_content =
+        fs::read_to_string(path).map_err(|e| format!("Failed to read {:?}: {}", path, e))?;
+    let name = extract_meta(&css_content, "name").unwrap_or_else(|| {
+        path.file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown")
+            .to_string()
+    });
+    let id = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("unknown")
+        .to_string();
+
+    Ok(TemplateInfo {
+        id,
+        name,
+        css: css_content,
+        manifest: None,
+    })
+}
+
+fn read_directory_template(path: &Path) -> Result<Option<TemplateInfo>, String> {
+    let css_path = path.join("template.css");
+    if !css_path.exists() {
+        return Ok(None);
+    }
+
+    let css_content = fs::read_to_string(&css_path)
+        .map_err(|e| format!("Failed to read {:?}: {}", css_path, e))?;
+    let manifest_path = path.join("manifest.json");
+    let manifest = if manifest_path.exists() {
+        Some(read_template_manifest(&manifest_path)?)
+    } else {
+        None
+    };
+    let name = extract_meta(&css_content, "name").unwrap_or_else(|| {
+        path.file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown")
+            .to_string()
+    });
+    let id = path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("unknown")
+        .to_string();
+
+    Ok(Some(TemplateInfo {
+        id,
+        name,
+        css: css_content,
+        manifest,
+    }))
+}
+
+fn read_template_manifest(path: &Path) -> Result<Value, String> {
+    let manifest_content =
+        fs::read_to_string(path).map_err(|e| format!("Failed to read {:?}: {}", path, e))?;
+    serde_json::from_str::<Value>(&manifest_content)
+        .map_err(|e| format!("Failed to parse manifest {:?}: {}", path, e))
 }
 
 /// Parse `/* @key: value */` style metadata from CSS content.

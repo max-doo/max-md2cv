@@ -5,4 +5,5 @@ export * from "./utils/fontAssets";
 export * from "./utils/manualPageBreak";
 export * from "./utils/markdownRender";
 export * from "./utils/resumeParser";
+export * from "./utils/templateManifest";
 export * from "./utils/templateStyle";

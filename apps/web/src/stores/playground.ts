@@ -9,7 +9,7 @@ import {
   cloneResumeStyle,
   getBuiltinTemplateById,
   getBuiltinTemplates,
-  parseResumeStyleFromTemplateCss,
+  resolveTemplateManifest,
   type ResumeStyle,
   type WebPlaygroundDraft,
 } from "@resume-core";
@@ -17,9 +17,12 @@ import {
 const templates = getBuiltinTemplates();
 
 const getDefaultResumeStyle = (templateId: string = DEFAULT_TEMPLATE_ID) => {
-  return parseResumeStyleFromTemplateCss(
-    getBuiltinTemplateById(templateId)?.css ?? "",
-  );
+  const template = getBuiltinTemplateById(templateId);
+
+  return resolveTemplateManifest({
+    css: template?.css ?? "",
+    manifest: template?.manifest,
+  }).defaults!;
 };
 
 const createDefaultDraft = (): WebPlaygroundDraft => ({

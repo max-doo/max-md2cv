@@ -1,8 +1,8 @@
 import {
   cloneResumeStyle,
   createDefaultResumeStyle,
-  parseResumeStyleFromTemplateCss,
 } from "../../../utils/templateStyle";
+import { resolveTemplateManifest } from "@resume-core";
 import { DEFAULT_TEMPLATE_ID, RENDER_STATE_VERSION } from "../constants";
 import type { ResumeStoreBaseContext } from "../context";
 import type {
@@ -52,7 +52,9 @@ export const createRenderProfileModule = (
       return createDefaultResumeStyle();
     }
 
-    return parseResumeStyleFromTemplateCss(template.css);
+    return cloneResumeStyle(
+      resolveTemplateManifest(template).defaults ?? createDefaultResumeStyle(),
+    );
   };
 
   const applyRenderProfile = (profile?: ResumeRenderProfile | null) => {
@@ -257,10 +259,25 @@ export const createRenderProfileModule = (
     const baseCss = template.css.split(marker)[0].trimEnd();
     const patchCss = `\n\n${marker}\n.resume-document {\n  font-family: ${style.fontFamily};\n  font-size: ${style.fontSize}px;\n  line-height: ${style.lineHeight};\n  --cv-theme-color: ${style.themeColor};\n  --cv-font-size: ${style.fontSize}px;\n  --cv-paragraph-spacing: ${style.paragraphSpacing}px;\n  --cv-h2-margin-top: ${style.h2MarginTop}px;\n  --cv-h2-margin-bottom: ${style.h2MarginBottom}px;\n  --cv-h3-margin-top: ${style.h3MarginTop}px;\n  --cv-h3-margin-bottom: ${style.h3MarginBottom}px;\n  --cv-personal-header-spacing: ${style.personalHeaderSpacing}px;\n  --cv-contact-render: ${style.personalInfoMode || "text"};\n}\n.resume-document h1 { font-size: ${style.h1Size}px; }\n.resume-document h2 { font-size: ${style.h2Size}px; margin-top: var(--cv-h2-margin-top); margin-bottom: var(--cv-h2-margin-bottom); }\n.resume-document h3 { font-size: ${style.h3Size}px; margin-top: var(--cv-h3-margin-top); margin-bottom: var(--cv-h3-margin-bottom); }\n.resume-document p,\n.resume-document ul,\n.resume-document ol,\n.resume-document .job-intention + p,\n.resume-document .contact-info--text,\n.resume-document .contact-info-text-line,\n.resume-document .contact-info--icon,\n.resume-document .contact-info-item { font-size: var(--cv-font-size); }\n.resume-document blockquote { font-size: calc(var(--cv-font-size) * 0.9); }\n.resume-document p,\n.resume-document ul,\n.resume-document ol,\n.resume-document blockquote { margin-top: 0; margin-bottom: var(--cv-paragraph-spacing); }\n.resume-document li { margin-bottom: calc(var(--cv-paragraph-spacing) * 0.5); }\n.resume-document .personal-header { margin-bottom: 0; padding-bottom: var(--cv-personal-header-spacing); }\n.resume-document .job-intention + p,\n.resume-document .contact-info--text,\n.resume-document .contact-info--icon { margin-bottom: 0; }\n@page { margin: ${style.marginV}mm ${style.marginH}mm; }\n.resume-document h2 { border-left-color: var(--cv-theme-color); border-bottom-color: var(--cv-theme-color); background-color: color-mix(in srgb, var(--cv-theme-color) 10%, transparent); }\n`;
     const newCss = baseCss + patchCss;
+    const nextManifest = resolveTemplateManifest({
+      css: newCss,
+      manifest: template.manifest,
+    });
+    nextManifest.defaults = cloneResumeStyle(style);
+    nextManifest.layout = {
+      ...nextManifest.layout,
+      personalInfoMode:
+        style.personalInfoMode ?? nextManifest.layout?.personalInfoMode ?? "text",
+    };
 
     try {
-      await platform.invoke("save_template", { id: template.id, css: newCss });
+      await platform.invoke("save_template", {
+        id: template.id,
+        css: newCss,
+        manifest: nextManifest,
+      });
       template.css = newCss;
+      template.manifest = nextManifest;
       ui.message.success("模板已保存");
     } catch (error) {
       console.error("Failed to save template:", error);
