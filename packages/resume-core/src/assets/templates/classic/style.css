@@ -1,17 +1,18 @@
 /* @name: 传统经典 */
 
 @page {
-  margin: 10mm 12mm;
+  margin: var(--tpl-page-margin-v) var(--tpl-page-margin-h);
 }
 
 .resume-document {
   color: #000;
-  line-height: 1.5;
-  font-family: "Times New Roman", Times, serif;
+  font-family: var(--tpl-font-family);
+  font-size: var(--tpl-font-size);
+  line-height: var(--tpl-line-height);
 }
 
 .resume-document h1 {
-  font-size: 32px;
+  font-size: var(--tpl-h1-size);
   font-weight: bold;
   line-height: 1.2;
   text-align: center;
@@ -53,19 +54,20 @@
 }
 
 .resume-document h2 {
-  font-size: 18px;
+  font-size: var(--tpl-h2-size);
   font-weight: bold;
-  color: #000;
-  margin-top: 14px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #000;
+  color: var(--tpl-theme-color);
+  margin-top: var(--tpl-h2-margin-top);
+  margin-bottom: var(--tpl-h2-margin-bottom);
+  border-bottom: 1px solid var(--tpl-theme-color);
 }
 
 .resume-document h3 {
-  font-size: 16px;
+  font-size: var(--tpl-h3-size);
   font-weight: bold;
   color: #000000;
-  margin-bottom: 4px;
+  margin-top: var(--tpl-h3-margin-top);
+  margin-bottom: var(--tpl-h3-margin-bottom);
 }
 
 .resume-document .experience-line {
@@ -81,8 +83,8 @@
 }
 
 .resume-document .experience-date {
-  font-size: inherit;
-  font-weight: 400;
+  font-size: var(--tpl-date-size);
+  font-weight: var(--tpl-date-weight);
   color: #000;
   flex-shrink: 0;
   margin-left: auto;
@@ -100,20 +102,20 @@
 .resume-document ul {
   list-style-type: disc;
   padding-left: 24px;
-  font-size: 14px;
-  margin-bottom: 16px;
+  font-size: var(--tpl-font-size);
+  margin-bottom: calc(var(--tpl-paragraph-spacing) * 2);
 }
 
 .resume-document p {
-  font-size: 14px;
-  margin-bottom: 8px;
+  font-size: var(--tpl-font-size);
+  margin-bottom: var(--tpl-paragraph-spacing);
 }
 
 .resume-document blockquote {
   font-family: inherit;
-  font-size: calc(14px * 0.9);
+  font-size: calc(var(--tpl-font-size) * 0.9);
   color: #000000;
-  margin: 0 0 12px;
+  margin: 0 0 var(--tpl-paragraph-spacing);
 }
 
 .resume-document blockquote p {

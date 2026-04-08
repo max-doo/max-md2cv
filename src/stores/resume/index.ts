@@ -10,7 +10,12 @@ import {
   reorderOutlineSiblings,
   type ResumeOutlineNode,
 } from "../../utils/markdownOutline";
-import { createDefaultResumeStyle } from "../../utils/templateStyle";
+import {
+  createDefaultTemplateValues,
+  extractTemplateValueOverrides,
+  resolveResumeStyle,
+  resolveTemplateValues,
+} from "../../utils/templateStyle";
 import {
   DEFAULT_MARKDOWN,
   DEFAULT_TEMPLATE_ID,
@@ -36,6 +41,8 @@ import type {
   ResumeStyle,
   ResumeTemplate,
   SidebarPrimaryView,
+  TemplateValue,
+  TemplateValues,
 } from "./types";
 
 export type {
@@ -47,6 +54,9 @@ export type {
   ResumeStyle,
   ResumeTemplate,
   SidebarPrimaryView,
+  TemplateFieldSchema,
+  TemplateValue,
+  TemplateValues,
   WorkspaceChangedEvent,
   WorkspaceRenderState,
 } from "./types";
@@ -71,15 +81,63 @@ const createBaseContext = (
 });
 
 export const useResumeStore = defineStore("resume", () => {
+  const availableTemplates = ref<ResumeTemplate[]>([]);
+  const activeTemplate = ref(DEFAULT_TEMPLATE_ID);
+  const templateValues = ref<TemplateValues>({});
+  const currentTemplate = computed<ResumeTemplate | null>(() => {
+    return (
+      availableTemplates.value.find((template) => template.id === activeTemplate.value) ??
+      availableTemplates.value[0] ??
+      null
+    );
+  });
+  const resumeStyle = computed<ResumeStyle>(() => {
+    if (!currentTemplate.value) {
+      return resolveResumeStyle(
+        {
+          defaults: createDefaultTemplateValues(),
+          editorSchema: [],
+        },
+        templateValues.value,
+      );
+    }
+
+    return resolveResumeStyle(currentTemplate.value, templateValues.value);
+  });
+
+  const setTemplateValue = (key: string, value: TemplateValue) => {
+    const template = currentTemplate.value;
+
+    if (!template) {
+      templateValues.value = {
+        ...templateValues.value,
+        [key]: value,
+      };
+      return;
+    }
+
+    const nextResolved = resolveTemplateValues(template, {
+      ...templateValues.value,
+      [key]: value,
+    });
+
+    templateValues.value = extractTemplateValueOverrides(template, nextResolved);
+  };
+
+  const resetTemplateValues = () => {
+    templateValues.value = {};
+  };
+
   const state: ResumeStoreState = {
     markdownContent: ref(DEFAULT_MARKDOWN),
-    availableTemplates: ref<ResumeTemplate[]>([]),
-    activeTemplate: ref(DEFAULT_TEMPLATE_ID),
+    availableTemplates,
+    activeTemplate,
     isExporting: ref(false),
     isPreviewRendering: ref(false),
     isPreviewReady: ref(false),
     templatesLoaded: ref(false),
-    resumeStyle: ref<ResumeStyle>(createDefaultResumeStyle()),
+    templateValues,
+    resumeStyle,
     renderProfilesByFile: ref<Record<string, ResumeRenderProfile>>({}),
     workspacePath: ref<string | null>(null),
     fileList: ref<FileItem[]>([]),
@@ -248,7 +306,7 @@ export const useResumeStore = defineStore("resume", () => {
     state.photoFileList.value = [];
     state.renderProfilesByFile.value = {};
     state.activeTemplate.value = DEFAULT_TEMPLATE_ID;
-    state.resumeStyle.value = createDefaultResumeStyle();
+    state.templateValues.value = {};
     resetActiveDocumentState();
     state.sidebarPrimaryView.value = "library";
     clearPhotoState();
@@ -402,11 +460,15 @@ export const useResumeStore = defineStore("resume", () => {
     markdownContent: state.markdownContent,
     availableTemplates: state.availableTemplates,
     activeTemplate: state.activeTemplate,
+    currentTemplate,
     isExporting: state.isExporting,
     isPreviewRendering: state.isPreviewRendering,
     isPreviewReady: state.isPreviewReady,
     templatesLoaded: state.templatesLoaded,
+    templateValues: state.templateValues,
     resumeStyle: state.resumeStyle,
+    setTemplateValue,
+    resetTemplateValues,
     renderProfilesByFile: state.renderProfilesByFile,
     loadTemplates: renderProfileModule.loadTemplates,
     saveCurrentTemplate: renderProfileModule.saveCurrentTemplate,

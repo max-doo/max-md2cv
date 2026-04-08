@@ -37,20 +37,37 @@ export const buildRuntimeResumeStyleCss = (
     --cv-photo-gap: 18px;
     --cv-photo-radius: 8px;
     --cv-photo-reserve: calc(var(--cv-photo-width) + var(--cv-photo-gap));
-    --cv-theme-color: ${cvStyle.themeColor};
-    --cv-font-size: ${cvStyle.fontSize}px;
-    --cv-paragraph-spacing: ${cvStyle.paragraphSpacing}px;
-    --cv-h2-margin-top: ${cvStyle.h2MarginTop}px;
-    --cv-h2-margin-bottom: ${cvStyle.h2MarginBottom}px;
-    --cv-h3-margin-top: ${cvStyle.h3MarginTop}px;
-    --cv-h3-margin-bottom: ${cvStyle.h3MarginBottom}px;
-    --cv-personal-header-spacing: ${cvStyle.personalHeaderSpacing}px;
+    --tpl-theme-color: ${cvStyle.themeColor};
+    --tpl-font-family: ${cvStyle.fontFamily};
+    --tpl-font-size: ${cvStyle.fontSize}px;
+    --tpl-line-height: ${cvStyle.lineHeight};
+    --tpl-paragraph-spacing: ${cvStyle.paragraphSpacing}px;
+    --tpl-h1-size: ${cvStyle.h1Size}px;
+    --tpl-h2-size: ${cvStyle.h2Size}px;
+    --tpl-h3-size: ${cvStyle.h3Size}px;
+    --tpl-h2-margin-top: ${cvStyle.h2MarginTop}px;
+    --tpl-h2-margin-bottom: ${cvStyle.h2MarginBottom}px;
+    --tpl-h3-margin-top: ${cvStyle.h3MarginTop}px;
+    --tpl-h3-margin-bottom: ${cvStyle.h3MarginBottom}px;
+    --tpl-date-size: ${cvStyle.dateSize ?? cvStyle.fontSize}px;
+    --tpl-date-weight: ${cvStyle.dateWeight ?? "400"};
+    --tpl-personal-header-spacing: ${cvStyle.personalHeaderSpacing}px;
+    --tpl-page-margin-v: ${cvStyle.marginV}mm;
+    --tpl-page-margin-h: ${cvStyle.marginH}mm;
+    --cv-theme-color: var(--tpl-theme-color);
+    --cv-font-size: var(--tpl-font-size);
+    --cv-paragraph-spacing: var(--tpl-paragraph-spacing);
+    --cv-h2-margin-top: var(--tpl-h2-margin-top);
+    --cv-h2-margin-bottom: var(--tpl-h2-margin-bottom);
+    --cv-h3-margin-top: var(--tpl-h3-margin-top);
+    --cv-h3-margin-bottom: var(--tpl-h3-margin-bottom);
+    --cv-personal-header-spacing: var(--tpl-personal-header-spacing);
     font-family: ${cvStyle.fontFamily} !important;
-    font-size: ${cvStyle.fontSize}px !important;
-    line-height: ${cvStyle.lineHeight} !important;
+    font-size: var(--tpl-font-size) !important;
+    line-height: var(--tpl-line-height) !important;
     position: relative !important;
-    ${cvStyle.dateWeight ? `--cv-date-weight: ${cvStyle.dateWeight};` : ""}
-    ${cvStyle.dateSize ? `--cv-date-size: ${cvStyle.dateSize}px;` : ""}
+    --cv-date-weight: var(--tpl-date-weight);
+    --cv-date-size: var(--tpl-date-size);
   }
   .resume-document .resume-photo-wrapper {
     position: absolute !important;
@@ -124,23 +141,17 @@ export const buildRuntimeResumeStyleCss = (
     box-sizing: border-box;
   }
   .resume-document h1 {
-    font-size: ${cvStyle.h1Size}px !important;
-    color: ${cvStyle.themeColor} !important;
-    border-color: ${cvStyle.themeColor} !important;
+    font-size: var(--tpl-h1-size) !important;
   }
   .resume-document h2 {
-    font-size: ${cvStyle.h2Size}px !important;
-    color: ${cvStyle.themeColor} !important;
-    border-bottom-color: ${cvStyle.themeColor} !important;
-    border-left-color: ${cvStyle.themeColor} !important;
-    margin-top: var(--cv-h2-margin-top) !important;
-    margin-bottom: var(--cv-h2-margin-bottom) !important;
+    font-size: var(--tpl-h2-size) !important;
+    margin-top: var(--tpl-h2-margin-top) !important;
+    margin-bottom: var(--tpl-h2-margin-bottom) !important;
   }
   .resume-document h3 {
-    font-size: ${cvStyle.h3Size}px !important;
-    color: ${cvStyle.themeColor} !important;
-    margin-top: var(--cv-h3-margin-top) !important;
-    margin-bottom: var(--cv-h3-margin-bottom) !important;
+    font-size: var(--tpl-h3-size) !important;
+    margin-top: var(--tpl-h3-margin-top) !important;
+    margin-bottom: var(--tpl-h3-margin-bottom) !important;
   }
   .resume-document .experience-line {
     display: flex;
@@ -156,8 +167,8 @@ export const buildRuntimeResumeStyleCss = (
     min-width: 0;
   }
   .resume-document .experience-date {
-    font-size: var(--cv-date-size, inherit);
-    font-weight: var(--cv-date-weight, inherit);
+    font-size: var(--tpl-date-size, inherit);
+    font-weight: var(--tpl-date-weight, inherit);
     flex-shrink: 0;
     margin-left: auto;
     text-align: right;
@@ -171,24 +182,24 @@ export const buildRuntimeResumeStyleCss = (
   .resume-document .contact-info-text-line,
   .resume-document .contact-info--icon,
   .resume-document .contact-info-item {
-    font-size: var(--cv-font-size) !important;
+    font-size: var(--tpl-font-size) !important;
   }
   .resume-document blockquote {
-    font-size: calc(var(--cv-font-size) * 0.9) !important;
+    font-size: calc(var(--tpl-font-size) * 0.9) !important;
   }
   .resume-document p,
   .resume-document ul,
   .resume-document ol,
   .resume-document blockquote {
     margin-top: 0 !important;
-    margin-bottom: var(--cv-paragraph-spacing) !important;
+    margin-bottom: var(--tpl-paragraph-spacing) !important;
   }
   .resume-document li {
-    margin-bottom: calc(var(--cv-paragraph-spacing) * 0.5) !important;
+    margin-bottom: calc(var(--tpl-paragraph-spacing) * 0.5) !important;
   }
   .resume-document .personal-header {
     margin-bottom: 0 !important;
-    padding-bottom: var(--cv-personal-header-spacing) !important;
+    padding-bottom: var(--tpl-personal-header-spacing) !important;
     break-inside: avoid;
     box-sizing: border-box;
   }
@@ -276,7 +287,7 @@ export const buildRuntimeResumeStyleCss = (
     width: 14px;
     height: 14px;
     flex-shrink: 0;
-    background-color: var(--cv-theme-color);
+    background-color: var(--tpl-theme-color);
     -webkit-mask-size: contain;
     mask-size: contain;
     -webkit-mask-repeat: no-repeat;

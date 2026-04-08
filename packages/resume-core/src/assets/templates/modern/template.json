@@ -1,0 +1,128 @@
+{
+  "id": "modern",
+  "name": "现代简约",
+  "version": "1.0.0",
+  "entryCss": "style.css",
+  "description": "适合通用求职场景的现代风格简历模板。",
+  "defaults": {
+    "themeColor": "#4c49cc",
+    "fontFamily": "\"Microsoft YaHei\", \"PingFang SC\", sans-serif",
+    "fontSize": 14,
+    "paragraphSpacing": 8,
+    "h2MarginTop": 24,
+    "h2MarginBottom": 12,
+    "h3MarginTop": 12,
+    "h3MarginBottom": 4,
+    "personalHeaderSpacing": 24,
+    "h1Size": 32,
+    "h2Size": 18,
+    "h3Size": 16,
+    "dateSize": 14,
+    "dateWeight": "700",
+    "lineHeight": 1.5,
+    "marginV": 10,
+    "marginH": 12,
+    "personalInfoMode": "icon",
+    "headerLayout": "stack",
+    "photoPlacement": "top-right",
+    "sectionTitlePreset": "accent-bar"
+  },
+  "editorSchema": [
+    { "key": "themeColor", "type": "color", "label": "主题色", "group": "基础" },
+    {
+      "key": "fontFamily",
+      "type": "select",
+      "label": "字体",
+      "group": "基础",
+      "options": [
+        { "label": "苹方", "value": "\"PingFang SC\", \"Microsoft YaHei\", sans-serif" },
+        { "label": "微软雅黑", "value": "\"Microsoft YaHei\", \"PingFang SC\", sans-serif" },
+        { "label": "黑体", "value": "\"SimHei\", \"Microsoft YaHei\", sans-serif" },
+        { "label": "宋体", "value": "\"SimSun\", \"Times New Roman\", serif" },
+        { "label": "Helvetica", "value": "Helvetica, Arial, sans-serif" },
+        { "label": "Arial", "value": "Arial, sans-serif" },
+        { "label": "Times New Roman", "value": "\"Times New Roman\", Times, serif" }
+      ]
+    },
+    { "key": "fontSize", "type": "number", "label": "正文字号", "group": "字号", "min": 11, "max": 16, "step": 1, "unit": "px" },
+    { "key": "h1Size", "type": "number", "label": "H1 标题", "group": "字号", "min": 24, "max": 34, "step": 1, "unit": "px" },
+    { "key": "h2Size", "type": "number", "label": "H2 标题", "group": "字号", "min": 14, "max": 22, "step": 1, "unit": "px" },
+    { "key": "h3Size", "type": "number", "label": "H3 标题", "group": "字号", "min": 12, "max": 18, "step": 1, "unit": "px" },
+    { "key": "dateSize", "type": "number", "label": "日期字号", "group": "字号", "min": 11, "max": 16, "step": 1, "unit": "px" },
+    {
+      "key": "dateWeight",
+      "type": "select",
+      "label": "日期字重",
+      "group": "字号",
+      "options": [
+        { "label": "常规", "value": "400" },
+        { "label": "加粗", "value": "700" }
+      ]
+    },
+    { "key": "lineHeight", "type": "number", "label": "行高", "group": "间距", "min": 1, "max": 2.5, "step": 0.1 },
+    { "key": "paragraphSpacing", "type": "number", "label": "正文块间距", "group": "间距", "min": 0, "max": 20, "step": 1, "unit": "px" },
+    { "key": "h2MarginTop", "type": "number", "label": "H2 上边距", "group": "间距", "min": 2, "max": 24, "step": 1, "unit": "px" },
+    { "key": "h2MarginBottom", "type": "number", "label": "H2 下边距", "group": "间距", "min": 2, "max": 24, "step": 1, "unit": "px" },
+    { "key": "h3MarginTop", "type": "number", "label": "H3 上边距", "group": "间距", "min": 2, "max": 12, "step": 1, "unit": "px" },
+    { "key": "h3MarginBottom", "type": "number", "label": "H3 下边距", "group": "间距", "min": 2, "max": 12, "step": 1, "unit": "px" },
+    { "key": "personalHeaderSpacing", "type": "number", "label": "个人信息间距", "group": "间距", "min": 2, "max": 24, "step": 1, "unit": "px" },
+    { "key": "marginV", "type": "number", "label": "上下页边距", "group": "间距", "min": 8, "max": 20, "step": 1, "unit": "mm" },
+    { "key": "marginH", "type": "number", "label": "左右页边距", "group": "间距", "min": 8, "max": 20, "step": 1, "unit": "mm" },
+    {
+      "key": "headerLayout",
+      "type": "select",
+      "label": "抬头布局",
+      "group": "布局",
+      "options": [
+        { "label": "纵向堆叠", "value": "stack" },
+        { "label": "左右分栏", "value": "split" },
+        { "label": "横向对齐", "value": "inline" }
+      ]
+    },
+    {
+      "key": "personalInfoMode",
+      "type": "select",
+      "label": "个人信息",
+      "group": "布局",
+      "options": [
+        { "label": "文字", "value": "text" },
+        { "label": "图标", "value": "icon" },
+        { "label": "标签", "value": "chips" }
+      ]
+    },
+    {
+      "key": "photoPlacement",
+      "type": "select",
+      "label": "照片位置",
+      "group": "布局",
+      "options": [
+        { "label": "右上角", "value": "top-right" },
+        { "label": "左上角", "value": "top-left" },
+        { "label": "抬头右侧", "value": "header-right" },
+        { "label": "隐藏", "value": "hidden" }
+      ]
+    },
+    {
+      "key": "sectionTitlePreset",
+      "type": "select",
+      "label": "二级标题样式",
+      "group": "布局",
+      "options": [
+        { "label": "强调条", "value": "accent-bar" },
+        { "label": "下划线", "value": "underline" },
+        { "label": "纯文字", "value": "plain" }
+      ]
+    }
+  ],
+  "features": {
+    "photo": true,
+    "pageFooter": true,
+    "contactModes": ["text", "icon"]
+  },
+  "layout": {
+    "headerLayout": "stack",
+    "personalInfoMode": "icon",
+    "photoPlacement": "top-right",
+    "sectionTitlePreset": "accent-bar"
+  }
+}

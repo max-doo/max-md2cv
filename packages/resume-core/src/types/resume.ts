@@ -13,16 +13,33 @@ export type TemplateSectionTitlePreset =
   | "underline"
   | "plain";
 
-export type TemplateEditableField =
-  | "fontFamily"
-  | "themeColor"
-  | "fontSize"
-  | "lineHeight"
-  | "spacing"
-  | "headerLayout"
-  | "personalInfoMode"
-  | "photoPlacement"
-  | "sectionTitlePreset";
+export type TemplateValue = string | number | boolean;
+export type TemplateValues = Record<string, TemplateValue>;
+
+export type TemplateFieldType =
+  | "color"
+  | "number"
+  | "select"
+  | "boolean"
+  | "text";
+
+export interface TemplateOption {
+  label: string;
+  value: TemplateValue;
+}
+
+export interface TemplateFieldSchema {
+  key: string;
+  type: TemplateFieldType;
+  label: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  unit?: string;
+  group?: string;
+  placeholder?: string;
+  options?: TemplateOption[];
+}
 
 export interface TemplateLayoutConfig {
   headerLayout: TemplateHeaderLayout;
@@ -31,18 +48,23 @@ export interface TemplateLayoutConfig {
   sectionTitlePreset: TemplateSectionTitlePreset;
 }
 
-export interface TemplateManifest {
-  version: 1;
-  defaults?: Partial<ResumeStyle>;
-  layout?: Partial<TemplateLayoutConfig>;
-  editable?: TemplateEditableField[];
+export interface TemplateFeatures {
+  photo?: boolean;
+  pageFooter?: boolean;
+  contactModes?: PersonalInfoMode[];
+  [key: string]: unknown;
 }
 
-export interface ResumeTemplate {
+export interface TemplateManifest {
   id: string;
   name: string;
-  css: string;
-  manifest?: TemplateManifest;
+  version: string;
+  entryCss: string;
+  description?: string;
+  defaults: TemplateValues;
+  editorSchema: TemplateFieldSchema[];
+  features?: TemplateFeatures;
+  layout?: Partial<TemplateLayoutConfig>;
 }
 
 export interface ResumeStyle {
@@ -66,11 +88,15 @@ export interface ResumeStyle {
   personalInfoMode?: PersonalInfoMode;
 }
 
+export interface ResumeTemplate extends TemplateManifest {
+  css: string;
+}
+
 export interface WebPlaygroundDraft {
-  version: 1;
+  version: 2;
   markdown: string;
   templateId: string;
-  resumeStyle: ResumeStyle;
+  values: TemplateValues;
   photoBase64: string | null;
   updatedAt: string;
 }

@@ -9,9 +9,8 @@ import { renderMarkdownToHtml } from '../utils/markdownRender'
 import { buildRuntimeResumeStyleCss } from '../utils/runtimeResumeStyle'
 import PreviewToolbar from './preview/PreviewToolbar.vue'
 import {
-  resolveTemplateManifest,
   type ResumeStyle,
-  type TemplateManifest,
+  type ResumeTemplate,
 } from '@resume-core'
 
 const store = useResumeStore()
@@ -67,15 +66,15 @@ interface PreviewRenderRequest {
   templateId: string
   cssText: string
   cvStyle: ResumeStyle
-  templateManifest: TemplateManifest
+  templateDefinition: ResumeTemplate
   photoBase64: string | null
 }
 
 const applyResumeDocumentLayoutHooks = (
   documentRoot: HTMLElement,
-  templateManifest: TemplateManifest,
+  templateDefinition: ResumeTemplate,
 ) => {
-  const layout = templateManifest.layout
+  const layout = templateDefinition.layout
   documentRoot.dataset.headerLayout = layout?.headerLayout ?? 'stack'
   documentRoot.dataset.personalInfoMode = layout?.personalInfoMode ?? 'text'
   documentRoot.dataset.photoPlacement = layout?.photoPlacement ?? 'top-right'
@@ -209,18 +208,25 @@ onMounted(async () => {
   }
 })
 const createPreviewRenderRequest = (markdownText: string): PreviewRenderRequest => {
-  const activeTemplateData = store.availableTemplates.find(t => t.id === store.activeTemplate)
-  const templateManifest = resolveTemplateManifest({
-    css: activeTemplateData?.css ?? '',
-    manifest: activeTemplateData?.manifest,
-  })
+  const activeTemplateData =
+    store.availableTemplates.find(t => t.id === store.activeTemplate)
+    ?? store.currentTemplate
+    ?? {
+      id: store.activeTemplate,
+      name: store.activeTemplate,
+      version: '1.0.0',
+      entryCss: 'style.css',
+      css: '',
+      defaults: {},
+      editorSchema: [],
+    }
 
   return {
     markdownText,
     templateId: store.activeTemplate,
     cssText: activeTemplateData?.css ?? '',
     cvStyle: { ...store.resumeStyle },
-    templateManifest,
+    templateDefinition: activeTemplateData,
     photoBase64: store.photoBase64,
   }
 }
@@ -260,7 +266,7 @@ const renderPdfPreview = async (request: PreviewRenderRequest) => {
     {
       ...cvStyle,
       personalInfoMode:
-        request.templateManifest.layout?.personalInfoMode ?? cvStyle.personalInfoMode,
+        request.templateDefinition.layout?.personalInfoMode ?? cvStyle.personalInfoMode,
     },
     request.templateId,
   )
@@ -275,13 +281,13 @@ const renderPdfPreview = async (request: PreviewRenderRequest) => {
 
   const headerHooks = applyResumeDocumentLayoutHooks(
     documentRoot,
-    request.templateManifest,
+    request.templateDefinition,
   )
 
   if (headerHooks?.photoWrapper) {
     headerHooks.photoWrapper.classList.add(
       request.photoBase64 ? 'has-photo' : 'is-empty',
-      `photo-placement-${request.templateManifest.layout?.photoPlacement ?? 'top-right'}`,
+      `photo-placement-${request.templateDefinition.layout?.photoPlacement ?? 'top-right'}`,
     )
   }
 
@@ -420,7 +426,7 @@ watch(() => store.activeTemplate, () => {
   persistRenderState()
 })
 
-watch(() => store.resumeStyle, () => {
+watch(() => store.templateValues, () => {
   queuePreviewRender(store.markdownContent)
   persistRenderState()
 }, { deep: true })

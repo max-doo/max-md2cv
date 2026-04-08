@@ -1,8 +1,13 @@
 import {
-  cloneResumeStyle,
-  createDefaultResumeStyle,
+  createLegacyTemplateManifest,
+  DEFAULT_TEMPLATE_EDITOR_SCHEMA,
+  createDefaultTemplateValues,
+  extractTemplateValueOverrides,
+  migrateLegacyResumeStyle,
+  normalizeResumeTemplate,
+  resolveResumeStyle,
+  resolveTemplateValues,
 } from "../../../utils/templateStyle";
-import { resolveTemplateManifest } from "@resume-core";
 import { DEFAULT_TEMPLATE_ID, RENDER_STATE_VERSION } from "../constants";
 import type { ResumeStoreBaseContext } from "../context";
 import type {
@@ -23,6 +28,22 @@ export const createRenderProfileModule = (
 ) => {
   const { state, platform, ui } = context;
 
+  const getTemplateDefinition = (templateId?: string | null) =>
+    state.availableTemplates.value.find(
+      (item) => item.id === resolveAvailableTemplateId(templateId),
+    ) ?? {
+      id: resolveAvailableTemplateId(templateId),
+      name: resolveAvailableTemplateId(templateId),
+      version: "1.0.0",
+      entryCss: "style.css",
+      css: "",
+      defaults: createDefaultTemplateValues(),
+      editorSchema: DEFAULT_TEMPLATE_EDITOR_SCHEMA,
+      features: undefined,
+      description: undefined,
+      layout: undefined,
+    };
+
   const resolveAvailableTemplateId = (templateId?: string | null) => {
     if (
       templateId &&
@@ -42,29 +63,51 @@ export const createRenderProfileModule = (
     );
   };
 
-  const getTemplateDefaultStyle = (templateId?: string | null) => {
-    const resolvedTemplateId = resolveAvailableTemplateId(templateId);
-    const template = state.availableTemplates.value.find(
-      (item) => item.id === resolvedTemplateId,
-    );
+  const getTemplateDefaultValues = (templateId?: string | null) =>
+    resolveTemplateValues(getTemplateDefinition(templateId));
 
-    if (!template) {
-      return createDefaultResumeStyle();
+  const normalizeProfileValues = (
+    templateId: string,
+    profile?:
+      | ResumeRenderProfile
+      | { templateId?: string | null; values?: unknown; style?: unknown }
+      | null,
+  ) => {
+    const template = getTemplateDefinition(templateId);
+
+    if (profile && typeof profile === "object" && profile.values && typeof profile.values === "object") {
+      return extractTemplateValueOverrides(
+        template,
+        profile.values as Record<string, string | number | boolean>,
+      );
     }
 
-    return cloneResumeStyle(
-      resolveTemplateManifest(template).defaults ?? createDefaultResumeStyle(),
-    );
+    if (
+      profile &&
+      typeof profile === "object" &&
+      "style" in profile &&
+      profile.style &&
+      typeof profile.style === "object"
+    ) {
+      return migrateLegacyResumeStyle(
+        template,
+        profile.style as Record<string, unknown>,
+      );
+    }
+
+    return {};
   };
 
-  const applyRenderProfile = (profile?: ResumeRenderProfile | null) => {
+  const applyRenderProfile = (
+    profile?:
+      | ResumeRenderProfile
+      | { templateId?: string | null; values?: unknown; style?: unknown }
+      | null,
+  ) => {
     const templateId = resolveAvailableTemplateId(profile?.templateId);
-    const baseStyle = getTemplateDefaultStyle(templateId);
 
     state.activeTemplate.value = templateId;
-    state.resumeStyle.value = cloneResumeStyle(
-      profile ? { ...baseStyle, ...profile.style } : baseStyle,
-    );
+    state.templateValues.value = normalizeProfileValues(templateId, profile);
   };
 
   const syncActiveFilePhoto = () => {
@@ -108,7 +151,10 @@ export const createRenderProfileModule = (
           path.replace(/\\/g, "/"),
           {
             templateId: profile?.templateId ?? DEFAULT_TEMPLATE_ID,
-            style: cloneResumeStyle(profile?.style),
+            values: normalizeProfileValues(
+              profile?.templateId ?? DEFAULT_TEMPLATE_ID,
+              profile,
+            ),
             photoPath: profile?.photoPath,
           },
         ]),
@@ -145,7 +191,10 @@ export const createRenderProfileModule = (
       ...state.renderProfilesByFile.value,
       [fileKey]: {
         templateId: state.activeTemplate.value,
-        style: cloneResumeStyle(state.resumeStyle.value),
+        values: extractTemplateValueOverrides(
+          getTemplateDefinition(state.activeTemplate.value),
+          state.templateValues.value,
+        ),
         photoPath: state.currentPhotoPath.value ?? undefined,
       },
     };
@@ -160,14 +209,14 @@ export const createRenderProfileModule = (
   const resetActiveFileRenderSettings = () => {
     applyRenderProfile({
       templateId: state.activeTemplate.value,
-      style: getTemplateDefaultStyle(state.activeTemplate.value),
+      values: {},
     });
   };
 
   const setActiveTemplateForCurrentFile = (templateId: string) => {
     applyRenderProfile({
       templateId,
-      style: getTemplateDefaultStyle(templateId),
+      values: {},
     });
   };
 
@@ -191,7 +240,7 @@ export const createRenderProfileModule = (
     const nextProfiles = { ...state.renderProfilesByFile.value };
     nextProfiles[newKey] = {
       templateId: profile.templateId,
-      style: cloneResumeStyle(profile.style),
+      values: { ...profile.values },
       photoPath: profile.photoPath,
     };
 
@@ -228,13 +277,28 @@ export const createRenderProfileModule = (
   const loadTemplates = async () => {
     try {
       const templates = await platform.invoke<ResumeTemplate[]>("list_templates");
-      state.availableTemplates.value = templates;
+      state.availableTemplates.value = templates.map((template) => {
+        if (!template.defaults || !template.editorSchema?.length) {
+          return normalizeResumeTemplate({
+            ...createLegacyTemplateManifest(
+              template.id,
+              template.name,
+              template.css,
+            ),
+            css: template.css,
+          });
+        }
+
+        return normalizeResumeTemplate(template);
+      });
 
       if (
-        templates.length > 0 &&
-        !templates.some((template) => template.id === state.activeTemplate.value)
+        state.availableTemplates.value.length > 0 &&
+        !state.availableTemplates.value.some(
+          (template) => template.id === state.activeTemplate.value,
+        )
       ) {
-        state.activeTemplate.value = templates[0].id;
+        state.activeTemplate.value = state.availableTemplates.value[0].id;
       }
 
       state.templatesLoaded.value = true;
@@ -254,30 +318,43 @@ export const createRenderProfileModule = (
       return;
     }
 
-    const style = state.resumeStyle.value;
-    const marker = "/* @user-overrides */";
-    const baseCss = template.css.split(marker)[0].trimEnd();
-    const patchCss = `\n\n${marker}\n.resume-document {\n  font-family: ${style.fontFamily};\n  font-size: ${style.fontSize}px;\n  line-height: ${style.lineHeight};\n  --cv-theme-color: ${style.themeColor};\n  --cv-font-size: ${style.fontSize}px;\n  --cv-paragraph-spacing: ${style.paragraphSpacing}px;\n  --cv-h2-margin-top: ${style.h2MarginTop}px;\n  --cv-h2-margin-bottom: ${style.h2MarginBottom}px;\n  --cv-h3-margin-top: ${style.h3MarginTop}px;\n  --cv-h3-margin-bottom: ${style.h3MarginBottom}px;\n  --cv-personal-header-spacing: ${style.personalHeaderSpacing}px;\n  --cv-contact-render: ${style.personalInfoMode || "text"};\n}\n.resume-document h1 { font-size: ${style.h1Size}px; }\n.resume-document h2 { font-size: ${style.h2Size}px; margin-top: var(--cv-h2-margin-top); margin-bottom: var(--cv-h2-margin-bottom); }\n.resume-document h3 { font-size: ${style.h3Size}px; margin-top: var(--cv-h3-margin-top); margin-bottom: var(--cv-h3-margin-bottom); }\n.resume-document p,\n.resume-document ul,\n.resume-document ol,\n.resume-document .job-intention + p,\n.resume-document .contact-info--text,\n.resume-document .contact-info-text-line,\n.resume-document .contact-info--icon,\n.resume-document .contact-info-item { font-size: var(--cv-font-size); }\n.resume-document blockquote { font-size: calc(var(--cv-font-size) * 0.9); }\n.resume-document p,\n.resume-document ul,\n.resume-document ol,\n.resume-document blockquote { margin-top: 0; margin-bottom: var(--cv-paragraph-spacing); }\n.resume-document li { margin-bottom: calc(var(--cv-paragraph-spacing) * 0.5); }\n.resume-document .personal-header { margin-bottom: 0; padding-bottom: var(--cv-personal-header-spacing); }\n.resume-document .job-intention + p,\n.resume-document .contact-info--text,\n.resume-document .contact-info--icon { margin-bottom: 0; }\n@page { margin: ${style.marginV}mm ${style.marginH}mm; }\n.resume-document h2 { border-left-color: var(--cv-theme-color); border-bottom-color: var(--cv-theme-color); background-color: color-mix(in srgb, var(--cv-theme-color) 10%, transparent); }\n`;
-    const newCss = baseCss + patchCss;
-    const nextManifest = resolveTemplateManifest({
-      css: newCss,
-      manifest: template.manifest,
-    });
-    nextManifest.defaults = cloneResumeStyle(style);
-    nextManifest.layout = {
-      ...nextManifest.layout,
-      personalInfoMode:
-        style.personalInfoMode ?? nextManifest.layout?.personalInfoMode ?? "text",
+    const resolvedValues = resolveTemplateValues(
+      template,
+      state.templateValues.value,
+    );
+    const resolvedStyle = resolveResumeStyle(template, resolvedValues);
+    const nextTemplate = {
+      ...template,
+      defaults: resolveTemplateValues(template, resolvedValues),
+      layout: {
+        ...template.layout,
+        headerLayout: String(
+          resolvedValues.headerLayout ?? template.layout?.headerLayout ?? "stack",
+        ) as "stack" | "split" | "inline",
+        personalInfoMode: String(
+          resolvedValues.personalInfoMode ??
+            template.layout?.personalInfoMode ??
+            resolvedStyle.personalInfoMode ??
+            "text",
+        ) as "text" | "icon" | "chips",
+        photoPlacement: String(
+          resolvedValues.photoPlacement ??
+            template.layout?.photoPlacement ??
+            "top-right",
+        ) as "hidden" | "top-right" | "top-left" | "header-right",
+        sectionTitlePreset: String(
+          resolvedValues.sectionTitlePreset ??
+            template.layout?.sectionTitlePreset ??
+            "accent-bar",
+        ) as "accent-bar" | "underline" | "plain",
+      },
     };
 
     try {
-      await platform.invoke("save_template", {
-        id: template.id,
-        css: newCss,
-        manifest: nextManifest,
+      await platform.invoke("save_template_package", {
+        template: nextTemplate,
       });
-      template.css = newCss;
-      template.manifest = nextManifest;
+      Object.assign(template, nextTemplate);
       ui.message.success("模板已保存");
     } catch (error) {
       console.error("Failed to save template:", error);
@@ -287,7 +364,7 @@ export const createRenderProfileModule = (
 
   return {
     resolveAvailableTemplateId,
-    getTemplateDefaultStyle,
+    getTemplateDefaultValues,
     applyRenderProfile,
     syncActiveFilePhoto,
     syncActiveFileRenderProfile,

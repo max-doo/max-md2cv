@@ -72,7 +72,8 @@ const buildWebPrintHtml = async (
 
 export const useResumeStore = defineStore("resume", () => {
   const playground = usePlaygroundStore();
-  const { photoBase64, resumeStyle } = storeToRefs(playground);
+  const { photoBase64, resumeStyle, templateValues, currentTemplate } =
+    storeToRefs(playground);
 
   if (!playground.hydrated) {
     playground.hydrate();
@@ -290,6 +291,9 @@ export const useResumeStore = defineStore("resume", () => {
     isPreviewReady,
     templatesLoaded,
     resumeStyle,
+    templateValues,
+    currentTemplate,
+    setTemplateValue: playground.setTemplateValue,
     renderProfilesByFile: computed(() => ({})),
     workspacePath: computed(() => null),
     fileList,

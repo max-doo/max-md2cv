@@ -9,7 +9,7 @@ use files::{
     open_directory, open_pdf, path_exists, read_image_as_data_url, read_resume, rename_resume,
     write_resume,
 };
-use templates::{list_templates, save_template};
+use templates::{list_templates, save_template_package};
 use workspace::{
     read_workspace_render_state, set_workspace_watch, write_workspace_render_state,
     WorkspaceWatchState,
@@ -27,7 +27,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             export_pdf_command,
             list_templates,
-            save_template,
+            save_template_package,
             list_resumes,
             list_pdfs,
             list_images,

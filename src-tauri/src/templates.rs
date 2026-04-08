@@ -1,19 +1,38 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fs;
 use std::path::Path;
 use tauri::Manager;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct TemplateInfo {
     pub id: String,
     pub name: String,
+    pub version: String,
+    pub entry_css: String,
+    pub description: Option<String>,
+    pub defaults: Value,
+    pub editor_schema: Value,
+    pub features: Option<Value>,
+    pub layout: Option<Value>,
     pub css: String,
-    pub manifest: Option<Value>,
 }
 
-/// Scan built-in resource templates and user-custom templates from appDataDir.
-/// User templates take precedence over built-ins with the same id.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TemplateManifestFile {
+    id: String,
+    name: String,
+    version: Option<String>,
+    entry_css: Option<String>,
+    description: Option<String>,
+    defaults: Option<Value>,
+    editor_schema: Option<Value>,
+    features: Option<Value>,
+    layout: Option<Value>,
+}
+
 #[tauri::command]
 pub async fn list_templates(app: tauri::AppHandle) -> Result<Vec<TemplateInfo>, String> {
     let mut templates: Vec<TemplateInfo> = Vec::new();
@@ -28,15 +47,13 @@ pub async fn list_templates(app: tauri::AppHandle) -> Result<Vec<TemplateInfo>, 
     }
 
     if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
-        let dev_source_path = Path::new(&manifest_dir)
-            .parent()
-            .map(|root| {
-                root.join("packages")
-                    .join("resume-core")
-                    .join("src")
-                    .join("assets")
-                    .join("templates")
-            });
+        let dev_source_path = Path::new(&manifest_dir).parent().map(|root| {
+            root.join("packages")
+                .join("resume-core")
+                .join("src")
+                .join("assets")
+                .join("templates")
+        });
         if let Some(dev_path) = dev_source_path {
             if dev_path.exists() {
                 load_templates_overriding(&dev_path, &mut templates)?;
@@ -59,13 +76,10 @@ pub async fn list_templates(app: tauri::AppHandle) -> Result<Vec<TemplateInfo>, 
     Ok(templates)
 }
 
-/// Write (or overwrite) a legacy template CSS file in the user's AppData/templates directory.
 #[tauri::command]
-pub async fn save_template(
+pub async fn save_template_package(
     app: tauri::AppHandle,
-    id: String,
-    css: String,
-    manifest: Option<Value>,
+    template: TemplateInfo,
 ) -> Result<(), String> {
     let app_data_dir = app
         .path()
@@ -77,37 +91,42 @@ pub async fn save_template(
             .map_err(|e| format!("Failed to create templates dir: {}", e))?;
     }
 
-    if let Some(manifest_value) = manifest {
-        let legacy_file_path = user_path.join(format!("{}.css", id));
-        if legacy_file_path.exists() {
-            fs::remove_file(&legacy_file_path).map_err(|e| {
-                format!(
-                    "Failed to remove legacy template file {:?}: {}",
-                    legacy_file_path, e
-                )
-            })?;
-        }
-
-        let template_dir = user_path.join(&id);
-        if !template_dir.exists() {
-            fs::create_dir_all(&template_dir)
-                .map_err(|e| format!("Failed to create template dir {:?}: {}", template_dir, e))?;
-        }
-
-        let css_path = template_dir.join("template.css");
-        fs::write(&css_path, &css)
-            .map_err(|e| format!("Failed to write template {:?}: {}", css_path, e))?;
-
-        let manifest_path = template_dir.join("manifest.json");
-        let manifest_content = serde_json::to_string_pretty(&manifest_value)
-            .map_err(|e| format!("Failed to serialize manifest {:?}: {}", manifest_path, e))?;
-        fs::write(&manifest_path, manifest_content)
-            .map_err(|e| format!("Failed to write manifest {:?}: {}", manifest_path, e))?;
-    } else {
-        let file_path = user_path.join(format!("{}.css", id));
-        fs::write(&file_path, &css)
-            .map_err(|e| format!("Failed to write template {:?}: {}", file_path, e))?;
+    let legacy_file_path = user_path.join(format!("{}.css", template.id));
+    if legacy_file_path.exists() {
+        fs::remove_file(&legacy_file_path).map_err(|e| {
+            format!(
+                "Failed to remove legacy template file {:?}: {}",
+                legacy_file_path, e
+            )
+        })?;
     }
+
+    let template_dir = user_path.join(&template.id);
+    if !template_dir.exists() {
+        fs::create_dir_all(&template_dir)
+            .map_err(|e| format!("Failed to create template dir {:?}: {}", template_dir, e))?;
+    }
+
+    let css_path = template_dir.join("style.css");
+    fs::write(&css_path, &template.css)
+        .map_err(|e| format!("Failed to write template {:?}: {}", css_path, e))?;
+
+    let manifest_path = template_dir.join("template.json");
+    let manifest = serde_json::json!({
+        "id": template.id,
+        "name": template.name,
+        "version": template.version,
+        "entryCss": template.entry_css,
+        "description": template.description,
+        "defaults": template.defaults,
+        "editorSchema": template.editor_schema,
+        "features": template.features,
+        "layout": template.layout,
+    });
+    let manifest_content = serde_json::to_string_pretty(&manifest)
+        .map_err(|e| format!("Failed to serialize manifest {:?}: {}", manifest_path, e))?;
+    fs::write(&manifest_path, manifest_content)
+        .map_err(|e| format!("Failed to write manifest {:?}: {}", manifest_path, e))?;
 
     Ok(())
 }
@@ -116,7 +135,6 @@ fn load_templates_from_dir(dir: &Path, templates: &mut Vec<TemplateInfo>) -> Res
     load_templates(dir, templates, false)
 }
 
-/// Same as `load_templates_from_dir` but user entries *replace* any existing entry with the same id.
 fn load_templates_overriding(
     dir: &Path,
     templates: &mut Vec<TemplateInfo>,
@@ -135,7 +153,7 @@ fn load_templates(
         let path = entry.path();
 
         let template = if path.is_dir() {
-            read_directory_template(&path)?
+            read_template_package(&path)?
         } else if path.extension().and_then(|e| e.to_str()) == Some("css") {
             Some(read_legacy_css_template(&path)?)
         } else {
@@ -169,7 +187,6 @@ fn insert_template(
 fn read_legacy_css_template(path: &Path) -> Result<TemplateInfo, String> {
     let css_content =
         fs::read_to_string(path).map_err(|e| format!("Failed to read {:?}: {}", path, e))?;
-    let manifest = read_sidecar_manifest(path)?;
     let name = extract_meta(&css_content, "name").unwrap_or_else(|| {
         path.file_stem()
             .and_then(|s| s.to_str())
@@ -185,62 +202,47 @@ fn read_legacy_css_template(path: &Path) -> Result<TemplateInfo, String> {
     Ok(TemplateInfo {
         id,
         name,
+        version: "1.0.0".to_string(),
+        entry_css: "style.css".to_string(),
+        description: None,
+        defaults: Value::Object(Default::default()),
+        editor_schema: Value::Array(Vec::new()),
+        features: None,
+        layout: None,
         css: css_content,
-        manifest,
     })
 }
 
-fn read_directory_template(path: &Path) -> Result<Option<TemplateInfo>, String> {
-    let css_path = path.join("template.css");
-    if !css_path.exists() {
-        return Ok(None);
-    }
-
-    let css_content = fs::read_to_string(&css_path)
-        .map_err(|e| format!("Failed to read {:?}: {}", css_path, e))?;
-    let manifest_path = path.join("manifest.json");
-    let manifest = if manifest_path.exists() {
-        Some(read_template_manifest(&manifest_path)?)
-    } else {
-        None
-    };
-    let name = extract_meta(&css_content, "name").unwrap_or_else(|| {
-        path.file_name()
-            .and_then(|s| s.to_str())
-            .unwrap_or("unknown")
-            .to_string()
-    });
-    let id = path
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap_or("unknown")
-        .to_string();
-
-    Ok(Some(TemplateInfo {
-        id,
-        name,
-        css: css_content,
-        manifest,
-    }))
-}
-
-fn read_template_manifest(path: &Path) -> Result<Value, String> {
-    let manifest_content =
-        fs::read_to_string(path).map_err(|e| format!("Failed to read {:?}: {}", path, e))?;
-    serde_json::from_str::<Value>(&manifest_content)
-        .map_err(|e| format!("Failed to parse manifest {:?}: {}", path, e))
-}
-
-fn read_sidecar_manifest(path: &Path) -> Result<Option<Value>, String> {
-    let manifest_path = path.with_extension("manifest.json");
+fn read_template_package(path: &Path) -> Result<Option<TemplateInfo>, String> {
+    let manifest_path = path.join("template.json");
     if !manifest_path.exists() {
         return Ok(None);
     }
 
-    read_template_manifest(&manifest_path).map(Some)
+    let manifest_content = fs::read_to_string(&manifest_path)
+        .map_err(|e| format!("Failed to read {:?}: {}", manifest_path, e))?;
+    let manifest: TemplateManifestFile = serde_json::from_str(&manifest_content)
+        .map_err(|e| format!("Failed to parse manifest {:?}: {}", manifest_path, e))?;
+
+    let entry_css = manifest.entry_css.unwrap_or_else(|| "style.css".to_string());
+    let css_path = path.join(&entry_css);
+    let css_content =
+        fs::read_to_string(&css_path).map_err(|e| format!("Failed to read {:?}: {}", css_path, e))?;
+
+    Ok(Some(TemplateInfo {
+        id: manifest.id,
+        name: manifest.name,
+        version: manifest.version.unwrap_or_else(|| "1.0.0".to_string()),
+        entry_css,
+        description: manifest.description,
+        defaults: manifest.defaults.unwrap_or_else(|| Value::Object(Default::default())),
+        editor_schema: manifest.editor_schema.unwrap_or_else(|| Value::Array(Vec::new())),
+        features: manifest.features,
+        layout: manifest.layout,
+        css: css_content,
+    }))
 }
 
-/// Parse `/* @key: value */` style metadata from CSS content.
 fn extract_meta(css: &str, key: &str) -> Option<String> {
     let pattern = format!("@{}:", key);
     for line in css.lines() {

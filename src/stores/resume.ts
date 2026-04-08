@@ -8,6 +8,9 @@ export type {
   ResumeStyle,
   ResumeTemplate,
   SidebarPrimaryView,
+  TemplateFieldSchema,
+  TemplateValue,
+  TemplateValues,
   WorkspaceChangedEvent,
   WorkspaceRenderState,
 } from "./resume/index";

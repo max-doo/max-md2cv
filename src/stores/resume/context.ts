@@ -1,5 +1,5 @@
 import type { UnlistenFn } from "@tauri-apps/api/event";
-import type { Ref } from "vue";
+import type { ComputedRef, Ref } from "vue";
 import type {
   ActiveFileStatus,
   EditorJumpRequest,
@@ -9,6 +9,7 @@ import type {
   ResumeStyle,
   ResumeTemplate,
   SidebarPrimaryView,
+  TemplateValues,
 } from "./types";
 
 type InvokeFn = typeof import("@tauri-apps/api/core").invoke;
@@ -26,7 +27,8 @@ export interface ResumeStoreState {
   isPreviewRendering: Ref<boolean>;
   isPreviewReady: Ref<boolean>;
   templatesLoaded: Ref<boolean>;
-  resumeStyle: Ref<ResumeStyle>;
+  templateValues: Ref<TemplateValues>;
+  resumeStyle: ComputedRef<ResumeStyle>;
   renderProfilesByFile: Ref<Record<string, ResumeRenderProfile>>;
   workspacePath: Ref<string | null>;
   fileList: Ref<FileItem[]>;

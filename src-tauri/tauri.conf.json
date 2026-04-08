@@ -28,8 +28,7 @@
     "active": true,
     "targets": ["nsis"],
     "resources": {
-      "../packages/resume-core/src/assets/templates/*.css": "templates/",
-      "../packages/resume-core/src/assets/templates/*.manifest.json": "templates/"
+      "../packages/resume-core/src/assets/templates": "templates/"
     },
     "icon": [
       "icons/32x32.png",

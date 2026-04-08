@@ -6,64 +6,33 @@ import {
   DEFAULT_TEMPLATE_ID,
   PLAYGROUND_DRAFT_VERSION,
   PLAYGROUND_STORAGE_KEY,
-  cloneResumeStyle,
+  extractTemplateValueOverrides,
   getBuiltinTemplateById,
   getBuiltinTemplates,
-  resolveTemplateManifest,
-  type ResumeStyle,
+  migrateLegacyResumeStyle,
+  resolveResumeStyle,
+  resolveTemplateValues,
+  type TemplateValue,
+  type TemplateValues,
   type WebPlaygroundDraft,
 } from "@resume-core";
 
 const templates = getBuiltinTemplates();
 
-const getDefaultResumeStyle = (templateId: string = DEFAULT_TEMPLATE_ID) => {
-  const template = getBuiltinTemplateById(templateId);
-
-  return cloneResumeStyle(
-    resolveTemplateManifest({
-      css: template?.css ?? "",
-      manifest: template?.manifest,
-    }).defaults,
-  );
-};
+const getTemplateDefinition = (templateId: string = DEFAULT_TEMPLATE_ID) =>
+  getBuiltinTemplateById(templateId) ?? templates[0] ?? null;
 
 const createDefaultDraft = (): WebPlaygroundDraft => ({
   version: PLAYGROUND_DRAFT_VERSION,
   markdown: DEFAULT_RESUME_MARKDOWN,
   templateId: DEFAULT_TEMPLATE_ID,
-  resumeStyle: getDefaultResumeStyle(DEFAULT_TEMPLATE_ID),
+  values: {},
   photoBase64: null,
   updatedAt: new Date().toISOString(),
 });
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null;
-};
-
-const hasValidCssColor = (value: string) => {
-  if (typeof CSS === "undefined" || typeof CSS.supports !== "function") {
-    return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(value.trim());
-  }
-
-  return CSS.supports("color", value.trim());
-};
-
-const normalizeResumeStyle = (
-  style: Partial<ResumeStyle> | null | undefined,
-  templateId: string,
-): ResumeStyle => {
-  const fallback = getDefaultResumeStyle(templateId);
-  const normalized = cloneResumeStyle(style ?? fallback);
-
-  if (!normalized.fontFamily?.trim()) {
-    normalized.fontFamily = fallback.fontFamily;
-  }
-
-  if (!normalized.themeColor?.trim() || !hasValidCssColor(normalized.themeColor)) {
-    normalized.themeColor = fallback.themeColor;
-  }
-
-  return normalized;
 };
 
 const migrateDraft = (raw: unknown): WebPlaygroundDraft | null => {
@@ -75,18 +44,32 @@ const migrateDraft = (raw: unknown): WebPlaygroundDraft | null => {
     typeof raw.templateId === "string" && getBuiltinTemplateById(raw.templateId)
       ? raw.templateId
       : DEFAULT_TEMPLATE_ID;
+  const template = getTemplateDefinition(templateId);
+
+  if (!template) {
+    return createDefaultDraft();
+  }
+
+  let values: TemplateValues = {};
+
+  if (isRecord(raw.values)) {
+    values = extractTemplateValueOverrides(
+      template,
+      raw.values as Record<string, TemplateValue>,
+    );
+  } else if (isRecord(raw.resumeStyle)) {
+    values = migrateLegacyResumeStyle(
+      template,
+      raw.resumeStyle as Record<string, unknown>,
+    );
+  }
 
   return {
     version: PLAYGROUND_DRAFT_VERSION,
     markdown:
       typeof raw.markdown === "string" ? raw.markdown : DEFAULT_RESUME_MARKDOWN,
     templateId,
-    resumeStyle: normalizeResumeStyle(
-      isRecord(raw.resumeStyle)
-        ? (raw.resumeStyle as Partial<ResumeStyle>)
-        : getDefaultResumeStyle(templateId),
-      templateId,
-    ),
+    values,
     photoBase64:
       typeof raw.photoBase64 === "string" ? raw.photoBase64 : null,
     updatedAt:
@@ -107,20 +90,36 @@ const readFileAsDataUrl = (file: File) =>
 export const usePlaygroundStore = defineStore("web-playground", () => {
   const markdown = ref(DEFAULT_RESUME_MARKDOWN);
   const templateId = ref<string>(DEFAULT_TEMPLATE_ID);
-  const resumeStyle = ref<ResumeStyle>(getDefaultResumeStyle(DEFAULT_TEMPLATE_ID));
+  const templateValues = ref<TemplateValues>({});
   const photoBase64 = ref<string | null>(null);
   const lastSavedAt = ref<string | null>(null);
   const hydrated = ref(false);
 
   const currentTemplate = computed(() => {
-    return getBuiltinTemplateById(templateId.value) ?? templates[0] ?? null;
+    return getTemplateDefinition(templateId.value);
+  });
+
+  const resumeStyle = computed(() => {
+    if (!currentTemplate.value) {
+      return resolveResumeStyle(
+        {
+          defaults: {},
+          editorSchema: [],
+        },
+        templateValues.value,
+      );
+    }
+
+    return resolveResumeStyle(currentTemplate.value, templateValues.value);
   });
 
   const draft = computed<WebPlaygroundDraft>(() => ({
     version: PLAYGROUND_DRAFT_VERSION,
     markdown: markdown.value,
     templateId: templateId.value,
-    resumeStyle: cloneResumeStyle(resumeStyle.value),
+    values: currentTemplate.value
+      ? extractTemplateValueOverrides(currentTemplate.value, templateValues.value)
+      : { ...templateValues.value },
     photoBase64: photoBase64.value,
     updatedAt: new Date().toISOString(),
   }));
@@ -139,7 +138,7 @@ export const usePlaygroundStore = defineStore("web-playground", () => {
       const initialDraft = createDefaultDraft();
       markdown.value = initialDraft.markdown;
       templateId.value = initialDraft.templateId;
-      resumeStyle.value = initialDraft.resumeStyle;
+      templateValues.value = initialDraft.values;
       photoBase64.value = initialDraft.photoBase64;
       lastSavedAt.value = initialDraft.updatedAt;
       hydrated.value = true;
@@ -151,14 +150,14 @@ export const usePlaygroundStore = defineStore("web-playground", () => {
       const parsed = migrateDraft(JSON.parse(raw)) ?? createDefaultDraft();
       markdown.value = parsed.markdown;
       templateId.value = parsed.templateId;
-      resumeStyle.value = parsed.resumeStyle;
+      templateValues.value = parsed.values;
       photoBase64.value = parsed.photoBase64;
       lastSavedAt.value = parsed.updatedAt;
     } catch {
       const initialDraft = createDefaultDraft();
       markdown.value = initialDraft.markdown;
       templateId.value = initialDraft.templateId;
-      resumeStyle.value = initialDraft.resumeStyle;
+      templateValues.value = initialDraft.values;
       photoBase64.value = initialDraft.photoBase64;
       lastSavedAt.value = initialDraft.updatedAt;
     }
@@ -172,14 +171,26 @@ export const usePlaygroundStore = defineStore("web-playground", () => {
     }
 
     templateId.value = nextTemplateId;
-    resumeStyle.value = normalizeResumeStyle(undefined, nextTemplateId);
+    templateValues.value = {};
   };
 
-  const patchResumeStyle = (patch: Partial<ResumeStyle>) => {
-    resumeStyle.value = normalizeResumeStyle({
-      ...resumeStyle.value,
-      ...patch,
-    }, templateId.value);
+  const setTemplateValue = (key: string, value: TemplateValue) => {
+    if (!currentTemplate.value) {
+      templateValues.value = {
+        ...templateValues.value,
+        [key]: value,
+      };
+      return;
+    }
+
+    const nextResolvedValues = resolveTemplateValues(currentTemplate.value, {
+      ...templateValues.value,
+      [key]: value,
+    });
+    templateValues.value = extractTemplateValueOverrides(
+      currentTemplate.value,
+      nextResolvedValues,
+    );
   };
 
   const updateMarkdown = (value: string) => {
@@ -202,13 +213,13 @@ export const usePlaygroundStore = defineStore("web-playground", () => {
     const initialDraft = createDefaultDraft();
     markdown.value = initialDraft.markdown;
     templateId.value = initialDraft.templateId;
-    resumeStyle.value = initialDraft.resumeStyle;
+    templateValues.value = initialDraft.values;
     photoBase64.value = initialDraft.photoBase64;
     persistNow();
   };
 
   watch(
-    [markdown, templateId, resumeStyle, photoBase64],
+    [markdown, templateId, templateValues, photoBase64],
     () => {
       if (!hydrated.value) {
         return;
@@ -223,6 +234,7 @@ export const usePlaygroundStore = defineStore("web-playground", () => {
     templates,
     markdown,
     templateId,
+    templateValues,
     resumeStyle,
     photoBase64,
     lastSavedAt,
@@ -231,7 +243,7 @@ export const usePlaygroundStore = defineStore("web-playground", () => {
     draft,
     hydrate,
     setTemplate,
-    patchResumeStyle,
+    setTemplateValue,
     updateMarkdown,
     setPhotoBase64,
     uploadPhoto,
