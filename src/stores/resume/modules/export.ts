@@ -1,4 +1,5 @@
 import { buildPagedExportDocumentHtml } from "../../../utils/pagedExport";
+import { resolvePhotoAdjustments, resolveTemplateValues } from "@resume-core";
 import type { ResumeStoreBaseContext } from "../context";
 
 interface ExportModuleContext extends ResumeStoreBaseContext {
@@ -77,6 +78,17 @@ export const createExportModule = (context: ExportModuleContext) => {
         documentTitle,
         pagesContainer: pagesContainer as HTMLElement,
         cvStyle: state.resumeStyle.value,
+        photoAdjustments: resolvePhotoAdjustments(
+          resolveTemplateValues(
+            state.availableTemplates.value.find(
+              (template) => template.id === state.activeTemplate.value,
+            ) ?? {
+              defaults: {},
+              editorSchema: [],
+            },
+            state.templateValues.value,
+          ),
+        ),
       });
 
       await platform.invoke("export_pdf_command", {

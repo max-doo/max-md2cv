@@ -206,17 +206,49 @@ export const createRenderProfileModule = (
     }
   };
 
+  const updateCurrentFileRenderProfile = (
+    templateId: string,
+    values: ResumeRenderProfile["values"],
+  ) => {
+    const fileKey = context.getWorkspaceRelativePath(state.activeFilePath.value);
+    if (!fileKey) {
+      return false;
+    }
+
+    const currentProfile = state.renderProfilesByFile.value[fileKey];
+    state.renderProfilesByFile.value = {
+      ...state.renderProfilesByFile.value,
+      [fileKey]: {
+        templateId,
+        values,
+        photoPath: currentProfile?.photoPath ?? state.currentPhotoPath.value ?? undefined,
+      },
+    };
+
+    return true;
+  };
+
   const resetActiveFileRenderSettings = () => {
-    applyRenderProfile({
-      templateId: state.activeTemplate.value,
-      values: {},
+    state.templateValues.value = {};
+    if (!updateCurrentFileRenderProfile(state.activeTemplate.value, {})) {
+      return;
+    }
+
+    void persistWorkspaceRenderState().catch((error) => {
+      console.error("Failed to reset active render state:", error);
     });
   };
 
   const setActiveTemplateForCurrentFile = (templateId: string) => {
-    applyRenderProfile({
-      templateId,
-      values: {},
+    state.activeTemplate.value = resolveAvailableTemplateId(templateId);
+    state.templateValues.value = {};
+
+    if (!updateCurrentFileRenderProfile(state.activeTemplate.value, {})) {
+      return;
+    }
+
+    void persistWorkspaceRenderState().catch((error) => {
+      console.error("Failed to update active template render state:", error);
     });
   };
 
@@ -278,7 +310,18 @@ export const createRenderProfileModule = (
     try {
       const templates = await platform.invoke<ResumeTemplate[]>("list_templates");
       state.availableTemplates.value = templates.map((template) => {
-        if (!template.defaults || !template.editorSchema?.length) {
+        const hasDefaults =
+          !!template.defaults &&
+          typeof template.defaults === "object" &&
+          Object.keys(template.defaults).length > 0;
+        const hasStructuredManifest =
+          hasDefaults ||
+          !!template.schemaPreset ||
+          !!template.layout ||
+          !!template.features ||
+          !!template.editorSchema?.length;
+
+        if (!hasStructuredManifest) {
           return normalizeResumeTemplate({
             ...createLegacyTemplateManifest(
               template.id,

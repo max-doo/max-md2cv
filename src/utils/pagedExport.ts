@@ -1,18 +1,20 @@
 import { buildSelfContainedExportStyles } from "./exportStyles";
 import { getInlinePingFangFontFaceCss } from "./fontAssets";
 import { buildRuntimeResumeStyleCss } from "./runtimeResumeStyle";
-import type { ResumeStyle } from "@resume-core";
+import type { PhotoAdjustments, ResumeStyle } from "@resume-core";
 
 interface PagedExportDocumentOptions {
   documentTitle: string;
   pagesContainer: HTMLElement;
   cvStyle: ResumeStyle;
+  photoAdjustments: PhotoAdjustments;
 }
 
 export const buildPagedExportDocumentHtml = async ({
   documentTitle,
   pagesContainer,
   cvStyle,
+  photoAdjustments,
 }: PagedExportDocumentOptions) => {
   const styles = await buildSelfContainedExportStyles();
   const inlinePingFangFontFaceCss = await getInlinePingFangFontFaceCss();
@@ -35,7 +37,10 @@ export const buildPagedExportDocumentHtml = async ({
       ${styles}
       <style>
         ${inlinePingFangFontFaceCss}
-        ${buildRuntimeResumeStyleCss(cvStyle, { includePageRule: false })}
+        ${buildRuntimeResumeStyleCss(cvStyle, {
+          includePageRule: false,
+          photoAdjustments,
+        })}
         @page {
           size: A4;
           margin: 0 !important;

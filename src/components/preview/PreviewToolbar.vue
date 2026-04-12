@@ -2,7 +2,13 @@
 import { computed } from 'vue'
 import SoftSelect from '../shared/SoftSelect.vue'
 import { useResumeStore } from '@resume-store'
-import type { TemplateFieldSchema, TemplateValue } from '@resume-core'
+import {
+  resolvePhotoAdjustments,
+  resolveTemplateValues,
+  type PhotoAdjustments,
+  type TemplateFieldSchema,
+  type TemplateValue,
+} from '@resume-core'
 
 defineProps<{
   zoomLevel: number
@@ -44,6 +50,10 @@ const HIDDEN_PREVIEW_FIELD_KEYS = new Set([
   'headerLayout',
   'personalInfoMode',
   'photoPlacement',
+  'photoVisible',
+  'photoSize',
+  'photoOffsetX',
+  'photoOffsetY',
   'sectionTitlePreset',
 ])
 
@@ -90,6 +100,22 @@ const themeColorField = computed(
   () => store.currentTemplate?.editorSchema.find(field => field.key === 'themeColor') ?? null,
 )
 
+const resolvedTemplateValues = computed(() =>
+  store.currentTemplate
+    ? resolveTemplateValues(store.currentTemplate, store.templateValues)
+    : store.templateValues,
+)
+
+const photoAdjustments = computed<PhotoAdjustments>(() =>
+  resolvePhotoAdjustments(resolvedTemplateValues.value),
+)
+
+const PHOTO_SLIDERS = [
+  { key: 'photoSize', label: '大小', min: 88, max: 112, step: 1, unit: '%' },
+  { key: 'photoOffsetY', label: '上下', min: -24, max: 24, step: 1, unit: 'px' },
+  { key: 'photoOffsetX', label: '左右', min: -24, max: 24, step: 1, unit: 'px' },
+] as const
+
 const getFieldValue = (field: TemplateFieldSchema): TemplateValue => {
   const overrideValue = store.templateValues?.[field.key]
   if (overrideValue !== undefined) {
@@ -124,6 +150,20 @@ const isThemeColorSelected = (field: TemplateFieldSchema, color: string) =>
 
 const isSegmentedSelectField = (field: TemplateFieldSchema) =>
   field.key === 'dateWeight' && (field.options?.length ?? 0) > 0
+
+const setPhotoVisibility = (visible: boolean) => {
+  setFieldValue('photoVisible', visible)
+}
+
+const setPhotoSliderValue = (
+  key: typeof PHOTO_SLIDERS[number]['key'],
+  value: number,
+) => {
+  setFieldValue(key, value)
+}
+
+const getPhotoSliderValue = (key: typeof PHOTO_SLIDERS[number]['key']) =>
+  Number(resolvedTemplateValues.value[key] ?? 0)
 </script>
 
 <template>
@@ -233,6 +273,82 @@ const isSegmentedSelectField = (field: TemplateFieldSchema) =>
                 class="preview-theme-hex-input"
                 maxlength="6"
                 @input="handleThemeColorHexInput(themeColorField.key, $event)"
+              />
+            </div>
+          </div>
+        </div>
+      </el-popover>
+
+      <el-popover
+        placement="bottom"
+        trigger="click"
+        :width="280"
+        popper-class="preview-toolbar-popper preview-toolbar-photo-popper"
+      >
+        <template #reference>
+          <button
+            type="button"
+            class="preview-toolbar-icon cursor-pointer"
+            :class="{ 'is-active': photoAdjustments.visible }"
+            title="证件照调整"
+          >
+            <span class="material-symbols-outlined text-[15px]">portrait</span>
+          </button>
+        </template>
+
+        <div class="preview-toolbar-panel preview-photo-panel flex flex-col gap-3 font-sans">
+          <div class="flex items-center justify-between text-xs font-bold text-on-surface-variant">
+            <span>证件照</span>
+            <span class="text-[11px] text-on-surface-variant/60">
+              {{ store.photoBase64 ? '已添加照片' : '未添加照片' }}
+            </span>
+          </div>
+
+          <div class="preview-field-stack">
+            <div class="preview-field-block">
+              <div class="mb-2 text-xs font-bold text-on-surface-variant">显示状态</div>
+              <div class="preview-segmented-control">
+                <button
+                  type="button"
+                  class="preview-segmented-button"
+                  :class="{ 'is-active': photoAdjustments.visible }"
+                  @click="setPhotoVisibility(true)"
+                >
+                  显示
+                </button>
+                <button
+                  type="button"
+                  class="preview-segmented-button"
+                  :class="{ 'is-active': !photoAdjustments.visible }"
+                  @click="setPhotoVisibility(false)"
+                >
+                  隐藏
+                </button>
+              </div>
+              <p
+                v-if="!store.photoBase64"
+                class="mt-2 text-[11px] leading-5 text-on-surface-variant/70"
+              >
+                先在左侧照片库导入，或点击预览里的照片占位区添加。
+              </p>
+            </div>
+
+            <div
+              v-for="slider in PHOTO_SLIDERS"
+              :key="slider.key"
+              class="preview-field-block"
+            >
+              <div class="mb-2 flex justify-between text-xs font-bold text-on-surface-variant">
+                <span>{{ slider.label }}</span>
+                <span class="text-primary">{{ getPhotoSliderValue(slider.key) }}{{ slider.unit }}</span>
+              </div>
+              <el-slider
+                :model-value="getPhotoSliderValue(slider.key)"
+                :min="slider.min"
+                :max="slider.max"
+                :step="slider.step"
+                :show-tooltip="false"
+                @update:model-value="setPhotoSliderValue(slider.key, Number($event))"
               />
             </div>
           </div>
@@ -464,6 +580,11 @@ const isSegmentedSelectField = (field: TemplateFieldSchema) =>
 .preview-toolbar-center > div[title]:hover {
   background-color: var(--color-surface-container-high);
   color: var(--color-on-surface);
+}
+
+.preview-toolbar-center :deep(.preview-toolbar-icon.is-active) {
+  color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 16%, transparent);
 }
 
 .preview-toolbar-zoom {

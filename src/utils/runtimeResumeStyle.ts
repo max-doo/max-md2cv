@@ -1,9 +1,10 @@
-import type { ResumeStyle } from "@resume-core";
+import type { PhotoAdjustments, ResumeStyle } from "@resume-core";
 
 interface RuntimeResumeStyleOptions {
   includePageRule?: boolean;
   includeContactIconRules?: boolean;
   extraCss?: string;
+  photoAdjustments?: PhotoAdjustments;
 }
 
 export const buildRuntimeResumeStyleCss = (
@@ -14,7 +15,15 @@ export const buildRuntimeResumeStyleCss = (
     includePageRule = true,
     includeContactIconRules = true,
     extraCss = "",
+    photoAdjustments,
   } = options;
+
+  const resolvedPhotoAdjustments = photoAdjustments ?? {
+    visible: true,
+    size: 100,
+    offsetX: 0,
+    offsetY: 0,
+  };
 
   return `
   ${extraCss}
@@ -32,11 +41,14 @@ export const buildRuntimeResumeStyleCss = (
   }`
     : ""}
   .resume-document {
-    --cv-photo-width: 90px;
-    --cv-photo-height: 120px;
-    --cv-photo-gap: 18px;
+    --cv-photo-size-factor: ${resolvedPhotoAdjustments.size / 100};
+    --cv-photo-offset-x: ${resolvedPhotoAdjustments.offsetX}px;
+    --cv-photo-offset-y: ${resolvedPhotoAdjustments.offsetY}px;
+    --cv-photo-width: calc(84px * var(--cv-photo-size-factor));
+    --cv-photo-height: calc(112px * var(--cv-photo-size-factor));
+    --cv-photo-gap: 12px;
     --cv-photo-radius: 8px;
-    --cv-photo-reserve: calc(var(--cv-photo-width) + var(--cv-photo-gap));
+    --cv-photo-base-reserve: calc(var(--cv-photo-width) + var(--cv-photo-gap));
     --tpl-theme-color: ${cvStyle.themeColor};
     --tpl-font-family: ${cvStyle.fontFamily};
     --tpl-font-size: ${cvStyle.fontSize}px;
@@ -82,6 +94,7 @@ export const buildRuntimeResumeStyleCss = (
     box-sizing: border-box;
     cursor: pointer;
     z-index: 10;
+    transform: translate(var(--cv-photo-offset-x), var(--cv-photo-offset-y));
     transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
   }
   .resume-document .resume-photo-wrapper.is-empty {
@@ -137,8 +150,10 @@ export const buildRuntimeResumeStyleCss = (
     box-sizing: border-box;
   }
   .resume-document .dodge-photo:not(h2) {
-    padding-right: var(--cv-photo-reserve) !important;
     box-sizing: border-box;
+  }
+  .resume-document[data-photo-placement="top-right"] .dodge-photo:not(h2) {
+    padding-right: calc(var(--cv-photo-base-reserve) + max(0px, var(--cv-photo-offset-x))) !important;
   }
   .resume-document h1 {
     font-size: var(--tpl-h1-size) !important;
@@ -242,6 +257,14 @@ export const buildRuntimeResumeStyleCss = (
     right: auto;
     left: auto;
   }
+  .resume-document[data-photo-visible="false"] .resume-header-photo,
+  .resume-document[data-photo-visible="false"] .resume-photo-wrapper {
+    display: none !important;
+  }
+  .resume-document[data-photo-visible="false"] .dodge-photo:not(h2) {
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
   .resume-document[data-photo-placement="header-right"] .dodge-photo:not(h2) {
     padding-right: 0 !important;
     padding-left: 0 !important;
@@ -252,7 +275,7 @@ export const buildRuntimeResumeStyleCss = (
   }
   .resume-document[data-photo-placement="top-left"] .dodge-photo:not(h2) {
     padding-right: 0 !important;
-    padding-left: var(--cv-photo-reserve) !important;
+    padding-left: calc(var(--cv-photo-base-reserve) + max(0px, calc(var(--cv-photo-offset-x) * -1))) !important;
   }
   .resume-document[data-photo-placement="hidden"] .resume-header-photo,
   .resume-document[data-photo-placement="hidden"] .resume-photo-wrapper {
@@ -261,6 +284,48 @@ export const buildRuntimeResumeStyleCss = (
   .resume-document[data-photo-placement="hidden"] .dodge-photo:not(h2) {
     padding-right: 0 !important;
     padding-left: 0 !important;
+  }
+  .resume-document[data-photo-visible="false"] .resume-header,
+  .resume-document[data-photo-placement="hidden"] .resume-header {
+    display: flex;
+    justify-content: center;
+  }
+  .resume-document[data-photo-visible="false"] .resume-header-body,
+  .resume-document[data-photo-placement="hidden"] .resume-header-body {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+  }
+  .resume-document[data-photo-visible="false"] .resume-header-main,
+  .resume-document[data-photo-visible="false"] .resume-header-meta,
+  .resume-document[data-photo-visible="false"] .personal-header,
+  .resume-document[data-photo-placement="hidden"] .resume-header-main,
+  .resume-document[data-photo-placement="hidden"] .resume-header-meta,
+  .resume-document[data-photo-placement="hidden"] .personal-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
+  .resume-document[data-photo-visible="false"] .job-intention,
+  .resume-document[data-photo-visible="false"] .contact-info--text,
+  .resume-document[data-photo-visible="false"] .contact-info-text-line,
+  .resume-document[data-photo-visible="false"] .job-intention + p,
+  .resume-document[data-photo-placement="hidden"] .job-intention,
+  .resume-document[data-photo-placement="hidden"] .contact-info--text,
+  .resume-document[data-photo-placement="hidden"] .contact-info-text-line,
+  .resume-document[data-photo-placement="hidden"] .job-intention + p {
+    text-align: center;
+  }
+  .resume-document[data-photo-visible="false"] .contact-info--icon,
+  .resume-document[data-photo-visible="false"] .job-intention + p,
+  .resume-document[data-photo-placement="hidden"] .contact-info--icon,
+  .resume-document[data-photo-placement="hidden"] .job-intention + p {
+    justify-content: center;
   }
   .resume-document .contact-info--text,
   .resume-document .contact-info--icon,

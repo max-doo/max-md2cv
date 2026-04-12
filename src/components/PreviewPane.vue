@@ -9,6 +9,13 @@ import { renderMarkdownToHtml } from '../utils/markdownRender'
 import { buildRuntimeResumeStyleCss } from '../utils/runtimeResumeStyle'
 import PreviewToolbar from './preview/PreviewToolbar.vue'
 import {
+  resolvePhotoAdjustments,
+  resolveTemplateValues,
+  type PersonalInfoMode,
+  type TemplateHeaderLayout,
+  type TemplatePhotoPlacement,
+  type TemplateSectionTitlePreset,
+  type PhotoAdjustments,
   type ResumeStyle,
   type ResumeTemplate,
 } from '@resume-core'
@@ -67,18 +74,26 @@ interface PreviewRenderRequest {
   cssText: string
   cvStyle: ResumeStyle
   templateDefinition: ResumeTemplate
+  layoutConfig: {
+    headerLayout: TemplateHeaderLayout
+    personalInfoMode: PersonalInfoMode
+    photoPlacement: TemplatePhotoPlacement
+    sectionTitlePreset: TemplateSectionTitlePreset
+  }
+  photoAdjustments: PhotoAdjustments
   photoBase64: string | null
 }
 
 const applyResumeDocumentLayoutHooks = (
   documentRoot: HTMLElement,
-  templateDefinition: ResumeTemplate,
+  layoutConfig: PreviewRenderRequest['layoutConfig'],
+  photoVisible: boolean,
 ) => {
-  const layout = templateDefinition.layout
-  documentRoot.dataset.headerLayout = layout?.headerLayout ?? 'stack'
-  documentRoot.dataset.personalInfoMode = layout?.personalInfoMode ?? 'text'
-  documentRoot.dataset.photoPlacement = layout?.photoPlacement ?? 'top-right'
-  documentRoot.dataset.sectionTitlePreset = layout?.sectionTitlePreset ?? 'accent-bar'
+  documentRoot.dataset.headerLayout = layoutConfig.headerLayout
+  documentRoot.dataset.personalInfoMode = layoutConfig.personalInfoMode
+  documentRoot.dataset.photoPlacement = layoutConfig.photoPlacement
+  documentRoot.dataset.photoVisible = photoVisible ? 'true' : 'false'
+  documentRoot.dataset.sectionTitlePreset = layoutConfig.sectionTitlePreset
 
   const photoWrapper = documentRoot.querySelector(':scope > .resume-photo-wrapper') as HTMLElement | null
   const primaryTitle = documentRoot.querySelector(':scope > h1') as HTMLElement | null
@@ -132,8 +147,9 @@ const applyResumeDocumentLayoutHooks = (
 
   if (
     photoWrapper &&
-    layout?.photoPlacement !== 'header-right' &&
-    layout?.photoPlacement !== 'hidden'
+    photoVisible &&
+    layoutConfig.photoPlacement !== 'header-right' &&
+    layoutConfig.photoPlacement !== 'hidden'
   ) {
     headerBody.classList.add('dodge-photo')
   }
@@ -220,6 +236,8 @@ const createPreviewRenderRequest = (markdownText: string): PreviewRenderRequest 
       defaults: {},
       editorSchema: [],
     }
+  const rawTemplateValues = store.templateValues
+  const resolvedTemplateValues = resolveTemplateValues(activeTemplateData, store.templateValues)
 
   return {
     markdownText,
@@ -227,6 +245,34 @@ const createPreviewRenderRequest = (markdownText: string): PreviewRenderRequest 
     cssText: activeTemplateData?.css ?? '',
     cvStyle: { ...store.resumeStyle },
     templateDefinition: activeTemplateData,
+    layoutConfig: {
+      headerLayout: String(
+        rawTemplateValues.headerLayout
+          ?? activeTemplateData.layout?.headerLayout
+          ?? activeTemplateData.defaults?.headerLayout
+          ?? 'stack',
+      ) as TemplateHeaderLayout,
+      personalInfoMode: String(
+        rawTemplateValues.personalInfoMode
+          ?? activeTemplateData.layout?.personalInfoMode
+          ?? activeTemplateData.defaults?.personalInfoMode
+          ?? store.resumeStyle.personalInfoMode
+          ?? 'text',
+      ) as PersonalInfoMode,
+      photoPlacement: String(
+        rawTemplateValues.photoPlacement
+          ?? activeTemplateData.layout?.photoPlacement
+          ?? activeTemplateData.defaults?.photoPlacement
+          ?? 'top-right',
+      ) as TemplatePhotoPlacement,
+      sectionTitlePreset: String(
+        rawTemplateValues.sectionTitlePreset
+          ?? activeTemplateData.layout?.sectionTitlePreset
+          ?? activeTemplateData.defaults?.sectionTitlePreset
+          ?? 'accent-bar',
+      ) as TemplateSectionTitlePreset,
+    },
+    photoAdjustments: resolvePhotoAdjustments(resolvedTemplateValues),
     photoBase64: store.photoBase64,
   }
 }
@@ -249,6 +295,7 @@ const renderPdfPreview = async (request: PreviewRenderRequest) => {
 
   const injectCss = buildRuntimeResumeStyleCss(cvStyle, {
     extraCss: pingFangFontFaceCss,
+    photoAdjustments: request.photoAdjustments,
   })
   const stylesheetSources = [
     { [`${window.location.href}#template-${request.templateId}`]: request.cssText },
@@ -265,8 +312,7 @@ const renderPdfPreview = async (request: PreviewRenderRequest) => {
     htmlContent,
     {
       ...cvStyle,
-      personalInfoMode:
-        request.templateDefinition.layout?.personalInfoMode ?? cvStyle.personalInfoMode,
+      personalInfoMode: request.layoutConfig.personalInfoMode,
     },
     request.templateId,
   )
@@ -281,13 +327,14 @@ const renderPdfPreview = async (request: PreviewRenderRequest) => {
 
   const headerHooks = applyResumeDocumentLayoutHooks(
     documentRoot,
-    request.templateDefinition,
+    request.layoutConfig,
+    request.photoAdjustments.visible,
   )
 
   if (headerHooks?.photoWrapper) {
     headerHooks.photoWrapper.classList.add(
       request.photoBase64 ? 'has-photo' : 'is-empty',
-      `photo-placement-${request.templateDefinition.layout?.photoPlacement ?? 'top-right'}`,
+      `photo-placement-${request.layoutConfig.photoPlacement}`,
     )
   }
 
@@ -447,6 +494,14 @@ watch(() => store.templateValues, () => {
     <div class="preview-footer h-10 shrink-0 flex items-center px-5 justify-between bg-surface-container-high/30 backdrop-blur-sm border-t border-outline-variant/10">
       <!-- Left: Reset -->
       <div class="flex items-center gap-3">
+        <button
+          @click="store.saveCurrentTemplate()"
+          class="preview-reset-button text-xs flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
+          title="用当前样式覆盖模板默认值"
+        >
+          <span class="material-symbols-outlined text-[14px]">save</span>
+          覆盖模板
+        </button>
         <button
           @click="store.resetActiveFileRenderSettings()"
           class="preview-reset-button text-xs flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors cursor-pointer"

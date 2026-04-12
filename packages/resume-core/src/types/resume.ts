@@ -92,6 +92,13 @@ export interface ResumeStyle {
   personalInfoMode?: PersonalInfoMode;
 }
 
+export interface PhotoAdjustments {
+  visible: boolean;
+  size: number;
+  offsetX: number;
+  offsetY: number;
+}
+
 export interface ResumeTemplate extends Omit<TemplateManifest, "editorSchema"> {
   editorSchema: TemplateFieldSchema[];
   css: string;

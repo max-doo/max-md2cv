@@ -1,4 +1,5 @@
 import type {
+  PhotoAdjustments,
   PersonalInfoMode,
   ResumeStyle,
   ResumeTemplate,
@@ -23,6 +24,13 @@ export const DEFAULT_TEMPLATE_FEATURES: TemplateFeatures = {
   photo: true,
   pageFooter: true,
   contactModes: ["text", "icon"],
+};
+
+export const DEFAULT_PHOTO_ADJUSTMENTS: PhotoAdjustments = {
+  visible: true,
+  size: 100,
+  offsetX: 0,
+  offsetY: 0,
 };
 
 const DEFAULT_FONT_OPTIONS = [
@@ -268,6 +276,42 @@ export const DEFAULT_TEMPLATE_EDITOR_SCHEMA: TemplateFieldSchema[] = [
     options: [...DEFAULT_PHOTO_PLACEMENT_OPTIONS],
   },
   {
+    key: "photoVisible",
+    type: "boolean",
+    label: "显示照片",
+    group: "布局",
+  },
+  {
+    key: "photoSize",
+    type: "number",
+    label: "照片大小",
+    group: "布局",
+    min: 88,
+    max: 112,
+    step: 1,
+    unit: "%",
+  },
+  {
+    key: "photoOffsetY",
+    type: "number",
+    label: "上下位置",
+    group: "布局",
+    min: -24,
+    max: 24,
+    step: 1,
+    unit: "px",
+  },
+  {
+    key: "photoOffsetX",
+    type: "number",
+    label: "左右位置",
+    group: "布局",
+    min: -24,
+    max: 24,
+    step: 1,
+    unit: "px",
+  },
+  {
     key: "sectionTitlePreset",
     type: "select",
     label: "二级标题样式",
@@ -299,6 +343,10 @@ const TEMPLATE_VALUE_KEYS = [
   "personalInfoMode",
   "headerLayout",
   "photoPlacement",
+  "photoVisible",
+  "photoSize",
+  "photoOffsetX",
+  "photoOffsetY",
   "sectionTitlePreset",
 ] as const;
 
@@ -347,9 +395,38 @@ export const resumeStyleToTemplateValues = (
     personalInfoMode: normalized.personalInfoMode ?? "text",
     headerLayout: DEFAULT_TEMPLATE_LAYOUT.headerLayout,
     photoPlacement: DEFAULT_TEMPLATE_LAYOUT.photoPlacement,
+    photoVisible: DEFAULT_PHOTO_ADJUSTMENTS.visible,
+    photoSize: DEFAULT_PHOTO_ADJUSTMENTS.size,
+    photoOffsetX: DEFAULT_PHOTO_ADJUSTMENTS.offsetX,
+    photoOffsetY: DEFAULT_PHOTO_ADJUSTMENTS.offsetY,
     sectionTitlePreset: DEFAULT_TEMPLATE_LAYOUT.sectionTitlePreset,
   };
 };
+
+const toClampedNumber = (value: TemplateValue | undefined, fallback: number) => {
+  const numericValue =
+    typeof value === "number" ? value : Number.parseFloat(String(value ?? ""));
+
+  return Number.isFinite(numericValue) ? numericValue : fallback;
+};
+
+export const resolvePhotoAdjustments = (
+  values?: TemplateValues | null,
+): PhotoAdjustments => ({
+  visible:
+    typeof values?.photoVisible === "boolean"
+      ? values.photoVisible
+      : DEFAULT_PHOTO_ADJUSTMENTS.visible,
+  size: toClampedNumber(values?.photoSize, DEFAULT_PHOTO_ADJUSTMENTS.size),
+  offsetX: toClampedNumber(
+    values?.photoOffsetX,
+    DEFAULT_PHOTO_ADJUSTMENTS.offsetX,
+  ),
+  offsetY: toClampedNumber(
+    values?.photoOffsetY,
+    DEFAULT_PHOTO_ADJUSTMENTS.offsetY,
+  ),
+});
 
 export const createDefaultTemplateValues = (): TemplateValues =>
   resumeStyleToTemplateValues(createDefaultResumeStyle());

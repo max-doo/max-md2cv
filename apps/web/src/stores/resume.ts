@@ -8,7 +8,12 @@ import {
   reorderOutlineSiblings,
   type ResumeOutlineNode,
 } from "@desktop/utils/markdownOutline";
-import type { ResumeStyle } from "@resume-core";
+import {
+  resolvePhotoAdjustments,
+  resolveTemplateValues,
+  type PhotoAdjustments,
+  type ResumeStyle,
+} from "@resume-core";
 
 interface FileItem {
   name: string;
@@ -60,11 +65,13 @@ const buildWebPrintHtml = async (
   documentTitle: string,
   pagesContainer: HTMLElement,
   cvStyle: ResumeStyle,
+  photoAdjustments: PhotoAdjustments,
 ) => {
   const htmlContent = await buildPagedExportDocumentHtml({
     documentTitle,
     pagesContainer,
     cvStyle,
+    photoAdjustments,
   });
 
   return htmlContent.replace("</body>", `${WEB_PRINT_SCRIPT}</body>`);
@@ -196,6 +203,15 @@ export const useResumeStore = defineStore("resume", () => {
         documentTitle,
         pagesContainer,
         resumeStyle.value,
+        resolvePhotoAdjustments(
+          resolveTemplateValues(
+            currentTemplate.value ?? {
+              defaults: {},
+              editorSchema: [],
+            },
+            templateValues.value,
+          ),
+        ),
       );
       printWindow.document.open();
       printWindow.document.write(htmlContent);

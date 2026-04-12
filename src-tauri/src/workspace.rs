@@ -1,6 +1,7 @@
 use crate::files::is_workspace_asset_path;
 use notify::{recommended_watcher, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -8,26 +9,6 @@ use std::sync::Mutex;
 use tauri::{Emitter, State};
 
 const RENDER_STATE_FILE_NAME: &str = ".max-md2cv.render-state.json";
-
-fn default_h2_margin_top() -> f64 {
-    14.0
-}
-
-fn default_h2_margin_bottom() -> f64 {
-    8.0
-}
-
-fn default_h3_margin_top() -> f64 {
-    12.0
-}
-
-fn default_h3_margin_bottom() -> f64 {
-    4.0
-}
-
-fn default_personal_header_spacing() -> f64 {
-    12.0
-}
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -48,37 +29,12 @@ struct WorkspaceWatcherHandle {
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-struct ResumeStyleState {
-    theme_color: String,
-    font_family: String,
-    font_size: f64,
-    paragraph_spacing: f64,
-    #[serde(default = "default_h2_margin_top")]
-    h2_margin_top: f64,
-    #[serde(default = "default_h2_margin_bottom")]
-    h2_margin_bottom: f64,
-    #[serde(default = "default_h3_margin_top")]
-    h3_margin_top: f64,
-    #[serde(default = "default_h3_margin_bottom")]
-    h3_margin_bottom: f64,
-    #[serde(default = "default_personal_header_spacing")]
-    personal_header_spacing: f64,
-    h1_size: f64,
-    h2_size: f64,
-    h3_size: f64,
-    date_size: Option<f64>,
-    date_weight: Option<String>,
-    line_height: f64,
-    margin_v: f64,
-    margin_h: f64,
-    personal_info_mode: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
 struct ResumeRenderProfile {
     template_id: String,
-    style: ResumeStyleState,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    values: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    style: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     photo_path: Option<String>,
 }
@@ -93,7 +49,7 @@ pub struct WorkspaceRenderState {
 impl Default for WorkspaceRenderState {
     fn default() -> Self {
         Self {
-            version: 1,
+            version: 2,
             files: BTreeMap::new(),
         }
     }
