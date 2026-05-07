@@ -500,6 +500,7 @@ watch(() => store.templateValues, () => {
       <!-- Left: Reset -->
       <div class="flex items-center gap-3">
         <button
+          v-if="store.workspacePath"
           @click="store.saveCurrentTemplate()"
           class="preview-reset-button text-xs flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
           title="用当前样式覆盖模板默认值"

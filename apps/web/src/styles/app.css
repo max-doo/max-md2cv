@@ -261,6 +261,11 @@ body {
     0 -14px 28px -24px rgba(15, 23, 42, 0.28);
 }
 
+.web-playground-body .preview-group-panel[data-group="字号"],
+.web-playground-body .preview-group-panel[data-group="间距"] {
+  width: 18rem !important;
+}
+
 .web-playground-body .preview-toolbar-popper {
   border: none !important;
   border-radius: 1.25rem !important;

@@ -366,7 +366,7 @@ const getPhotoSliderValue = (key: typeof PHOTO_SLIDERS[number]['key']) =>
           <span class="material-symbols-outlined text-[14px]">{{ group.icon }}</span>
         </button>
         <template #dropdown>
-          <div class="preview-toolbar-panel preview-group-panel w-72 rounded-xl p-4 font-sans shadow-ambient">
+          <div class="preview-toolbar-panel preview-group-panel w-72 rounded-xl p-4 font-sans shadow-ambient" :data-group="group.name">
             <div class="mb-3 flex items-center justify-between text-xs font-bold text-on-surface-variant">
               <span>{{ group.name }}</span>
               <span class="text-[11px] text-on-surface-variant/60">{{ group.fields.length }} 项</span>
