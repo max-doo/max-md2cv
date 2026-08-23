@@ -14,7 +14,14 @@
     "dev:web": "npm run dev --workspace @max-md2cv/web",
     "build:web": "npm run build --workspace @max-md2cv/web",
     "preview:web": "npm run preview --workspace @max-md2cv/web",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "dev:cli": "npm run build:renderer --workspace @max-md2cv/cli && npm run build:node --workspace @max-md2cv/cli && npm run build:assets --workspace @max-md2cv/cli",
+    "build:cli": "npm run build --workspace @max-md2cv/cli",
+    "test:cli": "npm run test --workspace @max-md2cv/cli",
+    "test:cli:e2e": "node scripts/test-cli-e2e.mjs",
+    "test:cli:renderer": "node scripts/test-cli-renderer.mjs",
+    "test:cli:pack": "node scripts/test-cli-pack.mjs",
+    "pack:cli": "npm pack --workspace @max-md2cv/cli"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.3",

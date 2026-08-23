@@ -1,0 +1,7 @@
+interface:
+  display_name: "MD2CV Resume Renderer"
+  short_description: "Render and visually verify Markdown resumes"
+  default_prompt: "Use $md2cv to render resume.md and verify every page."
+
+policy:
+  allow_implicit_invocation: true

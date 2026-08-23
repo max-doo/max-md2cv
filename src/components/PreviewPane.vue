@@ -1,29 +1,17 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import { Previewer } from 'pagedjs'
 import { useResumeStore } from '@resume-store'
 import { useDebounceFn } from '@vueuse/core'
-import { enhanceResumeHtml, resolveSectionType } from '../utils/resumeParser'
-import { ensurePreviewFontsReady, pingFangFontFaceCss } from '../utils/fontAssets'
-import { renderMarkdownToHtml } from '../utils/markdownRender'
-import { buildRuntimeResumeStyleCss } from '../utils/runtimeResumeStyle'
+import { renderResume } from '../../packages/resume-renderer/src'
 import PreviewToolbar from './preview/PreviewToolbar.vue'
 import {
-  resolvePhotoAdjustments,
   resolveTemplateValues,
-  type PersonalInfoMode,
-  type TemplateHeaderLayout,
-  type TemplatePhotoPlacement,
-  type TemplateSectionTitlePreset,
-  type PhotoAdjustments,
-  type ResumeStyle,
   type ResumeTemplate,
 } from '@resume-core'
 
 const store = useResumeStore()
 const previewContainer = ref<HTMLElement | null>(null)
 const previewScrollContainer = ref<HTMLElement | null>(null)
-let paged: any = null
 let activeRenderPromise: Promise<void> | null = null
 let pendingRenderRequest: PreviewRenderRequest | null = null
 let renderDebounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -70,94 +58,9 @@ const zoomOut = () => { if (zoomLevel.value > 50) zoomLevel.value -= 10 }
 const totalPages = ref(0)
 interface PreviewRenderRequest {
   markdownText: string
-  templateId: string
-  cssText: string
-  cvStyle: ResumeStyle
   templateDefinition: ResumeTemplate
-  layoutConfig: {
-    headerLayout: TemplateHeaderLayout
-    personalInfoMode: PersonalInfoMode
-    photoPlacement: TemplatePhotoPlacement
-    sectionTitlePreset: TemplateSectionTitlePreset
-  }
-  photoAdjustments: PhotoAdjustments
   photoBase64: string | null
-}
-
-const applyResumeDocumentLayoutHooks = (
-  documentRoot: HTMLElement,
-  layoutConfig: PreviewRenderRequest['layoutConfig'],
-  photoVisible: boolean,
-) => {
-  documentRoot.dataset.headerLayout = layoutConfig.headerLayout
-  documentRoot.dataset.personalInfoMode = layoutConfig.personalInfoMode
-  documentRoot.dataset.photoPlacement = layoutConfig.photoPlacement
-  documentRoot.dataset.photoVisible = photoVisible ? 'true' : 'false'
-  documentRoot.dataset.sectionTitlePreset = layoutConfig.sectionTitlePreset
-
-  const photoWrapper = documentRoot.querySelector(':scope > .resume-photo-wrapper') as HTMLElement | null
-  const primaryTitle = documentRoot.querySelector(':scope > h1') as HTMLElement | null
-  const personalHeader = documentRoot.querySelector(':scope > .personal-header') as HTMLElement | null
-
-  if (!photoWrapper && !primaryTitle && !personalHeader) {
-    return null
-  }
-
-  const headerWrapper = document.createElement('div')
-  headerWrapper.className = 'resume-header'
-
-  const headerBody = document.createElement('div')
-  headerBody.className = 'resume-header-body'
-
-  const headerMain = document.createElement('div')
-  headerMain.className = 'resume-header-main'
-
-  const headerMeta = document.createElement('div')
-  headerMeta.className = 'resume-header-meta'
-
-  const headerPhoto = document.createElement('div')
-  headerPhoto.className = 'resume-header-photo'
-
-  if (primaryTitle) {
-    headerMain.appendChild(primaryTitle)
-  }
-
-  if (personalHeader) {
-    headerMeta.appendChild(personalHeader)
-  }
-
-  if (headerMain.childElementCount > 0) {
-    headerBody.appendChild(headerMain)
-  }
-
-  if (headerMeta.childElementCount > 0) {
-    headerBody.appendChild(headerMeta)
-  }
-
-  if (headerBody.childElementCount > 0) {
-    headerWrapper.appendChild(headerBody)
-  }
-
-  if (photoWrapper) {
-    headerPhoto.appendChild(photoWrapper)
-    headerWrapper.appendChild(headerPhoto)
-  }
-
-  documentRoot.prepend(headerWrapper)
-
-  if (
-    photoWrapper &&
-    photoVisible &&
-    layoutConfig.photoPlacement !== 'header-right' &&
-    layoutConfig.photoPlacement !== 'hidden'
-  ) {
-    headerBody.classList.add('dodge-photo')
-  }
-
-  return {
-    photoWrapper,
-    headerBody,
-  }
+  values: ReturnType<typeof resolveTemplateValues>
 }
 
 const createPreviewStagingContainer = () => {
@@ -236,44 +139,13 @@ const createPreviewRenderRequest = (markdownText: string): PreviewRenderRequest 
       defaults: {},
       editorSchema: [],
     }
-  const rawTemplateValues = store.templateValues
   const resolvedTemplateValues = resolveTemplateValues(activeTemplateData, store.templateValues)
 
   return {
     markdownText,
-    templateId: store.activeTemplate,
-    cssText: activeTemplateData?.css ?? '',
-    cvStyle: { ...store.resumeStyle },
     templateDefinition: activeTemplateData,
-    layoutConfig: {
-      headerLayout: String(
-        rawTemplateValues.headerLayout
-          ?? activeTemplateData.layout?.headerLayout
-          ?? activeTemplateData.defaults?.headerLayout
-          ?? 'stack',
-      ) as TemplateHeaderLayout,
-      personalInfoMode: String(
-        rawTemplateValues.personalInfoMode
-          ?? activeTemplateData.layout?.personalInfoMode
-          ?? activeTemplateData.defaults?.personalInfoMode
-          ?? store.resumeStyle.personalInfoMode
-          ?? 'text',
-      ) as PersonalInfoMode,
-      photoPlacement: String(
-        rawTemplateValues.photoPlacement
-          ?? activeTemplateData.layout?.photoPlacement
-          ?? activeTemplateData.defaults?.photoPlacement
-          ?? 'top-right',
-      ) as TemplatePhotoPlacement,
-      sectionTitlePreset: String(
-        rawTemplateValues.sectionTitlePreset
-          ?? activeTemplateData.layout?.sectionTitlePreset
-          ?? activeTemplateData.defaults?.sectionTitlePreset
-          ?? 'accent-bar',
-      ) as TemplateSectionTitlePreset,
-    },
-    photoAdjustments: resolvePhotoAdjustments(resolvedTemplateValues),
     photoBase64: store.photoBase64,
+    values: resolvedTemplateValues,
   }
 }
 
@@ -283,108 +155,32 @@ const renderPdfPreview = async (request: PreviewRenderRequest) => {
   const scrollContainer = previewScrollContainer.value
   const preservedScrollTop = scrollContainer?.scrollTop ?? 0
   const preservedScrollLeft = scrollContainer?.scrollLeft ?? 0
-  const previousPagedStyles = Array.from(document.querySelectorAll('style[data-pagedjs-inserted-styles]'))
-  const previousPagedStyleSet = new Set(previousPagedStyles)
   const stagingContainer = createPreviewStagingContainer()
   let renderSucceeded = false
-
-  const htmlContent = await renderMarkdownToHtml(request.markdownText)
-  const cvStyle = request.cvStyle
-  await ensurePreviewFontsReady(cvStyle.fontFamily, cvStyle.fontSize)
-  await waitForStablePreviewLayout()
-
-  const injectCss = buildRuntimeResumeStyleCss(cvStyle, {
-    extraCss: pingFangFontFaceCss,
-    photoAdjustments: request.photoAdjustments,
-  })
-  const stylesheetSources = [
-    { [`${window.location.href}#template-${request.templateId}`]: request.cssText },
-    { [`${window.location.href}#runtime-preview`]: injectCss }
-  ]
-
-  const photoHtml = `
-    <div class="resume-photo-wrapper" title="点击上传证件照 (最大1MB)">
-      ${request.photoBase64
-        ? `<img src="${request.photoBase64}" />`
-        : `<div class="photo-placeholder-text">
-            <span class="material-symbols-outlined photo-placeholder-icon">add_a_photo</span>
-            <span class="photo-placeholder-label">添加证件照</span>
-          </div>`}
-    </div>
-  `
-
-  const finalHtml = enhanceResumeHtml(
-    htmlContent,
-    {
-      ...cvStyle,
-      personalInfoMode: request.layoutConfig.personalInfoMode,
-    },
-    request.templateId,
-  )
-
-  const sourceDiv = document.createElement('div')
-  sourceDiv.innerHTML = `<div class="resume-document">${photoHtml}${finalHtml}</div>`
-
-  const documentRoot = sourceDiv.querySelector('.resume-document') as HTMLElement | null
-  if (!documentRoot) {
-    return false
-  }
-
-  const headerHooks = applyResumeDocumentLayoutHooks(
-    documentRoot,
-    request.layoutConfig,
-    request.photoAdjustments.visible,
-  )
-
-  if (headerHooks?.photoWrapper) {
-    headerHooks.photoWrapper.classList.add(
-      request.photoBase64 ? 'has-photo' : 'is-empty',
-      `photo-placement-${request.layoutConfig.photoPlacement}`,
-    )
-  }
-
-  paged = new Previewer()
-
-  // Suppress non-fatal Paged.js internal errors (e.g. null getAttribute in findElement)
-  const suppressPagedjsErrors = (event: ErrorEvent) => {
-    const src = event.filename ?? ''
-    if (src.includes('dom.js') || src.includes('layout.js') || src.includes('page.js')) {
-      event.preventDefault()
-      return true
-    }
-  }
-  window.addEventListener('error', suppressPagedjsErrors)
-
   try {
-    await paged.preview(sourceDiv, stylesheetSources, stagingContainer)
+    await waitForStablePreviewLayout()
+    const renderResult = await renderResume({
+      markdown: request.markdownText,
+      documentTitle: 'Preview',
+      template: request.templateDefinition,
+      values: request.values,
+      photoDataUrl: request.photoBase64,
+      sourceDirectory: null,
+      options: {
+        strictFonts: false,
+        allowNetwork: false,
+        timeoutMs: 30_000,
+        showPhotoPlaceholder: true,
+      },
+    }, stagingContainer)
 
     previewContainer.value.replaceChildren(...Array.from(stagingContainer.childNodes))
-    previousPagedStyles.forEach(el => el.remove())
-
-    // Patch h2 section classes that may be lost during Paged.js rendering
-    previewContainer.value.querySelectorAll('.resume-document h2').forEach((h2) => {
-      const hasSection = Array.from(h2.classList).some((c) => c.startsWith('section-'))
-      if (hasSection) return
-      const plainText = (h2.textContent ?? '').trim()
-      const sectionDef = resolveSectionType(plainText)
-      h2.classList.add(sectionDef ? `section-${sectionDef.key}` : 'section-default')
-    })
-
-    // Count rendered pages
-    totalPages.value = previewContainer.value?.querySelectorAll('.pagedjs_page').length ?? 0
+    totalPages.value = renderResult.pageCount
     renderSucceeded = totalPages.value > 0
   } catch (err) {
     console.error('Paged.js rendering error:', err)
     totalPages.value = 0
   } finally {
-    if (!renderSucceeded) {
-      const currentPagedStyles = Array.from(document.querySelectorAll('style[data-pagedjs-inserted-styles]'))
-      currentPagedStyles
-        .filter(el => !previousPagedStyleSet.has(el))
-        .forEach(el => el.remove())
-    }
-
-    window.removeEventListener('error', suppressPagedjsErrors)
     stagingContainer.remove()
 
     if (scrollContainer) {

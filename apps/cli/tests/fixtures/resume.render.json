@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "template": "modern",
+  "values": {
+    "themeColor": "#2563eb",
+    "fontSize": 13,
+    "lineHeight": 1.4,
+    "paragraphSpacing": 6,
+    "h2MarginTop": 10,
+    "h2MarginBottom": 5,
+    "marginV": 9,
+    "marginH": 12
+  },
+  "outputs": {
+    "pdf": true,
+    "images": true,
+    "imageScale": 1
+  },
+  "render": {
+    "maxPages": 2,
+    "strictFonts": false,
+    "allowNetwork": false,
+    "timeoutMs": 30000
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "template": "modern",
+  "outputs": {
+    "pdf": false,
+    "images": true,
+    "imageScale": 1
+  }
+}

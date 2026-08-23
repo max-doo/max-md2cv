@@ -8,10 +8,12 @@ This file defines project rules for agents working in this repository.
 
 ## Project Overview
 - This repository is a monorepo with a Tauri v2 desktop app at the root and a separate Web app under `apps/web`.
+- The repository also contains an independently installable Markdown resume CLI under `apps/cli` and a browser-only shared renderer under `packages/resume-renderer`.
 - The frontend stack is Vue 3 + TypeScript + Vite.
 - The backend stack is Rust via Tauri commands.
 - The UI follows a Soft Minimalist design system.
 - Shared resume/theme utilities live in `packages/resume-core`.
+- The CLI runtime uses the system Edge/Chrome/Chromium through Playwright Core and ships its renderer host, templates, fonts, and `skills/md2cv` as npm runtime assets.
 
 ## Core Architecture
 - Desktop file I/O must go through Tauri commands. Do not add direct filesystem access in the desktop frontend.
@@ -58,6 +60,10 @@ This file defines project rules for agents working in this repository.
 - Desktop frontend app: `src`
 - Web app: `apps/web/src`
 - Shared resume core: `packages/resume-core/src`
+- Shared browser renderer: `packages/resume-renderer/src`
+- CLI package: `apps/cli`
+- CLI/renderer/pack tests: `scripts/test-cli-e2e.mjs`, `scripts/test-cli-renderer.mjs`, `scripts/test-cli-pack.mjs`
+- Agent Skill: `skills/md2cv`
 - Shared theme and utilities: `src/assets/tailwind.css`
 - Desktop store entry: `src/stores/resume.ts`
 - Desktop store implementation: `src/stores/resume`

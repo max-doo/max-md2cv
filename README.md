@@ -48,15 +48,14 @@ Max-MD2CV（小简）是依托现代前端架构、Rust 桌面环境打造的纯
 ```text
 max-md2cv/
 ├── apps/
+│   ├── cli/                         # 独立 Markdown 简历命令行工具 (@max-md2cv/cli)
 │   └── web/                         # Web Playground 子应用
-│       ├── src/
-│       ├── index.html
-│       ├── package.json
-│       ├── tsconfig.json
-│       └── vite.config.ts
 ├── packages/
-│   └── resume-core/                # Web / Desktop 共享的纯前端核心
-│       └── src/
+│   ├── resume-core/                # Web / Desktop / CLI 共享的核心解析与样式库
+│   └── resume-renderer/            # 独立浏览器端简历渲染器 Host
+├── skills/
+│   └── md2cv/                       # 面向 AI 智能体的 Agent Skill 工具包
+├── scripts/                         # CLI 集成、渲染器回归与安装包验证测试脚本
 ├── src-tauri/                         # Rust 后端与 Tauri 桌面壳
 │   ├── src/                           # Tauri 命令与应用入口
 │   │   ├── lib.rs
@@ -68,7 +67,7 @@ max-md2cv/
 │   ├── build.rs                      # Rust 构建脚本
 │   ├── Cargo.toml                    # Rust 包配置
 │   └── tauri.conf.json               # Tauri 窗口与打包配置
-├── src/                               # Vue 3 前端源码
+├── src/                               # Vue 3 前端源码 (Desktop)
 │   ├── assets/                        # 样式、字体与内置模板资源
 │   │   ├── fonts/
 │   │   ├── templates/
@@ -91,7 +90,7 @@ max-md2cv/
 │   └── vite-env.d.ts
 ├── public/                            # Vite 公共静态资源
 ├── design/                            # 设计稿与设计系统文档
-├── doc/                               # 项目说明与打包/模板文档
+├── doc/                               # 项目说明与开发/模板文档
 ├── index.html                         # 应用 HTML 入口
 ├── package.json                       # Node 依赖与脚本
 ├── tsconfig.json                      # TypeScript 配置
@@ -128,7 +127,19 @@ npm run build:web
 npm run preview:web
 ```
 
-### 4. 构建桌面端生产包
+### 4. CLI 命令行工具与测试
+CLI 工具支持在无桌面环境下将 Markdown 简历批量渲染为 PDF、按页 PNG 和 JSON 元数据，并支持与 Agent Skill 联动。
+
+常用 CLI 脚本：
+```bash
+npm run build:cli          # 构建 CLI、内置渲染器及静态资源
+npm run test:cli           # 运行 CLI 单元测试
+npm run test:cli:renderer  # 运行渲染器无头浏览器核心回归测试
+npm run test:cli:e2e       # 运行 CLI 端到端渲染测试
+npm run test:cli:pack      # 运行 CLI npm 打包与全局运行校验
+```
+
+### 5. 构建桌面端生产包
 当应用开发完毕后，可执行打包命令生成对应平台的独立安装包：
 ```bash
 npm run tauri build

@@ -1,0 +1,40 @@
+{
+  "name": "@max-md2cv/cli",
+  "version": "0.1.0",
+  "description": "Render Max-MD2CV Markdown resumes to PDF and page images.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "md2cv": "dist/node/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build:node": "tsup src/cli.ts --format esm --platform node --target node20 --out-dir dist/node --sourcemap --external playwright-core",
+    "build:renderer": "vite build --config vite.renderer.config.ts",
+    "build:assets": "node scripts/copy-runtime-assets.mjs",
+    "build": "npm run typecheck && npm run build:node && npm run build:renderer && npm run build:assets",
+    "test": "vitest run",
+    "pack:check": "npm pack --dry-run"
+  },
+  "dependencies": {
+    "commander": "^14.0.0",
+    "playwright-core": "^1.55.0",
+    "pngjs": "^7.0.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pngjs": "^6.0.4",
+    "pdfjs-dist": "4.10.38",
+    "tsup": "^8.5.0",
+    "typescript": "~5.6.2",
+    "vitest": "^3.2.0"
+  }
+}
