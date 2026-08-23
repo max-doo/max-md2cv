@@ -184,25 +184,55 @@ export const buildRuntimeResumeStyleCss = (
     margin-bottom: var(--tpl-h3-margin-bottom) !important;
   }
   .resume-document .experience-line {
+    width: 100%;
+  }
+  .resume-document .experience-line--2col {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 0.75rem;
   }
-  .resume-document h3.experience-line {
-    align-items: flex-end;
+  .resume-document .experience-line--3col {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: baseline;
+    gap: 0.75rem;
   }
-  .resume-document .experience-title {
-    flex: 1 1 auto;
+  .resume-document h3.experience-line {
+    align-items: baseline;
+  }
+  .resume-document .experience-col {
     min-width: 0;
   }
+  .resume-document .experience-col--left,
+  .resume-document .experience-title {
+    text-align: left;
+  }
+  .resume-document .experience-line--2col .experience-col--left,
+  .resume-document .experience-line--2col .experience-title {
+    flex: 1 1 auto;
+  }
+  .resume-document .experience-col--center {
+    text-align: center;
+    justify-self: center;
+  }
+  .resume-document .experience-col--right,
   .resume-document .experience-date {
     font-size: var(--tpl-date-size, inherit);
     font-weight: var(--tpl-date-weight, inherit);
-    flex-shrink: 0;
-    margin-left: auto;
     text-align: right;
     white-space: nowrap;
+    justify-self: end;
+  }
+  .resume-document .experience-line--2col .experience-col--right,
+  .resume-document .experience-line--2col .experience-date {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+  .resume-document .experience-col-sep {
+    display: inline;
+    margin: 0 4px;
+    opacity: 0.5;
   }
   .resume-document p:not(.job-intention),
   .resume-document ul,
@@ -352,11 +382,38 @@ export const buildRuntimeResumeStyleCss = (
   .resume-document .job-intention + p {
     margin-bottom: 0 !important;
   }
+  .resume-document[data-section-title-preset="capsule"] h2 {
+    background: transparent !important;
+    border: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  .resume-document[data-section-title-preset="capsule"] h2 .section-title-badge {
+    background-color: var(--tpl-theme-color) !important;
+    color: #ffffff !important;
+    border-radius: 9999px !important;
+    padding: 4px 14px 4px 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+  .resume-document[data-section-title-preset="capsule"] h2 .section-title-badge::before {
+    color: #ffffff !important;
+  }
   .resume-document[data-section-title-preset="plain"] h2 {
     background: transparent !important;
     border-left: none !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+  }
+  .resume-document[data-section-title-preset="plain"] h2 .section-title-badge {
+    background: transparent !important;
+    color: var(--tpl-theme-color) !important;
+    padding: 0 !important;
+  }
+  .resume-document[data-section-title-preset="plain"] h2::after {
+    display: none !important;
   }
   .resume-document[data-section-title-preset="underline"] h2 {
     background: transparent !important;

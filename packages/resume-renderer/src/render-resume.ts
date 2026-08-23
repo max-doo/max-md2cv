@@ -62,16 +62,20 @@ const normalizeLayoutConfig = (
 
 const removePreviousRender = (target: HTMLElement) => {
   target.replaceChildren();
-  document
-    .querySelectorAll("style[data-md2cv-render-style]")
-    .forEach((style) => style.remove());
 };
 
-const appendRenderStyle = (cssText: string, kind: string) => {
-  const style = document.createElement("style");
-  style.dataset.md2cvRenderStyle = kind;
-  style.textContent = cssText;
-  document.head.appendChild(style);
+const setRenderStyle = (cssText: string, kind: string) => {
+  let style = document.querySelector<HTMLStyleElement>(
+    `style[data-md2cv-render-style="${kind}"]`,
+  );
+  if (!style) {
+    style = document.createElement("style");
+    style.dataset.md2cvRenderStyle = kind;
+    document.head.appendChild(style);
+  }
+  if (style.textContent !== cssText) {
+    style.textContent = cssText;
+  }
   return style;
 };
 
@@ -131,18 +135,18 @@ export const renderResume = async (
       request.options.showPhotoPlaceholder === true,
     );
 
-    appendRenderStyle(
+    setRenderStyle(
       `html, body { margin: 0; padding: 0; background: #fff; }\n` +
         `.pagedjs_pages { display: flex; flex-direction: column; align-items: center; }\n` +
         `.pagedjs_page { box-shadow: none !important; background: #fff; }\n` +
         `@media print { .pagedjs_page { break-after: page; page-break-after: always; } .pagedjs_page:last-child { break-after: auto; page-break-after: auto; } }`,
       "shell",
     );
-    appendRenderStyle(
+    setRenderStyle(
       `@page { size: A4; margin: 0; }\n${request.template.css}`,
       "template",
     );
-    appendRenderStyle(
+    setRenderStyle(
       `@font-face { font-family: 'Manrope'; src: local('Arial'); }\n${buildRuntimeStyle(cvStyle, photoAdjustments)}`,
       "runtime",
     );
@@ -157,7 +161,7 @@ export const renderResume = async (
     warnings.push(...(await waitForImages(source)));
 
     const previousPagedStyles = new Set(
-      Array.from(document.querySelectorAll("style[data-pagedjs-inserted-styles]")),
+      Array.from(document.querySelectorAll("style[data-pagedjs-inserted-styles], style[data-md2cv-render-style='paged']")),
     );
     const paged = new Previewer();
     const suppressPagedjsErrors = (event: ErrorEvent) => {
@@ -177,6 +181,7 @@ export const renderResume = async (
         ],
         target,
       );
+      previousPagedStyles.forEach((style) => style.remove());
     } finally {
       window.removeEventListener("error", suppressPagedjsErrors);
       Array.from(document.querySelectorAll("style[data-pagedjs-inserted-styles]"))

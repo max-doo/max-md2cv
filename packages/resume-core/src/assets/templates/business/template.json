@@ -26,7 +26,7 @@
     "personalInfoMode": "icon",
     "headerLayout": "stack",
     "photoPlacement": "top-right",
-    "sectionTitlePreset": "plain"
+    "sectionTitlePreset": "capsule"
   },
   "features": {
     "photo": true,
@@ -37,6 +37,6 @@
     "headerLayout": "stack",
     "personalInfoMode": "icon",
     "photoPlacement": "top-right",
-    "sectionTitlePreset": "plain"
+    "sectionTitlePreset": "capsule"
   }
 }

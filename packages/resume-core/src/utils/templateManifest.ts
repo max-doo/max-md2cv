@@ -91,6 +91,7 @@ const DEFAULT_PHOTO_PLACEMENT_OPTIONS = [
 const DEFAULT_SECTION_TITLE_OPTIONS = [
   { label: "强调条", value: "accent-bar" },
   { label: "下划线", value: "underline" },
+  { label: "胶囊", value: "capsule" },
   { label: "纯文字", value: "plain" },
 ] as const;
 

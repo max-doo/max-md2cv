@@ -11,6 +11,7 @@ export type TemplatePhotoPlacement =
 export type TemplateSectionTitlePreset =
   | "accent-bar"
   | "underline"
+  | "capsule"
   | "plain";
 
 export type TemplateValue = string | number | boolean;

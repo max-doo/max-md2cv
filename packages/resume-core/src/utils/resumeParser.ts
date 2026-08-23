@@ -356,14 +356,32 @@ function renderExperienceLine(
   attrs: string,
   titleHtml: string,
   dateText: string,
+  allowThreeCol: boolean = true,
 ): string {
-  const lineHtml = `<span class="experience-title">${titleHtml}</span><span class="experience-date">${dateText}</span>`
+  const hasPipe = allowThreeCol && (titleHtml.includes('|') || titleHtml.includes('｜'))
+  const segments = hasPipe
+    ? titleHtml.split(/\s*[|｜]\s*/).map((s) => s.trim()).filter(Boolean)
+    : [titleHtml]
+  let lineHtml = ''
+  const isThreeCol = hasPipe && segments.length >= 2
+  const colClass = isThreeCol ? 'experience-line experience-line--3col' : 'experience-line experience-line--2col'
 
-  if (tag === 'li') {
-    return `<${tag}${attrs}><div class="experience-line">${lineHtml}</div></${tag}>`
+  if (isThreeCol) {
+    const leftHtml = segments[0]
+    const centerHtml = segments.slice(1).join(' <span class="experience-col-sep">|</span> ')
+    const dateHtml = dateText ? `<span class="experience-col experience-col--right experience-date">${dateText}</span>` : ''
+    lineHtml = `<span class="experience-col experience-col--left experience-title">${leftHtml}</span><span class="experience-col experience-col--center">${centerHtml}</span>${dateHtml}`
+  } else {
+    const mainHtml = segments[0] || titleHtml
+    const dateHtml = dateText ? `<span class="experience-col experience-col--right experience-date">${dateText}</span>` : ''
+    lineHtml = `<span class="experience-col experience-col--left experience-title">${mainHtml}</span>${dateHtml}`
   }
 
-  return `<${tag}${attrs} class="experience-line">${lineHtml}</${tag}>`
+  if (tag === 'li') {
+    return `<${tag}${attrs}><div class="${colClass}">${lineHtml}</div></${tag}>`
+  }
+
+  return `<${tag}${attrs} class="${colClass}">${lineHtml}</${tag}>`
 }
 
 export function enhanceResumeHtml(rawHtml: string, styleConfig: ResumeStyle, templateId?: string): string {
@@ -392,6 +410,11 @@ export function enhanceResumeHtml(rawHtml: string, styleConfig: ResumeStyle, tem
   html = html.replace(/<(h[1-6]|p|li)([^>]*)>([\s\S]*?)<\/\1>/g, (match, tag, attrs, content) => {
     if (content.includes('experience-date')) return match
 
+    // Body paragraphs (<p>) never trigger experience line formatting
+    if (tag === 'p') {
+      return match
+    }
+
     let finalTag = tag
     let finalAttrs = attrs
 
@@ -406,19 +429,30 @@ export function enhanceResumeHtml(rawHtml: string, styleConfig: ResumeStyle, tem
       } else {
         finalAttrs = `${finalAttrs} class="${sectionClass}"`
       }
+
+      return `<${finalTag}${finalAttrs}><span class="section-title-badge">${content}</span></${finalTag}>`
     }
 
+    const isHeading = /^h[1-6]$/i.test(tag)
     const plainText = stripHtml(content).trim()
     const bracketedMatch = plainText.match(DATE_BRACKETED_PATTERN)
     const rangeMatch = bracketedMatch ? null : plainText.match(DATE_RANGE_PATTERN)
-    if (!bracketedMatch && !rangeMatch) return `<${finalTag}${finalAttrs}>${content}</${finalTag}>`
+
+    if (!bracketedMatch && !rangeMatch) {
+      // If it's a heading with a pipe (|), render as experience line even without date
+      if (isHeading && (content.includes('|') || content.includes('｜'))) {
+        return renderExperienceLine(finalTag, finalAttrs, content.trim(), '', true)
+      }
+      return `<${finalTag}${finalAttrs}>${content}</${finalTag}>`
+    }
 
     const dateText = bracketedMatch?.[1] ?? rangeMatch?.[1] ?? ''
     const datePattern = bracketedMatch ? DATE_BRACKETED_PATTERN : DATE_RANGE_PATTERN
     const rawCleaned = content.replace(datePattern, '').trim()
     const titleHtml = rawCleaned.replace(/[\s\-|–—:：,，]+$/, '').trim()
 
-    return renderExperienceLine(finalTag, finalAttrs, titleHtml, dateText)
+    // Only headings allow 3-column pipe layout; list items (<li>) are kept as 2-column if they contain dates
+    return renderExperienceLine(finalTag, finalAttrs, titleHtml, dateText, isHeading)
   })
 
   return html

@@ -71,25 +71,62 @@
 }
 
 .resume-document .experience-line {
+  width: 100%;
+}
+
+.resume-document .experience-line--2col {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
 }
 
-.resume-document .experience-title {
-  flex: 1 1 auto;
+.resume-document .experience-line--3col {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.resume-document .experience-col {
   min-width: 0;
 }
 
+.resume-document .experience-col--left,
+.resume-document .experience-title {
+  text-align: left;
+}
+
+.resume-document .experience-line--2col .experience-col--left,
+.resume-document .experience-line--2col .experience-title {
+  flex: 1 1 auto;
+}
+
+.resume-document .experience-col--center {
+  text-align: center;
+  justify-self: center;
+}
+
+.resume-document .experience-col--right,
 .resume-document .experience-date {
   font-size: var(--tpl-date-size);
   font-weight: var(--tpl-date-weight);
   color: #000;
-  flex-shrink: 0;
-  margin-left: auto;
   text-align: right;
   white-space: nowrap;
+  justify-self: end;
+}
+
+.resume-document .experience-line--2col .experience-col--right,
+.resume-document .experience-line--2col .experience-date {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.resume-document .experience-col-sep {
+  display: inline;
+  margin: 0 4px;
+  opacity: 0.5;
 }
 
 .resume-document h4 {
