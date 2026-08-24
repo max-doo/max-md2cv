@@ -26,7 +26,7 @@
 .resume-document h2 {
   font-size: var(--tpl-h2-size);
   font-weight: bold;
-  color: var(--tpl-theme-color);
+  color: color-mix(in srgb, var(--tpl-theme-color) 70%, white);
   margin-top: var(--tpl-h2-margin-top);
   margin-bottom: var(--tpl-h2-margin-bottom);
   letter-spacing: 0.05em;
@@ -41,10 +41,11 @@
 .resume-document h2 .section-title-badge {
   display: inline-flex;
   align-items: center;
-  background-color: var(--tpl-theme-color);
+  background-color: color-mix(in srgb, var(--tpl-theme-color) 70%, white);
   color: #ffffff;
   border-radius: 9999px;
   padding: 4px 14px 4px 10px;
+  margin-left: -8px;
   line-height: 1.35;
   flex-shrink: 0;
   box-sizing: border-box;
@@ -54,6 +55,7 @@
   content: "label";
   /* Default fallback icon */
   font-family: 'Material Symbols Outlined';
+  font-variation-settings: 'FILL' 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -105,7 +107,8 @@
 .resume-document h2::after {
   content: "";
   flex: 1;
-  border-bottom: 2px solid var(--tpl-theme-color);
+  border-bottom: 1.5pt solid color-mix(in srgb, var(--tpl-theme-color) 70%, white);
+  opacity: 0.8;
   margin-left: 14px;
 }
 

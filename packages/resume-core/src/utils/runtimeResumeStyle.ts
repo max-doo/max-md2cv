@@ -391,15 +391,17 @@ export const buildRuntimeResumeStyleCss = (
     align-items: center !important;
   }
   .resume-document[data-section-title-preset="capsule"] h2 .section-title-badge {
-    background-color: var(--tpl-theme-color) !important;
+    background-color: color-mix(in srgb, var(--tpl-theme-color) 70%, white) !important;
     color: #ffffff !important;
     border-radius: 9999px !important;
     padding: 4px 14px 4px 10px !important;
+    margin-left: -8px !important;
     display: inline-flex !important;
     align-items: center !important;
   }
   .resume-document[data-section-title-preset="capsule"] h2 .section-title-badge::before {
     color: #ffffff !important;
+    font-variation-settings: 'FILL' 1 !important;
   }
   .resume-document[data-section-title-preset="plain"] h2 {
     background: transparent !important;
@@ -411,6 +413,7 @@ export const buildRuntimeResumeStyleCss = (
     background: transparent !important;
     color: var(--tpl-theme-color) !important;
     padding: 0 !important;
+    margin-left: 0 !important;
   }
   .resume-document[data-section-title-preset="plain"] h2::after {
     display: none !important;
