@@ -173,7 +173,7 @@ export const useResumeStore = defineStore("resume", () => {
   };
 
   const resetActiveFileRenderSettings = () => {
-    playground.setTemplate(playground.templateId);
+    playground.resetTemplateValues();
   };
 
   const setActiveTemplateForCurrentFile = (templateId: string) => {

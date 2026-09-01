@@ -240,10 +240,15 @@ export const createRenderProfileModule = (
   };
 
   const setActiveTemplateForCurrentFile = (templateId: string) => {
-    state.activeTemplate.value = resolveAvailableTemplateId(templateId);
-    state.templateValues.value = {};
+    const nextTemplateId = resolveAvailableTemplateId(templateId);
+    const nextTemplate = getTemplateDefinition(nextTemplateId);
+    state.activeTemplate.value = nextTemplateId;
+    state.templateValues.value = extractTemplateValueOverrides(
+      nextTemplate,
+      state.templateValues.value,
+    );
 
-    if (!updateCurrentFileRenderProfile(state.activeTemplate.value, {})) {
+    if (!updateCurrentFileRenderProfile(state.activeTemplate.value, state.templateValues.value)) {
       return;
     }
 

@@ -166,11 +166,19 @@ export const usePlaygroundStore = defineStore("web-playground", () => {
   };
 
   const setTemplate = (nextTemplateId: string) => {
-    if (!getBuiltinTemplateById(nextTemplateId)) {
+    const nextTemplate = getBuiltinTemplateById(nextTemplateId);
+    if (!nextTemplate) {
       return;
     }
 
     templateId.value = nextTemplateId;
+    templateValues.value = extractTemplateValueOverrides(
+      nextTemplate,
+      templateValues.value,
+    );
+  };
+
+  const resetTemplateValues = () => {
     templateValues.value = {};
   };
 
@@ -243,6 +251,7 @@ export const usePlaygroundStore = defineStore("web-playground", () => {
     draft,
     hydrate,
     setTemplate,
+    resetTemplateValues,
     setTemplateValue,
     updateMarkdown,
     setPhotoBase64,
