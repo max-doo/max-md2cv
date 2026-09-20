@@ -1,0 +1,42 @@
+{
+  "id": "business-block",
+  "name": "商务方标",
+  "version": "1.0.0",
+  "entryCss": "style.css",
+  "description": "适合商务与正式职场场景，采用线框图标方标下划线二级标题设计，沉稳干练。",
+  "schemaPreset": "standard",
+  "defaults": {
+    "themeColor": "#0050D1",
+    "fontFamily": "\"Microsoft YaHei\", \"PingFang SC\", sans-serif",
+    "fontSize": 14,
+    "paragraphSpacing": 8,
+    "h2MarginTop": 12,
+    "h2MarginBottom": 6,
+    "h3MarginTop": 8,
+    "h3MarginBottom": 4,
+    "personalHeaderSpacing": 8,
+    "h1Size": 32,
+    "h2Size": 18,
+    "h3Size": 16,
+    "dateSize": 14,
+    "dateWeight": "700",
+    "lineHeight": 1.5,
+    "marginV": 10,
+    "marginH": 12,
+    "personalInfoMode": "icon",
+    "headerLayout": "stack",
+    "photoPlacement": "top-right",
+    "sectionTitlePreset": "block-line"
+  },
+  "features": {
+    "photo": true,
+    "pageFooter": true,
+    "contactModes": ["text", "icon"]
+  },
+  "layout": {
+    "headerLayout": "stack",
+    "personalInfoMode": "icon",
+    "photoPlacement": "top-right",
+    "sectionTitlePreset": "block-line"
+  }
+}

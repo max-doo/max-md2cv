@@ -351,7 +351,12 @@ watch(() => store.templateValues, () => {
   flex-shrink: 0;
 }
 
-
+.pagedjs_page:only-child .pagedjs_margin-bottom-right,
+.pagedjs_page:first-child:last-child .pagedjs_margin-bottom-right,
+.pagedjs_pages[data-page-count="1"] .pagedjs_margin-bottom-right {
+  display: none !important;
+  visibility: hidden !important;
+}
 </style>
 
 <style scoped>

@@ -1,4 +1,4 @@
-/* @name: 商务专业 */
+/* @name: 商务方标 */
 
 @page {
   margin: var(--tpl-page-margin-v) var(--tpl-page-margin-h);
@@ -26,13 +26,13 @@
 .resume-document h2 {
   font-size: var(--tpl-h2-size);
   font-weight: bold;
-  color: color-mix(in srgb, var(--tpl-theme-color) 70%, white);
+  color: var(--tpl-theme-color);
   margin-top: var(--tpl-h2-margin-top);
   margin-bottom: var(--tpl-h2-margin-bottom);
   letter-spacing: 0.05em;
   text-transform: none;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   padding-right: 0 !important;
   background: transparent;
   border: none;
@@ -41,11 +41,11 @@
 .resume-document h2 .section-title-badge {
   display: inline-flex;
   align-items: center;
-  background-color: color-mix(in srgb, var(--tpl-theme-color) 70%, white);
+  background-color: var(--tpl-theme-color);
   color: #ffffff;
-  border-radius: 9999px;
+  border-radius: 0;
   padding: 4px 14px 4px 10px;
-  margin-left: -8px;
+  margin-left: 0;
   line-height: 1.35;
   flex-shrink: 0;
   box-sizing: border-box;
@@ -55,7 +55,7 @@
   content: "label";
   /* Default fallback icon */
   font-family: 'Material Symbols Outlined';
-  font-variation-settings: 'FILL' 1;
+  font-variation-settings: 'FILL' 0;
   -webkit-font-feature-settings: 'liga';
   font-feature-settings: 'liga';
   text-transform: none;
@@ -110,9 +110,7 @@
 .resume-document h2::after {
   content: "";
   flex: 1;
-  border-bottom: 1.5pt solid color-mix(in srgb, var(--tpl-theme-color) 70%, white);
-  opacity: 0.8;
-  margin-left: 14px;
+  border-bottom: 1.5px solid var(--tpl-theme-color);
 }
 
 .resume-document h3 {

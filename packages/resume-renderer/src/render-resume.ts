@@ -9,7 +9,11 @@ import {
   type ResumeTemplate,
   type TemplateValues,
 } from "../../resume-core/src/domain";
-import { pingFangFontFaceCss } from "../../resume-core/src/utils/fontAssets";
+import {
+  pingFangFontFaceCss,
+  materialSymbolsFontFaceCss,
+  ensureMaterialSymbolsFontReady,
+} from "../../resume-core/src/utils/fontAssets";
 import { applyResumeDocumentLayoutHooks, createPhotoMarkup, type ResumeLayoutConfig } from "./layout-hooks";
 import { collectPageDiagnostics, waitForDocumentFonts, waitForImages } from "./diagnostics";
 import { RendererError, type RenderRequest, type RenderResult, type RenderWarning } from "./types";
@@ -139,6 +143,9 @@ export const renderResume = async (
       `html, body { margin: 0; padding: 0; background: #fff; }\n` +
         `.pagedjs_pages { display: flex; flex-direction: column; align-items: center; }\n` +
         `.pagedjs_page { box-shadow: none !important; background: #fff; }\n` +
+        `.pagedjs_page:only-child .pagedjs_margin-bottom-right,\n` +
+        `.pagedjs_page:first-child:last-child .pagedjs_margin-bottom-right,\n` +
+        `.pagedjs_pages[data-page-count="1"] .pagedjs_margin-bottom-right { display: none !important; visibility: hidden !important; }\n` +
         `@media print { .pagedjs_page { break-after: page; page-break-after: always; } .pagedjs_page:last-child { break-after: auto; page-break-after: auto; } }`,
       "shell",
     );
@@ -147,9 +154,11 @@ export const renderResume = async (
       "template",
     );
     setRenderStyle(
-      `@font-face { font-family: 'Manrope'; src: local('Arial'); }\n${buildRuntimeStyle(cvStyle, photoAdjustments)}`,
+      `@font-face { font-family: 'Manrope'; src: local('Arial'); }\n${materialSymbolsFontFaceCss}\n${buildRuntimeStyle(cvStyle, photoAdjustments)}`,
       "runtime",
     );
+
+    await ensureMaterialSymbolsFontReady().catch(() => {});
 
     const fontReport = await waitForDocumentFonts(cvStyle, request.options.strictFonts).catch((error) => {
       if (request.options.strictFonts) {
@@ -177,7 +186,7 @@ export const renderResume = async (
         source,
         [
           { [`${window.location.href}#template-${request.template.id}`]: request.template.css },
-          { [`${window.location.href}#runtime-md2cv`]: buildRuntimeStyle(cvStyle, photoAdjustments) },
+          { [`${window.location.href}#runtime-md2cv`]: `${materialSymbolsFontFaceCss}\n${buildRuntimeStyle(cvStyle, photoAdjustments)}` },
         ],
         target,
       );
@@ -206,6 +215,10 @@ export const renderResume = async (
       Array.from(target.querySelectorAll(".pagedjs_page")),
       request.options.maxPages,
     );
+    const pagesContainer = target.querySelector<HTMLElement>(".pagedjs_pages");
+    if (pagesContainer) {
+      pagesContainer.dataset.pageCount = String(pageDiagnostics.pages.length);
+    }
     warnings.push(...pageDiagnostics.warnings);
     rendered = true;
     return {

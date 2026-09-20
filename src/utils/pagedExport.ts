@@ -20,10 +20,13 @@ export const buildPagedExportDocumentHtml = async ({
   const inlinePingFangFontFaceCss = await getInlinePingFangFontFaceCss();
   const exportedPagesContainer = pagesContainer.cloneNode(true) as HTMLElement;
 
+  const pageCount = exportedPagesContainer.querySelectorAll(".pagedjs_page").length;
+  exportedPagesContainer.dataset.pageCount = String(pageCount);
+
   if (!exportedPagesContainer.style.getPropertyValue("--pagedjs-page-count")) {
     exportedPagesContainer.style.setProperty(
       "--pagedjs-page-count",
-      String(exportedPagesContainer.querySelectorAll(".pagedjs_page").length),
+      String(pageCount),
     );
   }
 
@@ -64,6 +67,12 @@ export const buildPagedExportDocumentHtml = async ({
         }
         .pagedjs_page {
           box-shadow: none !important;
+        }
+        .pagedjs_page:only-child .pagedjs_margin-bottom-right,
+        .pagedjs_page:first-child:last-child .pagedjs_margin-bottom-right,
+        .pagedjs_pages[data-page-count="1"] .pagedjs_margin-bottom-right {
+          display: none !important;
+          visibility: hidden !important;
         }
         @media print {
           html,

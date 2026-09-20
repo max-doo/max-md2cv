@@ -12,7 +12,8 @@ export type TemplateSectionTitlePreset =
   | "accent-bar"
   | "underline"
   | "capsule"
-  | "plain";
+  | "plain"
+  | "block-line";
 
 export type TemplateValue = string | number | boolean;
 export type TemplateValues = Record<string, TemplateValue>;

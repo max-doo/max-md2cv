@@ -40,6 +40,12 @@ export const buildRuntimeResumeStyleCss = (
     }
   }`
     : ""}
+  .pagedjs_page:only-child .pagedjs_margin-bottom-right,
+  .pagedjs_page:first-child:last-child .pagedjs_margin-bottom-right,
+  .pagedjs_pages[data-page-count="1"] .pagedjs_margin-bottom-right {
+    display: none !important;
+    visibility: hidden !important;
+  }
   .resume-document {
     --cv-photo-size-factor: ${resolvedPhotoAdjustments.size / 100};
     --cv-photo-offset-x: ${resolvedPhotoAdjustments.offsetX}px;
@@ -137,7 +143,7 @@ export const buildRuntimeResumeStyleCss = (
   }
   .resume-document .resume-photo-wrapper .photo-placeholder-text {
     color: #adb5bd;
-    font-size: 12px;
+    font-size: calc(12px * var(--cv-photo-size-factor));
     text-align: center;
     line-height: 1.2;
     display: flex;
@@ -146,14 +152,14 @@ export const buildRuntimeResumeStyleCss = (
     justify-content: center;
     width: 100%;
     height: 100%;
-    padding: 12px;
+    padding: calc(10px * var(--cv-photo-size-factor));
     box-sizing: border-box;
   }
   .resume-document .resume-photo-wrapper .photo-placeholder-icon {
     display: block;
-    font-size: 24px;
+    font-size: calc(24px * var(--cv-photo-size-factor));
     line-height: 1;
-    margin-bottom: 4px;
+    margin-bottom: calc(4px * var(--cv-photo-size-factor));
   }
   .resume-document .resume-photo-wrapper .photo-placeholder-label {
     display: block;
@@ -424,6 +430,34 @@ export const buildRuntimeResumeStyleCss = (
     padding-left: 0 !important;
     padding-right: 0 !important;
     border-bottom-width: 2px !important;
+  }
+  .resume-document[data-section-title-preset="block-line"] h2 {
+    background: transparent !important;
+    border: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    display: flex !important;
+    align-items: flex-end !important;
+  }
+  .resume-document[data-section-title-preset="block-line"] h2 .section-title-badge {
+    background-color: var(--tpl-theme-color) !important;
+    color: #ffffff !important;
+    border-radius: 0 !important;
+    padding: 4px 14px 4px 10px !important;
+    margin-left: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    line-height: 1.35 !important;
+  }
+  .resume-document[data-section-title-preset="block-line"] h2 .section-title-badge::before {
+    color: #ffffff !important;
+    font-variation-settings: 'FILL' 0 !important;
+  }
+  .resume-document[data-section-title-preset="block-line"] h2::after {
+    content: "" !important;
+    flex: 1 !important;
+    border-bottom: 1.5px solid var(--tpl-theme-color) !important;
+    display: block !important;
   }
   .resume-document .contact-info-item {
     min-width: 0;

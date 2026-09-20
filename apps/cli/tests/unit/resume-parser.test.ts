@@ -69,3 +69,67 @@ describe("enhanceResumeHtml - experience line splitting", () => {
     expect(result).not.toContain("experience-col--center");
   });
 });
+
+describe("enhanceResumeHtml - personal info rendering", () => {
+  it("renders personal-header and contact-info icons when there is NO job intention", () => {
+    const rawHtml = "<h1>张三</h1>\n<p>电话：13800000000 | 邮箱：demo@example.com | 城市：北京</p>\n<h2>个人优势</h2>";
+    const result = enhanceResumeHtml(rawHtml, { ...defaultStyle, personalInfoMode: "icon" });
+
+    expect(result).toContain('<div class="personal-header">');
+    expect(result).toContain('class="contact-info contact-info--icon"');
+    expect(result).toContain('data-icon="call"');
+    expect(result).toContain('data-icon="mail"');
+    expect(result).toContain('data-icon="location_on"');
+    expect(result).not.toContain('class="job-intention"');
+  });
+
+  it("renders personal-header and contact-info text when there is NO job intention in text mode", () => {
+    const rawHtml = "<h1>张三</h1>\n<p>电话：13800000000 | 邮箱：demo@example.com | 城市：北京</p>\n<h2>个人优势</h2>";
+    const result = enhanceResumeHtml(rawHtml, { ...defaultStyle, personalInfoMode: "text" });
+
+    expect(result).toContain('<div class="personal-header">');
+    expect(result).toContain('class="contact-info contact-info--text"');
+    expect(result).toContain('class="contact-info-text-line"');
+  });
+
+  it("renders both job-intention and contact-info inside personal-header when job intention is present", () => {
+    const rawHtml = "<h1>张三</h1>\n<p>求职意向：前端开发工程师</p>\n<p>电话：13800000000 | 邮箱：demo@example.com</p>\n<h2>个人优势</h2>";
+    const result = enhanceResumeHtml(rawHtml, { ...defaultStyle, personalInfoMode: "icon" });
+
+    expect(result).toContain('<div class="personal-header">');
+    expect(result).toContain('class="job-intention"');
+    expect(result).toContain('class="contact-info contact-info--icon"');
+    expect(result).toContain('data-icon="call"');
+    expect(result).toContain('data-icon="mail"');
+  });
+
+  it("renders personal-header when ONLY job intention is present", () => {
+    const rawHtml = "<h1>张三</h1>\n<p>求职意向：前端开发工程师</p>\n<h2>个人优势</h2>";
+    const result = enhanceResumeHtml(rawHtml, { ...defaultStyle, personalInfoMode: "icon" });
+
+    expect(result).toContain('<div class="personal-header">');
+    expect(result).toContain('class="job-intention"');
+    expect(result).not.toContain('class="contact-info"');
+  });
+
+  it("renders multiple contact paragraphs combined in icon mode without job intention", () => {
+    const rawHtml = "<h1>张三</h1>\n<p>电话：13800000000 | 邮箱：demo@example.com</p>\n<p>微信：zhangsan | 城市：北京</p>\n<h2>个人优势</h2>";
+    const result = enhanceResumeHtml(rawHtml, { ...defaultStyle, personalInfoMode: "icon" });
+
+    expect(result).toContain('<div class="personal-header">');
+    expect(result).toContain('data-icon="call"');
+    expect(result).toContain('data-icon="mail"');
+    expect(result).toContain('data-icon="wechat"');
+    expect(result).toContain('data-icon="location_on"');
+  });
+
+  it("does not create personal-header when header has no contact info or job intention", () => {
+    const rawHtml = "<h1>张三</h1>\n<p>热爱技术，追求极致的普通段落</p>\n<h2>个人优势</h2>";
+    const result = enhanceResumeHtml(rawHtml, { ...defaultStyle, personalInfoMode: "icon" });
+
+    expect(result).not.toContain('<div class="personal-header">');
+    expect(result).not.toContain('class="contact-info"');
+    expect(result).toContain('<p>热爱技术，追求极致的普通段落</p>');
+  });
+});
+

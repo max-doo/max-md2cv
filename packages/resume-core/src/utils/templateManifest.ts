@@ -92,6 +92,7 @@ const DEFAULT_SECTION_TITLE_OPTIONS = [
   { label: "强调条", value: "accent-bar" },
   { label: "下划线", value: "underline" },
   { label: "胶囊", value: "capsule" },
+  { label: "方标", value: "block-line" },
   { label: "纯文字", value: "plain" },
 ] as const;
 
@@ -287,7 +288,7 @@ export const DEFAULT_TEMPLATE_EDITOR_SCHEMA: TemplateFieldSchema[] = [
     type: "number",
     label: "照片大小",
     group: "布局",
-    min: 88,
+    min: 50,
     max: 112,
     step: 1,
     unit: "%",

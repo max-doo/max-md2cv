@@ -252,55 +252,144 @@ function renderContactField(field: ContactField): string {
   return `<span class="contact-info-item contact-info-item--${field.type}" data-icon="${CONTACT_ICON_MAP[field.type]}">${valueHtml}</span>`
 }
 
-function enhanceModernContactInfo(html: string): string {
-  return html.replace(
-    /(<p class="job-intention"[^>]*>[\s\S]*?<\/p>)(\s*<p>([\s\S]*?)<\/p>)/i,
-    (match, jobIntentionHtml, _contactBlock, contactContent) => {
-      const fields = parseContactFields(contactContent)
-
-      if (fields.length < 2) {
-        return match
-      }
-
-      return `${jobIntentionHtml}<div class="contact-info contact-info--icon">${fields.map(renderContactField).join('')}</div>`
-    }
-  )
-}
-
-function collectContactParagraphs(jobIntentionElement: Element): HTMLParagraphElement[] {
-  const paragraphs: HTMLParagraphElement[] = []
-  let current = jobIntentionElement.nextElementSibling
-
-  while (current?.tagName === 'P') {
-    const paragraph = current as HTMLParagraphElement
-    const parsedFields = parseContactFields(paragraph.innerHTML)
-
-    if (parsedFields.length < 2) {
-      break
-    }
-
-    paragraphs.push(paragraph)
-    current = paragraph.nextElementSibling
-  }
-
-  return paragraphs
-}
-
-function renderTextContactInfo(paragraphs: HTMLParagraphElement[]): string {
-  return `
+function buildContactReplacementHtml(
+  paragraphsContent: string[],
+  isIconMode: boolean,
+): string {
+  if (!isIconMode) {
+    return `
     <div class="contact-info contact-info--text">
-      ${paragraphs
-      .map((paragraph) => `<p class="contact-info-text-line">${paragraph.innerHTML}</p>`)
+      ${paragraphsContent
+      .map((content) => `<p class="contact-info-text-line">${content}</p>`)
       .join('')}
     </div>
   `.trim()
+  }
+
+  const joinedHtml = paragraphsContent.join('\n')
+  const fields = parseContactFields(joinedHtml)
+  if (fields.length < 2) {
+    return `
+    <div class="contact-info contact-info--text">
+      ${paragraphsContent
+      .map((content) => `<p class="contact-info-text-line">${content}</p>`)
+      .join('')}
+    </div>
+  `.trim()
+  }
+
+  return `<div class="contact-info contact-info--icon">${fields.map(renderContactField).join('')}</div>`
+}
+
+function enhanceContactInfoNonDom(html: string, styleConfig: ResumeStyle): string {
+  const isIconMode = styleConfig.personalInfoMode === 'icon'
+
+  const hasH1 = /<h1[\s>]/i.test(html)
+  const jobIntentionMatch = html.match(/<p class="job-intention"[^>]*>[\s\S]*?<\/p>/i)
+  if (!hasH1 && !jobIntentionMatch) {
+    return html
+  }
+
+  const h1CloseMatch = html.match(/<\/h1>/i)
+  const headerStartIndex = hasH1 && h1CloseMatch && h1CloseMatch.index !== undefined
+    ? h1CloseMatch.index + h1CloseMatch[0].length
+    : 0
+  const h2Match = html.slice(headerStartIndex).match(/<h2[\s>]/i)
+  const headerEndIndex = h2Match && h2Match.index !== undefined
+    ? headerStartIndex + h2Match.index
+    : html.length
+
+  const beforeHeaderHtml = html.slice(0, headerStartIndex)
+  const headerHtml = html.slice(headerStartIndex, headerEndIndex)
+  const restHtml = html.slice(headerEndIndex)
+
+  const jobIntentionRegex = /<p class="job-intention"[^>]*>[\s\S]*?<\/p>/i
+  const headerJobIntentionMatch = headerHtml.match(jobIntentionRegex)
+  const jobIntentionHtml = headerJobIntentionMatch ? headerJobIntentionMatch[0] : null
+
+  const pRegex = /<p(?:\s+class="([^"]*)")?[^>]*>([\s\S]*?)<\/p>/gi
+  interface ParagraphInfo {
+    match: string
+    index: number
+    className: string
+    content: string
+    isJobIntention: boolean
+    fieldsCount: number
+  }
+
+  const pMatches: ParagraphInfo[] = []
+  let match: RegExpExecArray | null
+  while ((match = pRegex.exec(headerHtml)) !== null) {
+    const className = match[1] || ''
+    const content = match[2]
+    const isJobIntention = className.includes('job-intention')
+    const fieldsCount = isJobIntention ? 0 : parseContactFields(content).length
+    pMatches.push({
+      match: match[0],
+      index: match.index,
+      className,
+      content,
+      isJobIntention,
+      fieldsCount,
+    })
+  }
+
+  const contactParagraphs: ParagraphInfo[] = []
+  let inContactBlock = false
+  for (const p of pMatches) {
+    if (p.isJobIntention) continue
+    if (p.fieldsCount >= 2) {
+      contactParagraphs.push(p)
+      inContactBlock = true
+    } else if (inContactBlock && p.fieldsCount >= 1) {
+      contactParagraphs.push(p)
+    } else if (inContactBlock) {
+      break
+    }
+  }
+
+  if (!jobIntentionHtml && contactParagraphs.length === 0) {
+    return html
+  }
+
+  let contactHtml = ''
+  if (contactParagraphs.length > 0) {
+    contactHtml = buildContactReplacementHtml(
+      contactParagraphs.map((p) => p.content),
+      isIconMode,
+    )
+  }
+
+  const personalHeaderInner = [jobIntentionHtml, contactHtml].filter(Boolean).join('')
+  const personalHeaderHtml = `<div class="personal-header">${personalHeaderInner}</div>`
+
+  const allItems: Array<{ matchStr: string; index: number }> = []
+  if (headerJobIntentionMatch && headerJobIntentionMatch.index !== undefined) {
+    allItems.push({ matchStr: headerJobIntentionMatch[0], index: headerJobIntentionMatch.index })
+  }
+  for (const p of contactParagraphs) {
+    allItems.push({ matchStr: p.match, index: p.index })
+  }
+  allItems.sort((a, b) => a.index - b.index)
+
+  let newHeaderHtml = headerHtml
+  if (allItems.length > 0) {
+    for (let i = allItems.length - 1; i >= 0; i--) {
+      const item = allItems[i]
+      const repl = i === 0 ? personalHeaderHtml : ''
+      newHeaderHtml =
+        newHeaderHtml.slice(0, item.index) +
+        repl +
+        newHeaderHtml.slice(item.index + item.matchStr.length)
+    }
+  }
+
+  return beforeHeaderHtml + newHeaderHtml + restHtml
 }
 
 function enhanceContactInfo(html: string, styleConfig: ResumeStyle, _templateId?: string): string {
   if (typeof document === 'undefined') {
-    return styleConfig.personalInfoMode === 'icon'
-      ? enhanceModernContactInfo(html)
-      : html
+    return enhanceContactInfoNonDom(html, styleConfig)
   }
 
   const container = document.createElement('div')
@@ -308,48 +397,84 @@ function enhanceContactInfo(html: string, styleConfig: ResumeStyle, _templateId?
 
   const isIconMode = styleConfig.personalInfoMode === 'icon'
 
-  const jobIntentions = container.querySelectorAll('p.job-intention')
+  const h1Element = container.querySelector('h1')
+  const jobIntentionElement = container.querySelector('p.job-intention') as HTMLParagraphElement | null
 
-  jobIntentions.forEach((jobIntentionElement) => {
-    const paragraphs = collectContactParagraphs(jobIntentionElement)
-    if (paragraphs.length === 0) {
-      return
+  if (!h1Element && !jobIntentionElement) {
+    return container.innerHTML
+  }
+
+  const headerElements: Element[] = []
+  let current = h1Element ? h1Element.nextElementSibling : container.firstElementChild
+  while (current && current.tagName !== 'H2') {
+    headerElements.push(current)
+    current = current.nextElementSibling
+  }
+
+  const headerJobIntentionElement = headerElements.find(
+    (el) => el.tagName === 'P' && el.classList.contains('job-intention'),
+  ) as HTMLParagraphElement | undefined
+
+  const contactParagraphs: HTMLParagraphElement[] = []
+  let inContactBlock = false
+
+  for (const el of headerElements) {
+    if (el.tagName === 'P' && el !== headerJobIntentionElement) {
+      const p = el as HTMLParagraphElement
+      const parsedFields = parseContactFields(p.innerHTML)
+      if (parsedFields.length >= 2) {
+        contactParagraphs.push(p)
+        inContactBlock = true
+      } else if (inContactBlock && parsedFields.length >= 1) {
+        contactParagraphs.push(p)
+      } else if (inContactBlock) {
+        break
+      }
+    } else if (inContactBlock && el !== headerJobIntentionElement) {
+      break
     }
+  }
 
-    const replacementHtml = (() => {
-      if (!isIconMode) {
-        return renderTextContactInfo(paragraphs)
-      }
+  if (!headerJobIntentionElement && contactParagraphs.length === 0) {
+    return container.innerHTML
+  }
 
-      const joinedHtml = paragraphs.map((paragraph) => paragraph.innerHTML).join('\n')
-      const fields = parseContactFields(joinedHtml)
-      if (fields.length < 2) {
-        return renderTextContactInfo(paragraphs)
-      }
+  const anchorElement = (() => {
+    if (headerJobIntentionElement && contactParagraphs.length > 0) {
+      const pos = headerJobIntentionElement.compareDocumentPosition(contactParagraphs[0])
+      return (pos & Node.DOCUMENT_POSITION_FOLLOWING) ? headerJobIntentionElement : contactParagraphs[0]
+    }
+    return headerJobIntentionElement ?? contactParagraphs[0]
+  })()
 
-      return `<div class="contact-info contact-info--icon">${fields.map(renderContactField).join('')}</div>`
-    })()
+  const headerWrapper = document.createElement('div')
+  headerWrapper.className = 'personal-header'
+  anchorElement.before(headerWrapper)
+
+  if (headerJobIntentionElement) {
+    headerWrapper.appendChild(headerJobIntentionElement)
+  }
+
+  if (contactParagraphs.length > 0) {
+    const replacementHtml = buildContactReplacementHtml(
+      contactParagraphs.map((p) => p.innerHTML),
+      isIconMode,
+    )
 
     const replacementWrapper = document.createElement('div')
     replacementWrapper.innerHTML = replacementHtml
     const replacementElement = replacementWrapper.firstElementChild
 
-    if (!replacementElement) {
-      return
+    if (replacementElement) {
+      headerWrapper.appendChild(replacementElement)
     }
 
-    // Wrap job-intention + contact-info in a personal-header container
-    // to prevent Paged.js from breaking their sibling layout relationship
-    const headerWrapper = document.createElement('div')
-    headerWrapper.className = 'personal-header'
-    jobIntentionElement.before(headerWrapper)
-    headerWrapper.appendChild(jobIntentionElement)
-    headerWrapper.appendChild(replacementElement)
-    paragraphs.forEach((paragraph) => paragraph.remove())
-  })
+    contactParagraphs.forEach((p) => p.remove())
+  }
 
   return container.innerHTML
 }
+
 
 function renderExperienceLine(
   tag: string,

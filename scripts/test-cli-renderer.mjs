@@ -127,6 +127,25 @@ try {
   assert.equal(first.ok, true);
   assert.equal(first.result.pageCount, 1);
   assert.ok(first.result.pages[0].widthPx > 0 && first.result.pages[0].heightPx > 0);
+  const singlePageMarginDisplay = await page.evaluate(() => {
+    const margin = document.querySelector(".pagedjs_page .pagedjs_margin-bottom-right");
+    return margin ? getComputedStyle(margin).display : null;
+  });
+  assert.equal(singlePageMarginDisplay, "none");
+
+  const multiPageMarkdown = "# 测试姓名\n\n测试职位 | 13800000000\n\n" +
+    Array.from({ length: 40 }, (_, i) => `## 项目经历 ${i + 1}\n\n- 项目描述内容，占用空间以触发分页。\n- 详细要点。`).join("\n\n");
+  const multiPageRender = await evaluateRender(page, { ...baseRequest, markdown: multiPageMarkdown });
+  assert.equal(multiPageRender.ok, true);
+  assert.ok(multiPageRender.result.pageCount > 1);
+  const multiPageMarginDisplays = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll(".pagedjs_page")).map((el) => {
+      const margin = el.querySelector(".pagedjs_margin-bottom-right");
+      return margin ? getComputedStyle(margin).display : null;
+    });
+  });
+  assert.equal(multiPageMarginDisplays.length, multiPageRender.result.pageCount);
+  assert.ok(multiPageMarginDisplays.every((display) => display === "flex"));
 
   const second = await evaluateRender(page, { ...baseRequest, values: { ...template.defaults, fontSize: 16 } });
   assert.equal(second.ok, true);
@@ -138,6 +157,18 @@ try {
 
   const photoRender = await evaluateRender(page, { ...baseRequest, photoDataUrl });
   assert.equal(photoRender.ok, true);
+
+  const smallPhotoRender = await evaluateRender(page, {
+    ...baseRequest,
+    values: { ...template.defaults, photoSize: 50 },
+    photoDataUrl,
+  });
+  assert.equal(smallPhotoRender.ok, true);
+  const smallPhotoWidth = await page.evaluate(() => {
+    const wrapper = document.querySelector(".pagedjs_page .resume-photo-wrapper");
+    return wrapper ? getComputedStyle(wrapper).width : null;
+  });
+  assert.equal(smallPhotoWidth, "42px");
   const visiblePhoto = await page.evaluate(() => {
     const wrapper = document.querySelector(".pagedjs_page .resume-photo-wrapper");
     const image = wrapper?.querySelector("img");

@@ -1,4 +1,5 @@
 import pingFangScRegularWoff2Url from '../assets/fonts/PingFangSC-Regular.woff2'
+import materialSymbolsOutlinedWoff2Url from '../assets/fonts/material-symbols-outlined.woff2'
 
 const buildPingFangFontFaceCss = (src: string) => `
   @font-face {
@@ -11,6 +12,16 @@ const buildPingFangFontFaceCss = (src: string) => `
 `
 
 export const pingFangFontFaceCss = buildPingFangFontFaceCss(pingFangScRegularWoff2Url)
+
+export const materialSymbolsFontFaceCss = `
+  @font-face {
+    font-family: 'Material Symbols Outlined';
+    font-style: normal;
+    font-weight: 100 700;
+    font-display: block;
+    src: url('${materialSymbolsOutlinedWoff2Url}') format('woff2');
+  }
+`
 
 let pingFangFontReadyPromise: Promise<void> | null = null
 
@@ -65,6 +76,52 @@ export const ensurePingFangFontReady = async () => {
   }
 
   await pingFangFontReadyPromise
+}
+
+let materialSymbolsFontReadyPromise: Promise<void> | null = null
+
+const hasLoadedMaterialSymbolsFace = () => {
+  if (typeof document === 'undefined' || !('fonts' in document)) {
+    return false
+  }
+
+  return Array.from(document.fonts).some((fontFace) => {
+    return normalizeFontFamilyName(fontFace.family).toLowerCase() === 'material symbols outlined'
+      && fontFace.status === 'loaded'
+  })
+}
+
+export const ensureMaterialSymbolsFontReady = async () => {
+  if (
+    typeof document === 'undefined'
+    || typeof FontFace === 'undefined'
+    || !('fonts' in document)
+  ) {
+    return
+  }
+
+  if (hasLoadedMaterialSymbolsFace()) {
+    return
+  }
+
+  if (!materialSymbolsFontReadyPromise) {
+    const fontFace = new FontFace(
+      'Material Symbols Outlined',
+      `url(${materialSymbolsOutlinedWoff2Url}) format('woff2')`,
+      {
+        style: 'normal',
+        weight: '100 700',
+      },
+    )
+
+    document.fonts.add(fontFace)
+    materialSymbolsFontReadyPromise = fontFace.load().then(() => undefined).catch((error) => {
+      materialSymbolsFontReadyPromise = null
+      throw error
+    })
+  }
+
+  await materialSymbolsFontReadyPromise
 }
 
 export const ensurePreviewFontsReady = async (

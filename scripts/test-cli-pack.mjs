@@ -43,7 +43,7 @@ try {
 
   assert.equal((await runInstalled(installDirectory, ["--version"])).trim(), "0.1.0");
   const templates = JSON.parse(await runInstalled(installDirectory, ["templates", "list", "--json"]));
-  assert.deepEqual(templates.templates.map((template) => template.id), ["business", "classic", "modern"]);
+  assert.deepEqual(templates.templates.map((template) => template.id), ["business", "business-block", "classic", "modern"]);
 
   const renderOutput = JSON.parse(await runInstalled(installDirectory, [
     "render",

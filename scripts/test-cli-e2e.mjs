@@ -79,7 +79,7 @@ try {
   assert.match(version.stdout.trim(), /^0\.1\.0$/);
 
   const list = parseJson(await run(["templates", "list", "--json"], cwd));
-  assert.deepEqual(list.templates.map((template) => template.id), ["business", "classic", "modern"]);
+  assert.deepEqual(list.templates.map((template) => template.id), ["business", "business-block", "classic", "modern"]);
 
   const schema = parseJson(await run(["templates", "schema", "modern", "--json"], cwd));
   assert.ok(schema.template.editorSchema.some((field) => field.key === "fontSize"));
@@ -113,6 +113,13 @@ try {
   assert.equal(business.pageCount, 1);
   await assertPdf(business.artifacts.pdf.path, 1);
   await assertPng(business.artifacts.images[0].path);
+
+  const businessBlockDir = join(tempRoot, "business-block-output");
+  const businessBlock = parseJson(await run(["render", onePage, "--template", "business-block", "--output-dir", businessBlockDir, "--json"], cwd));
+  assert.equal(businessBlock.template.id, "business-block");
+  assert.equal(businessBlock.pageCount, 1);
+  await assertPdf(businessBlock.artifacts.pdf.path, 1);
+  await assertPng(businessBlock.artifacts.images[0].path);
 
   const classicDir = join(tempRoot, "classic-output");
   const classic = parseJson(await run(["render", twoPage, "--template", "classic", "--output-dir", classicDir, "--json"], cwd));

@@ -111,7 +111,7 @@ const photoAdjustments = computed<PhotoAdjustments>(() =>
 )
 
 const PHOTO_SLIDERS = [
-  { key: 'photoSize', label: '大小', min: 88, max: 112, step: 1, unit: '%' },
+  { key: 'photoSize', label: '大小', min: 50, max: 112, step: 1, unit: '%' },
   { key: 'photoOffsetY', label: '上下', min: -24, max: 24, step: 1, unit: 'px' },
   { key: 'photoOffsetX', label: '左右', min: -24, max: 24, step: 1, unit: 'px' },
 ] as const
