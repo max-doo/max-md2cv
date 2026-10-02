@@ -9,6 +9,15 @@ export const ensureMarkdownFileName = (name: string) => {
   return trimmed.endsWith(".md") ? trimmed : `${trimmed}.md`;
 };
 
+export const ensurePdfFileName = (name: string) => {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return "resume.pdf";
+  }
+
+  return trimmed.toLowerCase().endsWith(".pdf") ? trimmed : `${trimmed}.pdf`;
+};
+
 export const removeStorageItem = (key: string) => {
   localStorage.removeItem(key);
 };

@@ -1,7 +1,11 @@
 import defaultResumeTemplate from "../../../../packages/resume-core/src/assets/templates/default-resume.md?raw";
 import { DEFAULT_FILE_NAME, DEFAULT_MARKDOWN } from "../constants";
 import type { ResumeStoreBaseContext } from "../context";
-import { ensureMarkdownFileName, normalizePathKey } from "../path-utils";
+import {
+  ensureMarkdownFileName,
+  ensurePdfFileName,
+  normalizePathKey,
+} from "../path-utils";
 import type { FileItem } from "../types";
 
 interface WorkspaceFilesModuleContext extends ResumeStoreBaseContext {
@@ -260,6 +264,69 @@ export const createWorkspaceFilesModule = (
     }
   };
 
+  const renamePdf = async (oldPath: string, newName: string) => {
+    if (!state.workspacePath.value) {
+      return;
+    }
+
+    try {
+      const newPath = await platform.join(
+        state.workspacePath.value,
+        ensurePdfFileName(newName),
+      );
+      if (normalizePathKey(oldPath) === normalizePathKey(newPath)) {
+        return;
+      }
+
+      if (await context.ensurePathExists(newPath)) {
+        ui.message.error("同名文件已存在，请换一个名称。");
+        return;
+      }
+
+      context.registerLocalMutation(oldPath, newPath);
+      await platform.invoke("rename_pdf", { oldPath, newPath });
+      await refreshPdfList(state.workspacePath.value);
+      ui.message.success("PDF 文件名已更新");
+    } catch (error) {
+      console.error("Failed to rename pdf:", error);
+      ui.message.error("重命名 PDF 失败");
+    }
+  };
+
+  const duplicatePdf = async (path: string) => {
+    if (!state.workspacePath.value) {
+      return;
+    }
+
+    try {
+      const originalFile = state.pdfFileList.value.find(
+        (file) => normalizePathKey(file.path) === normalizePathKey(path),
+      );
+      if (!originalFile) {
+        return;
+      }
+
+      const baseName = originalFile.name.replace(/\.pdf$/i, "");
+      let counter = 1;
+      let nextName = `${baseName}-副本.pdf`;
+      let nextPath = await platform.join(state.workspacePath.value, nextName);
+
+      while (await context.ensurePathExists(nextPath)) {
+        counter += 1;
+        nextName = `${baseName}-副本(${counter}).pdf`;
+        nextPath = await platform.join(state.workspacePath.value, nextName);
+      }
+
+      context.registerLocalMutation(nextPath);
+      await platform.invoke("duplicate_pdf", { path, newPath: nextPath });
+      await refreshPdfList(state.workspacePath.value);
+      ui.message.success("已创建 PDF 副本");
+    } catch (error) {
+      console.error("Failed to duplicate pdf:", error);
+      ui.message.error("创建 PDF 副本失败");
+    }
+  };
+
   const selectWorkspace = async () => {
     try {
       const selectedDir = await platform.openDialog({
@@ -311,6 +378,8 @@ export const createWorkspaceFilesModule = (
     deletePdf,
     renameFile,
     duplicateFile,
+    renamePdf,
+    duplicatePdf,
     selectWorkspace,
     openWorkspaceDirectory,
   };

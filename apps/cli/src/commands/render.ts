@@ -47,7 +47,7 @@ export const executeRender = async (
   const startedAt = now();
   const loadedConfig = options.config ? await loadConfig(options.config) : null;
   const config = loadedConfig?.value;
-  const template = await findTemplate(options.template ?? config?.template ?? "modern");
+  const template = await findTemplate(options.template ?? config?.template ?? "business-block");
   const input = await readMarkdownInput(inputPath, options.stdin === true, options.name);
   const cliValues = parseSetValues(template, options.set ?? []);
   const normalized = normalizeTemplateValuesForCli(template, config?.values ?? {}, cliValues);

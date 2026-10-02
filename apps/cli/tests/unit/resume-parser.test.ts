@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { enhanceResumeHtml } from "../../../../packages/resume-core/src/utils/resumeParser";
+import { enhanceResumeHtml, resolveSectionType } from "../../../../packages/resume-core/src/utils/resumeParser";
 import type { ResumeStyle } from "../../../../packages/resume-core/src/types/resume";
 
 const defaultStyle: ResumeStyle = {
@@ -130,6 +130,34 @@ describe("enhanceResumeHtml - personal info rendering", () => {
     expect(result).not.toContain('<div class="personal-header">');
     expect(result).not.toContain('class="contact-info"');
     expect(result).toContain('<p>热爱技术，追求极致的普通段落</p>');
+  });
+});
+
+describe("resolveSectionType & section headers", () => {
+  it("resolves '项目与竞赛经历' to project section", () => {
+    const section = resolveSectionType("项目与竞赛经历");
+    expect(section).not.toBeNull();
+    expect(section?.key).toBe("project");
+    expect(section?.emoji).toBe("🚀");
+  });
+
+  it("resolves other common project titles to project section", () => {
+    expect(resolveSectionType("项目经历")?.key).toBe("project");
+    expect(resolveSectionType("项目与比赛")?.key).toBe("project");
+    expect(resolveSectionType("个人项目")?.key).toBe("project");
+    expect(resolveSectionType("开源贡献")?.key).toBe("project");
+  });
+
+  it("resolves standalone competition titles to award section", () => {
+    expect(resolveSectionType("竞赛经历")?.key).toBe("award");
+    expect(resolveSectionType("学科竞赛")?.key).toBe("award");
+  });
+
+  it("adds section-project class to h2 for '项目与竞赛经历'", () => {
+    const rawHtml = "<h2>项目与竞赛经历</h2>";
+    const result = enhanceResumeHtml(rawHtml, defaultStyle);
+    expect(result).toContain('class="section-project"');
+    expect(result).toContain('<span class="section-title-badge">项目与竞赛经历</span>');
   });
 });
 

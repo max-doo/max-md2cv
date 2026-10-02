@@ -311,34 +311,64 @@ export const createRenderProfileModule = (
     }
   };
 
+  const BUILTIN_TEMPLATE_ORDER = [
+    DEFAULT_TEMPLATE_ID,
+    "modern",
+    "classic",
+    "business",
+  ];
+
+  const BUILTIN_TEMPLATE_NAMES: Record<string, string> = {
+    "business-block": "稳重商务",
+    modern: "清雅简约",
+    classic: "经典极简",
+    business: "轻盈现代",
+  };
+
   const loadTemplates = async () => {
     try {
       const templates = await platform.invoke<ResumeTemplate[]>("list_templates");
-      state.availableTemplates.value = templates.map((template) => {
+      const normalizedTemplates = templates.map((template) => {
+        const officialName = BUILTIN_TEMPLATE_NAMES[template.id];
+        const normalizedItem = officialName
+          ? { ...template, name: officialName }
+          : template;
+
         const hasDefaults =
-          !!template.defaults &&
-          typeof template.defaults === "object" &&
-          Object.keys(template.defaults).length > 0;
+          !!normalizedItem.defaults &&
+          typeof normalizedItem.defaults === "object" &&
+          Object.keys(normalizedItem.defaults).length > 0;
         const hasStructuredManifest =
           hasDefaults ||
-          !!template.schemaPreset ||
-          !!template.layout ||
-          !!template.features ||
-          !!template.editorSchema?.length;
+          !!normalizedItem.schemaPreset ||
+          !!normalizedItem.layout ||
+          !!normalizedItem.features ||
+          !!normalizedItem.editorSchema?.length;
 
         if (!hasStructuredManifest) {
           return normalizeResumeTemplate({
             ...createLegacyTemplateManifest(
-              template.id,
-              template.name,
-              template.css,
+              normalizedItem.id,
+              normalizedItem.name,
+              normalizedItem.css,
             ),
-            css: template.css,
+            css: normalizedItem.css,
           });
         }
 
-        return normalizeResumeTemplate(template);
+        return normalizeResumeTemplate(normalizedItem);
       });
+
+      normalizedTemplates.sort((a, b) => {
+        const orderA = BUILTIN_TEMPLATE_ORDER.indexOf(a.id);
+        const orderB = BUILTIN_TEMPLATE_ORDER.indexOf(b.id);
+        if (orderA !== -1 && orderB !== -1) return orderA - orderB;
+        if (orderA !== -1) return -1;
+        if (orderB !== -1) return 1;
+        return a.name.localeCompare(b.name, "zh-CN");
+      });
+
+      state.availableTemplates.value = normalizedTemplates;
 
       if (
         state.availableTemplates.value.length > 0 &&
@@ -373,6 +403,7 @@ export const createRenderProfileModule = (
     const resolvedStyle = resolveResumeStyle(template, resolvedValues);
     const nextTemplate = {
       ...template,
+      name: BUILTIN_TEMPLATE_NAMES[template.id] ?? template.name,
       defaults: resolveTemplateValues(template, resolvedValues),
       layout: {
         ...template.layout,

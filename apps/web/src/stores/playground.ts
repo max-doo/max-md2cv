@@ -201,6 +201,25 @@ export const usePlaygroundStore = defineStore("web-playground", () => {
     );
   };
 
+  const setTemplateValues = (values: TemplateValues) => {
+    if (!currentTemplate.value) {
+      templateValues.value = {
+        ...templateValues.value,
+        ...values,
+      };
+      return;
+    }
+
+    const nextResolvedValues = resolveTemplateValues(currentTemplate.value, {
+      ...templateValues.value,
+      ...values,
+    });
+    templateValues.value = extractTemplateValueOverrides(
+      currentTemplate.value,
+      nextResolvedValues,
+    );
+  };
+
   const updateMarkdown = (value: string) => {
     markdown.value = value;
   };
@@ -253,6 +272,7 @@ export const usePlaygroundStore = defineStore("web-playground", () => {
     setTemplate,
     resetTemplateValues,
     setTemplateValue,
+    setTemplateValues,
     updateMarkdown,
     setPhotoBase64,
     uploadPhoto,

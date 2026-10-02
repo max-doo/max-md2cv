@@ -25,15 +25,15 @@ export interface SectionTypeDef {
 }
 
 export const SECTION_TYPES: SectionTypeDef[] = [
-  { key: 'advantage', aliases: ['个人优势', '优势评述', '自我评价', '个人总结', '个人简介', '个人画像', '个人亮点', '自我介绍', 'about', 'profile', 'summary', 'advantage'], emoji: '✨' },
-  { key: 'education', aliases: ['教育背景', '教育经历', '学历背景', '学历', '学习经历', 'education', 'study'], emoji: '🎓' },
-  { key: 'work', aliases: ['工作经历', '实习经历', '工作经验', '实践经历', '职业经历', '任职经历', 'experience', 'work', 'intern'], emoji: '💼' },
-  { key: 'project', aliases: ['项目经历', '项目经验', '项目实践', '项目案例', '开源贡献', 'project'], emoji: '🚀' },
-  { key: 'skill', aliases: ['技能', '专业技能', '技术能力', '核心技能', '技术栈', '能力清单', '技能特长', '技能清单', '技能概览', '工具', 'skills', 'competence'], emoji: '🛠️' },
-  { key: 'campus', aliases: ['校园经历', '校园实践', '校园活动', '校内经历', '校内实践', '校内活动', '学生工作', '社团经历'], emoji: '🏫' },
-  { key: 'award', aliases: ['荣誉', '奖项', '奖励', '证书', '获得荣誉', '荣誉奖项', '比赛', 'award', 'certificate', 'honor'], emoji: '🏆' },
-  { key: 'hobby', aliases: ['爱好', '兴趣爱好', '兴趣特长'], emoji: '🎨' },
-  { key: 'other', aliases: ['其他经历', '其他经验', '其他信息', '补充经历', '补充信息', '附加经历', '附加信息'], emoji: '🗂️' },
+  { key: 'advantage', aliases: ['个人优势', '优势评述', '自我评价', '个人总结', '个人简介', '个人画像', '个人亮点', '自我介绍', '个人评价', '关于我', 'about', 'profile', 'summary', 'advantage'], emoji: '✨' },
+  { key: 'education', aliases: ['教育背景', '教育经历', '学历背景', '学历', '学习经历', '教育信息', 'education', 'academic', 'study'], emoji: '🎓' },
+  { key: 'work', aliases: ['工作经历', '实习经历', '工作经验', '实习经验', '实践经历', '职业经历', '任职经历', '工作与实习', '实习与工作', '从业经历', 'experience', 'work', 'intern', 'internship'], emoji: '💼' },
+  { key: 'project', aliases: ['项目经历', '项目经验', '项目实践', '项目案例', '项目与竞赛', '项目与比赛', '项目及竞赛', '项目及比赛', '项目', '开源贡献', 'projects', 'project'], emoji: '🚀' },
+  { key: 'skill', aliases: ['技能', '专业技能', '技术能力', '核心技能', '技术栈', '能力清单', '技能特长', '技能清单', '技能概览', '专业能力', '工具', 'skills', 'skill', 'competence'], emoji: '🛠️' },
+  { key: 'campus', aliases: ['校园经历', '校园实践', '校园活动', '校内经历', '校内实践', '校内活动', '学生工作', '社团经历', '社团活动', 'campus'], emoji: '🏫' },
+  { key: 'award', aliases: ['荣誉', '奖项', '奖励', '证书', '获得荣誉', '荣誉奖项', '比赛', '竞赛', '获奖情况', '所获奖项', 'award', 'awards', 'certificate', 'certificates', 'honor', 'honors'], emoji: '🏆' },
+  { key: 'hobby', aliases: ['爱好', '兴趣爱好', '兴趣特长', 'hobby', 'hobbies', 'interests'], emoji: '🎨' },
+  { key: 'other', aliases: ['其他经历', '其他经验', '其他信息', '补充经历', '补充信息', '附加经历', '附加信息', 'other', 'misc'], emoji: '🗂️' },
 ]
 
 export function resolveSectionType(title: string): SectionTypeDef | null {

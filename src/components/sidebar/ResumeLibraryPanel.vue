@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { invoke } from '@tauri-apps/api/core'
 import { useResumeStore } from '../../stores/resume'
@@ -10,14 +10,19 @@ const RENAME_IME_GUARD_MS = 180
 
 const activeTab = ref<'resume' | 'pdf' | 'photo'>('resume')
 const editingFilePath = ref<string | null>(null)
+const editingFileType = ref<'resume' | 'pdf'>('resume')
 const editingFileName = ref('')
 const isRenameComposing = ref(false)
 const renameImeGuardUntil = ref(0)
 const editInputRefs = ref<Record<string, HTMLInputElement | null>>({})
 const deleteDialogVisible = ref(false)
 const fileToDelete = ref<FileItem | null>(null)
+const deleteFileType = ref<'resume' | 'pdf'>('resume')
 
 const handleFileClick = async (path: string) => {
+  if (editingFilePath.value === path) {
+    return
+  }
   await store.openFile(path)
 }
 
@@ -46,6 +51,9 @@ watch(() => store.photoFileList, async (newList) => {
 }, { immediate: true, deep: true })
 
 const handlePdfClick = async (path: string) => {
+  if (editingFilePath.value === path) {
+    return
+  }
   try {
     await invoke('open_pdf', { path })
   } catch (error) {
@@ -62,13 +70,20 @@ const handlePhotoSelect = async (path: string) => {
   await store.selectPhoto(path)
 }
 
-const startRename = async (file: FileItem) => {
+const startRename = async (file: FileItem, type: 'resume' | 'pdf' = 'resume') => {
   editingFilePath.value = file.path
-  editingFileName.value = file.name.replace(/\.md$/, '')
+  editingFileType.value = type
+  editingFileName.value = type === 'resume'
+    ? file.name.replace(/\.md$/, '')
+    : file.name.replace(/\.pdf$/i, '')
   isRenameComposing.value = false
   renameImeGuardUntil.value = 0
   await nextTick()
-  editInputRefs.value[file.path]?.focus()
+  const input = editInputRefs.value[file.path]
+  if (input) {
+    input.focus()
+    input.select()
+  }
 }
 
 const finishRename = async (options: { force?: boolean } = {}) => {
@@ -81,6 +96,7 @@ const finishRename = async (options: { force?: boolean } = {}) => {
   }
 
   const oldPath = editingFilePath.value
+  const type = editingFileType.value
   const newName = editingFileName.value.trim()
 
   editingFilePath.value = null
@@ -89,7 +105,11 @@ const finishRename = async (options: { force?: boolean } = {}) => {
   renameImeGuardUntil.value = 0
 
   if (newName) {
-    await store.renameFile(oldPath, newName)
+    if (type === 'resume') {
+      await store.renameFile(oldPath, newName)
+    } else if (type === 'pdf') {
+      await store.renamePdf(oldPath, newName)
+    }
   }
 }
 
@@ -170,10 +190,20 @@ onBeforeUnmount(() => {
   }
 })
 
-const openDeleteDialog = (file: FileItem) => {
+const openDeleteDialog = (file: FileItem, type: 'resume' | 'pdf' = 'resume') => {
   fileToDelete.value = file
+  deleteFileType.value = type
   deleteDialogVisible.value = true
 }
+
+const deleteTargetDisplayName = computed(() => {
+  if (!fileToDelete.value) {
+    return ''
+  }
+  return deleteFileType.value === 'pdf'
+    ? fileToDelete.value.name.replace(/\.pdf$/i, '')
+    : fileToDelete.value.name.replace(/\.md$/, '')
+})
 
 const handleContextMenu = (command: { action: string; file: FileItem }) => {
   if (command.action === 'duplicate') {
@@ -182,16 +212,34 @@ const handleContextMenu = (command: { action: string; file: FileItem }) => {
   }
 
   if (command.action === 'rename') {
-    void startRename(command.file)
+    void startRename(command.file, 'resume')
     return
   }
 
-  openDeleteDialog(command.file)
+  openDeleteDialog(command.file, 'resume')
+}
+
+const handlePdfContextMenu = (command: { action: string; file: FileItem }) => {
+  if (command.action === 'duplicate') {
+    void store.duplicatePdf(command.file.path)
+    return
+  }
+
+  if (command.action === 'rename') {
+    void startRename(command.file, 'pdf')
+    return
+  }
+
+  openDeleteDialog(command.file, 'pdf')
 }
 
 const confirmDelete = async () => {
   if (fileToDelete.value) {
-    await store.deleteFile(fileToDelete.value.path)
+    if (deleteFileType.value === 'pdf') {
+      await store.deletePdf(fileToDelete.value.path)
+    } else {
+      await store.deleteFile(fileToDelete.value.path)
+    }
   }
 
   deleteDialogVisible.value = false
@@ -210,7 +258,7 @@ const confirmDelete = async () => {
       class="delete-confirm-dialog"
     >
       <span class="text-sm text-on-surface">
-        确认删除“{{ fileToDelete?.name.replace(/\.md$/, '') }}”吗？
+        确认删除“{{ deleteTargetDisplayName }}”吗？
       </span>
       <template #footer>
         <div class="flex justify-end gap-2">
@@ -250,7 +298,7 @@ const confirmDelete = async () => {
                   class="flex cursor-pointer items-center overflow-hidden rounded-2xl px-4 py-2.5 transition-all duration-200"
                   :class="store.activeFilePath === file.path ? 'sidebar-accent-surface font-medium' : 'text-on-surface hover:bg-surface-container-highest'"
                   @click="handleFileClick(file.path)"
-                  @dblclick="startRename(file)"
+                  @dblclick="startRename(file, 'resume')"
                 >
                   <span class="sidebar-accent-text mr-2 flex h-8 w-8 shrink-0 items-center justify-center">
                     <span class="material-symbols-outlined text-[20px]">description</span>
@@ -281,22 +329,15 @@ const confirmDelete = async () => {
                     </span>
                   </div>
 
-                  <el-popconfirm
-                    :title="`确认删除 ${file.name.replace(/\.md$/, '')} 吗？`"
-                    confirm-button-text="删除"
-                    cancel-button-text="取消"
-                    confirm-button-type="danger"
-                    @confirm="store.deleteFile(file.path)"
+                  <button
+                    v-if="editingFilePath !== file.path"
+                    class="flex h-8 w-8 shrink-0 scale-90 cursor-pointer items-center justify-center rounded-lg text-on-surface-variant opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100 hover:bg-surface-container hover:text-on-surface active:scale-95"
+                    title="重命名"
+                    aria-label="重命名"
+                    @click.stop="startRename(file, 'resume')"
                   >
-                    <template #reference>
-                      <button
-                        class="flex h-8 w-8 shrink-0 scale-90 cursor-pointer items-center justify-center rounded-lg text-on-surface-variant opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100 hover:bg-error/10 hover:text-error"
-                        @click.stop
-                      >
-                        <span class="material-symbols-outlined text-[18px]">delete</span>
-                      </button>
-                    </template>
-                  </el-popconfirm>
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
                 </div>
 
                 <template #dropdown>
@@ -351,36 +392,75 @@ const confirmDelete = async () => {
 
           <ul v-else class="sidebar-panel-scroll space-y-1">
             <li v-for="file in store.pdfFileList" :key="file.path" class="group relative">
-              <div
-                class="flex items-center gap-3 rounded-2xl px-4 py-3 text-on-surface transition-colors duration-200 hover:bg-surface-container-highest/60"
-              >
-                <button
-                  class="sidebar-accent-hover flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left transition-colors duration-200"
+              <el-dropdown trigger="contextmenu" popper-class="soft-dropdown-popper" @command="handlePdfContextMenu" class="!block w-full overflow-hidden">
+                <div
+                  class="flex cursor-pointer items-center overflow-hidden rounded-2xl px-4 py-2.5 text-on-surface transition-all duration-200 hover:bg-surface-container-highest"
                   @click="handlePdfClick(file.path)"
+                  @dblclick="startRename(file, 'pdf')"
                 >
-                  <span class="material-symbols-outlined shrink-0 text-[20px] text-[#dc2626]">picture_as_pdf</span>
-                  <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-medium" :title="file.name">{{ file.name }}</p>
-                  </div>
-                </button>
+                  <span class="mr-2 flex h-8 w-8 shrink-0 items-center justify-center text-[#dc2626]">
+                    <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                  </span>
 
-                <el-popconfirm
-                  :title="`确认删除 ${file.name} 吗？`"
-                  confirm-button-text="删除"
-                  cancel-button-text="取消"
-                  confirm-button-type="danger"
-                  @confirm="store.deletePdf(file.path)"
-                >
-                  <template #reference>
-                    <button
-                      class="flex h-8 w-8 shrink-0 scale-90 cursor-pointer items-center justify-center rounded-lg text-on-surface-variant opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100 hover:bg-error/10 hover:text-error"
+                  <div class="mr-2 min-w-0 flex-1 overflow-hidden">
+                    <input
+                      v-if="editingFilePath === file.path"
+                      :ref="(el) => { editInputRefs[file.path] = el as HTMLInputElement | null }"
+                      :value="editingFileName"
+                      class="sidebar-accent-input w-full rounded-lg border bg-surface-container-highest px-2 py-1 text-sm text-on-surface"
+                      @input="handleRenameInput"
+                      @compositionstart="handleRenameCompositionStart"
+                      @compositionupdate="handleRenameCompositionUpdate"
+                      @compositionend="handleRenameCompositionEnd"
+                      @keydown.stop
+                      @keydown.enter.prevent="handleRenameEnter"
+                      @keyup.stop
+                      @keyup.esc.prevent="cancelRename"
                       @click.stop
+                    />
+                    <span
+                      v-else
+                      class="block truncate text-sm font-medium leading-none select-none"
+                      :title="file.name.replace(/\.pdf$/i, '')"
                     >
-                      <span class="material-symbols-outlined text-[18px]">delete</span>
-                    </button>
-                  </template>
-                </el-popconfirm>
-              </div>
+                      {{ file.name.replace(/\.pdf$/i, '') }}
+                    </span>
+                  </div>
+
+                  <button
+                    v-if="editingFilePath !== file.path"
+                    class="flex h-8 w-8 shrink-0 scale-90 cursor-pointer items-center justify-center rounded-lg text-on-surface-variant opacity-0 transition-all duration-200 group-hover:scale-100 group-hover:opacity-100 hover:bg-surface-container hover:text-on-surface active:scale-95"
+                    title="重命名"
+                    aria-label="重命名"
+                    @click.stop="startRename(file, 'pdf')"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
+                </div>
+
+                <template #dropdown>
+                  <el-dropdown-menu class="soft-dropdown-menu">
+                    <el-dropdown-item :command="{ action: 'duplicate', file }">
+                      <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                        复制
+                      </span>
+                    </el-dropdown-item>
+                    <el-dropdown-item :command="{ action: 'rename', file }">
+                      <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">edit</span>
+                        重命名
+                      </span>
+                    </el-dropdown-item>
+                    <el-dropdown-item :command="{ action: 'delete', file }" class="soft-dropdown-item-danger">
+                      <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                        删除
+                      </span>
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
             </li>
           </ul>
         </div>

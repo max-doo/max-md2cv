@@ -68,7 +68,7 @@ export const runDoctorCommand = async (options: DoctorOptions): Promise<void> =>
 
   if (options.renderSmoke) {
     try {
-      const template = await findTemplate("modern");
+      const template = await findTemplate("business-block");
       const smoke = await renderInBrowser({
         markdown: "# MD2CV smoke test\n\n## Skills\n\n- Browser rendering works.",
         documentTitle: "doctor-smoke",

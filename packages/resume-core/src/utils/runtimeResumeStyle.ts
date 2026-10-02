@@ -378,8 +378,10 @@ export const buildRuntimeResumeStyleCss = (
     text-align: center;
   }
   .resume-document[data-photo-visible="false"] .contact-info--icon,
+  .resume-document[data-photo-visible="false"] .job-intention,
   .resume-document[data-photo-visible="false"] .job-intention + p,
   .resume-document[data-photo-placement="hidden"] .contact-info--icon,
+  .resume-document[data-photo-placement="hidden"] .job-intention,
   .resume-document[data-photo-placement="hidden"] .job-intention + p {
     justify-content: center;
   }
@@ -400,14 +402,22 @@ export const buildRuntimeResumeStyleCss = (
     background-color: color-mix(in srgb, var(--tpl-theme-color) 70%, white) !important;
     color: #ffffff !important;
     border-radius: 9999px !important;
-    padding: 4px 14px 4px 10px !important;
-    margin-left: -8px !important;
+    padding: 3px 12px 3px 8px !important;
+    margin-left: -4px !important;
     display: inline-flex !important;
     align-items: center !important;
   }
   .resume-document[data-section-title-preset="capsule"] h2 .section-title-badge::before {
     color: #ffffff !important;
-    font-variation-settings: 'FILL' 1 !important;
+    font-variation-settings: 'FILL' 0 !important;
+  }
+  .resume-document[data-section-title-preset="capsule"] h2::after {
+    content: "" !important;
+    flex: 1 !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--tpl-theme-color) 70%, white) !important;
+    opacity: 0.8 !important;
+    margin-left: 14px !important;
+    display: block !important;
   }
   .resume-document[data-section-title-preset="plain"] h2 {
     background: transparent !important;

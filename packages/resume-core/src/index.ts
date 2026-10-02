@@ -9,3 +9,4 @@ export * from "./utils/resumeParser";
 export * from "./utils/runtimeResumeStyle";
 export * from "./utils/templateManifest";
 export * from "./utils/templateStyle";
+export * from "./utils/autoOnePage";

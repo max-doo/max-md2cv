@@ -1,4 +1,4 @@
-/* @name: 传统经典 */
+/* @name: 经典极简 */
 
 @page {
   margin: var(--tpl-page-margin-v) var(--tpl-page-margin-h);
@@ -16,14 +16,15 @@
   font-weight: bold;
   line-height: 1.2;
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #000000;
   padding-bottom: 0;
 }
 
 .resume-document .job-intention {
-  line-height: 1.3;
+  line-height: 1.25;
   text-align: center;
+  justify-content: center;
   font-weight: bold;
 }
 
@@ -32,21 +33,25 @@
 .resume-document .contact-info-text-line,
 .resume-document .contact-info--icon,
 .resume-document .contact-info-item {
-  line-height: 1.2;
+  line-height: 1.25;
   text-align: center;
+}
+
+.resume-document .contact-info--icon {
+  justify-content: center;
 }
 
 .resume-document .contact-info--text {
   display: block;
   text-align: center;
   width: 100%;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .resume-document .contact-info-text-line {
   display: block;
   max-width: 100%;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .resume-document .contact-info-text-line:last-child {
@@ -65,7 +70,7 @@
 .resume-document h3 {
   font-size: var(--tpl-h3-size);
   font-weight: bold;
-  color: #000000;
+  color: var(--tpl-theme-color);
   margin-top: var(--tpl-h3-margin-top);
   margin-bottom: var(--tpl-h3-margin-bottom);
 }
@@ -111,7 +116,7 @@
 .resume-document .experience-date {
   font-size: var(--tpl-date-size);
   font-weight: var(--tpl-date-weight);
-  color: #000;
+  color: var(--tpl-theme-color);
   text-align: right;
   white-space: nowrap;
   justify-self: end;
@@ -130,17 +135,21 @@
 }
 
 .resume-document h4 {
-  font-size: 1.1em !important;
+  font-size: 1.05em !important;
   font-weight: bold;
   color: #000;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .resume-document ul {
   list-style-type: disc;
-  padding-left: 24px;
+  padding-left: 20px;
   font-size: var(--tpl-font-size);
-  margin-bottom: calc(var(--tpl-paragraph-spacing) * 2);
+  margin-bottom: var(--tpl-paragraph-spacing);
+}
+
+.resume-document li {
+  margin-bottom: calc(var(--tpl-paragraph-spacing) * 0.5);
 }
 
 .resume-document p {

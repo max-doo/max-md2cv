@@ -251,7 +251,55 @@ pub async fn rename_resume(old_path: String, new_path: String) -> Result<(), Str
 }
 
 #[tauri::command]
+pub async fn rename_pdf(old_path: String, new_path: String) -> Result<(), String> {
+    let old_file = Path::new(&old_path);
+    let new_file = Path::new(&new_path);
+
+    let is_old_pdf = old_file
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.eq_ignore_ascii_case("pdf"))
+        .unwrap_or(false);
+
+    let is_new_pdf = new_file
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.eq_ignore_ascii_case("pdf"))
+        .unwrap_or(false);
+
+    if !is_old_pdf || !is_new_pdf {
+        return Err("仅支持重命名 PDF 文件".into());
+    }
+
+    fs::rename(old_path, new_path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub async fn duplicate_resume(path: String, new_path: String) -> Result<(), String> {
+    fs::copy(path, new_path).map_err(|e| e.to_string()).map(|_| ())
+}
+
+#[tauri::command]
+pub async fn duplicate_pdf(path: String, new_path: String) -> Result<(), String> {
+    let old_file = Path::new(&path);
+    let new_file = Path::new(&new_path);
+
+    let is_old_pdf = old_file
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.eq_ignore_ascii_case("pdf"))
+        .unwrap_or(false);
+
+    let is_new_pdf = new_file
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.eq_ignore_ascii_case("pdf"))
+        .unwrap_or(false);
+
+    if !is_old_pdf || !is_new_pdf {
+        return Err("仅支持复制 PDF 文件".into());
+    }
+
     fs::copy(path, new_path).map_err(|e| e.to_string()).map(|_| ())
 }
 

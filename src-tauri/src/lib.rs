@@ -5,9 +5,9 @@ mod workspace;
 
 use export::export_pdf_command;
 use files::{
-    delete_resume, duplicate_resume, import_id_photo, list_images, list_pdfs, list_resumes,
-    open_directory, open_pdf, path_exists, read_image_as_data_url, read_resume, rename_resume,
-    write_resume,
+    delete_resume, duplicate_pdf, duplicate_resume, import_id_photo, list_images, list_pdfs,
+    list_resumes, open_directory, open_pdf, path_exists, read_image_as_data_url, read_resume,
+    rename_pdf, rename_resume, write_resume,
 };
 use templates::{list_templates, save_template_package};
 use workspace::{
@@ -40,7 +40,9 @@ pub fn run() {
             path_exists,
             delete_resume,
             rename_resume,
+            rename_pdf,
             duplicate_resume,
+            duplicate_pdf,
             open_pdf,
             open_directory,
             set_workspace_watch

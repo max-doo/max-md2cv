@@ -21,7 +21,7 @@ export const runValidateCommand = async (
   options: ValidateCommandOptions,
 ): Promise<void> => {
   const config = options.config ? await loadConfig(options.config) : null;
-  const template = await findTemplate(options.template ?? config?.value.template ?? "modern");
+  const template = await findTemplate(options.template ?? config?.value.template ?? "business-block");
   const input = await readMarkdownInput(inputPath, options.stdin === true, options.name);
   const values = normalizeTemplateValuesForCli(
     template,

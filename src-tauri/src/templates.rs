@@ -77,6 +77,17 @@ pub async fn list_templates(app: tauri::AppHandle) -> Result<Vec<TemplateInfo>, 
         load_templates_overriding(&user_path, &mut templates)?;
     }
 
+    templates.sort_by(|a, b| {
+        let pos_a = BUILTIN_ORDER.iter().position(|id| *id == a.id);
+        let pos_b = BUILTIN_ORDER.iter().position(|id| *id == b.id);
+        match (pos_a, pos_b) {
+            (Some(ia), Some(ib)) => ia.cmp(&ib),
+            (Some(_), None) => std::cmp::Ordering::Less,
+            (None, Some(_)) => std::cmp::Ordering::Greater,
+            (None, None) => a.id.cmp(&b.id),
+        }
+    });
+
     Ok(templates)
 }
 
@@ -190,13 +201,32 @@ fn load_templates(
     Ok(())
 }
 
+const BUILTIN_ORDER: [&str; 4] = ["business-block", "modern", "classic", "business"];
+
 fn insert_template(
     templates: &mut Vec<TemplateInfo>,
     template: TemplateInfo,
     override_existing: bool,
 ) {
     if override_existing {
-        templates.retain(|item| item.id != template.id);
+        if let Some(pos) = templates.iter().position(|item| item.id == template.id) {
+            let is_builtin = BUILTIN_ORDER.contains(&template.id.as_str());
+            let official_name = if is_builtin {
+                templates[pos].name.clone()
+            } else {
+                template.name.clone()
+            };
+            let official_description = if is_builtin && templates[pos].description.is_some() {
+                templates[pos].description.clone()
+            } else {
+                template.description.clone()
+            };
+
+            templates[pos] = template;
+            templates[pos].name = official_name;
+            templates[pos].description = official_description;
+            return;
+        }
         templates.push(template);
         return;
     }

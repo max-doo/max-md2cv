@@ -1,4 +1,4 @@
-/* @name: 商务方标 */
+/* @name: 稳重商务 */
 
 @page {
   margin: var(--tpl-page-margin-v) var(--tpl-page-margin-h);
@@ -17,7 +17,7 @@
   font-weight: 900;
   line-height: 1.2;
   letter-spacing: 0.05em;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   padding-bottom: 0;
   border: none;
   color: var(--tpl-theme-color);
@@ -44,7 +44,7 @@
   background-color: var(--tpl-theme-color);
   color: #ffffff;
   border-radius: 0;
-  padding: 4px 14px 4px 10px;
+  padding: 3px 12px 3px 8px;
   margin-left: 0;
   line-height: 1.35;
   flex-shrink: 0;
@@ -191,10 +191,10 @@
 }
 
 .resume-document h4 {
-  font-size: 1.1em !important;
+  font-size: 1.05em !important;
   font-weight: bold;
-  margin-top: 8px;
-  margin-bottom: 3.2px;
+  margin-top: 6px;
+  margin-bottom: 2.5px;
 }
 
 .resume-document ul {
@@ -234,9 +234,9 @@
 /* Job Intention Title */
 .resume-document .job-intention {
   font-weight: bold;
-  font-size: calc(var(--tpl-font-size) * 1.1);
-  line-height: 1.6;
-  margin-bottom: 8px;
+  font-size: calc(var(--tpl-font-size) * 1.05);
+  line-height: 1.35;
+  margin-bottom: 6px;
   color: var(--tpl-theme-color) !important;
 }
 
@@ -253,16 +253,16 @@
 /* Detailed Info block */
 .resume-document .job-intention+p {
   font-size: calc(var(--tpl-font-size) * 0.97);
-  line-height: 1.6;
+  line-height: 1.35;
   margin-bottom: var(--tpl-personal-header-spacing);
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
 }
 
 .resume-document .contact-info--text {
-  font-size: calc(var(--tpl-font-size) * 1.03);
-  line-height: 1.8;
+  font-size: calc(var(--tpl-font-size) * 1.0);
+  line-height: 1.4;
   margin-bottom: var(--tpl-paragraph-spacing);
   padding-right: var(--cv-photo-reserve);
   box-sizing: border-box;
@@ -270,7 +270,7 @@
 
 .resume-document .contact-info-text-line {
   max-width: 100%;
-  margin-bottom: 5.6px;
+  margin-bottom: 4px;
 }
 
 .resume-document .contact-info-text-line:last-child {
@@ -279,19 +279,19 @@
 
 .resume-document .contact-info--icon {
   font-size: calc(var(--tpl-font-size) * 0.97);
-  line-height: 1.6;
+  line-height: 1.35;
   margin-bottom: var(--tpl-personal-header-spacing);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 9.6px 16px;
+  gap: 8px 12px;
 }
 
 .resume-document .contact-info-item {
   display: inline-flex;
   align-items: center;
-  gap: 7.2px;
-  line-height: 1.6;
+  gap: 6px;
+  line-height: 1.35;
 }
 
 .resume-document .contact-info-item::before {

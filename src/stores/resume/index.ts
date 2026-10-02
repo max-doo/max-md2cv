@@ -124,6 +124,25 @@ export const useResumeStore = defineStore("resume", () => {
     templateValues.value = extractTemplateValueOverrides(template, nextResolved);
   };
 
+  const setTemplateValues = (values: TemplateValues) => {
+    const template = currentTemplate.value;
+
+    if (!template) {
+      templateValues.value = {
+        ...templateValues.value,
+        ...values,
+      };
+      return;
+    }
+
+    const nextResolved = resolveTemplateValues(template, {
+      ...templateValues.value,
+      ...values,
+    });
+
+    templateValues.value = extractTemplateValueOverrides(template, nextResolved);
+  };
+
   const resetTemplateValues = () => {
     templateValues.value = {};
   };
@@ -468,6 +487,7 @@ export const useResumeStore = defineStore("resume", () => {
     templateValues: state.templateValues,
     resumeStyle: state.resumeStyle,
     setTemplateValue,
+    setTemplateValues,
     resetTemplateValues,
     renderProfilesByFile: state.renderProfilesByFile,
     loadTemplates: renderProfileModule.loadTemplates,
@@ -507,6 +527,8 @@ export const useResumeStore = defineStore("resume", () => {
     deletePdf: workspaceFilesModule.deletePdf,
     renameFile: workspaceFilesModule.renameFile,
     duplicateFile: workspaceFilesModule.duplicateFile,
+    renamePdf: workspaceFilesModule.renamePdf,
+    duplicatePdf: workspaceFilesModule.duplicatePdf,
     refreshFileList: workspaceFilesModule.refreshFileList,
     refreshPdfList: workspaceFilesModule.refreshPdfList,
     refreshPhotoList: photoModule.refreshPhotoList,

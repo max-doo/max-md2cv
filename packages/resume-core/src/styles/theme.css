@@ -409,6 +409,10 @@
   --el-border-color: transparent;
   --el-border-color-light: transparent;
 
+  --el-switch-on-color: var(--color-primary);
+  --el-switch-off-color: color-mix(in srgb, var(--color-outline-variant) 50%, white);
+  --el-switch-border-color: transparent;
+
   --el-fill-color-light: var(--color-surface-container);
   --el-fill-color-lighter: var(--color-surface-container-high);
 
@@ -419,6 +423,33 @@
   /* 覆盖悬浮阴影为你定制的 Ambient Shadow */
   --el-box-shadow: var(--shadow-ambient);
   --el-box-shadow-light: var(--shadow-ambient);
+}
+
+/* =========================================================================
+   Element Plus Switch 软极简风格适配
+   ========================================================================= */
+.el-switch {
+  --el-switch-on-color: var(--ui-theme-color, var(--color-primary));
+  --el-switch-off-color: color-mix(in srgb, var(--color-outline-variant) 40%, white);
+  --el-switch-border-color: transparent;
+}
+
+.el-switch__core {
+  background-color: var(--el-switch-off-color) !important;
+  border: 1px solid transparent !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-outline-variant) 25%, transparent) !important;
+  transition: all 0.2s ease !important;
+}
+
+.el-switch.is-checked .el-switch__core {
+  background-color: var(--el-switch-on-color) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.el-switch__core .el-switch__action {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18), 0 1px 2px rgba(15, 23, 42, 0.08) !important;
 }
 
 .outline-sortable-ghost {

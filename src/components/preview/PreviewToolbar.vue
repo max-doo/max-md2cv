@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ElSwitch } from 'element-plus'
+import 'element-plus/es/components/switch/style/css'
 import SoftSelect from '../shared/SoftSelect.vue'
 import { useResumeStore } from '@resume-store'
 import {
@@ -155,6 +157,13 @@ const setPhotoVisibility = (visible: boolean) => {
   setFieldValue('photoVisible', visible)
 }
 
+const isPhotoVisible = computed({
+  get: () => photoAdjustments.value.visible,
+  set: (visible: boolean) => {
+    setPhotoVisibility(visible)
+  },
+})
+
 const setPhotoSliderValue = (
   key: typeof PHOTO_SLIDERS[number]['key'],
   value: number,
@@ -306,24 +315,9 @@ const getPhotoSliderValue = (key: typeof PHOTO_SLIDERS[number]['key']) =>
 
           <div class="preview-field-stack">
             <div class="preview-field-block">
-              <div class="mb-2 text-xs font-bold text-on-surface-variant">显示状态</div>
-              <div class="preview-segmented-control">
-                <button
-                  type="button"
-                  class="preview-segmented-button"
-                  :class="{ 'is-active': photoAdjustments.visible }"
-                  @click="setPhotoVisibility(true)"
-                >
-                  显示
-                </button>
-                <button
-                  type="button"
-                  class="preview-segmented-button"
-                  :class="{ 'is-active': !photoAdjustments.visible }"
-                  @click="setPhotoVisibility(false)"
-                >
-                  隐藏
-                </button>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-on-surface-variant">显示证件照</span>
+                <ElSwitch v-model="isPhotoVisible" />
               </div>
               <p
                 v-if="!store.photoBase64"
@@ -760,6 +754,29 @@ const getPhotoSliderValue = (key: typeof PHOTO_SLIDERS[number]['key']) =>
 
 :global(.preview-toolbar-popper .el-popper__arrow::before) {
   border-radius: 0.25rem !important;
+}
+
+:global(.preview-toolbar-popper .el-switch) {
+  --el-switch-on-color: var(--color-primary);
+  --el-switch-off-color: color-mix(in srgb, var(--color-outline-variant) 40%, white);
+}
+
+:global(.preview-toolbar-popper .el-switch .el-switch__core) {
+  background-color: var(--el-switch-off-color) !important;
+  border: 1px solid transparent !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-outline-variant) 25%, transparent) !important;
+  transition: all 0.2s ease !important;
+}
+
+:global(.preview-toolbar-popper .el-switch.is-checked .el-switch__core) {
+  background-color: var(--el-switch-on-color) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:global(.preview-toolbar-popper .el-switch .el-switch__action) {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18), 0 1px 2px rgba(15, 23, 42, 0.08) !important;
 }
 
 .preview-theme-hex-input {

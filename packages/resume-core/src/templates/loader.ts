@@ -12,10 +12,14 @@ import { normalizeResumeTemplate } from "../utils/templateManifest";
 
 export type BuiltinTemplateId = "modern" | "classic" | "business" | "business-block";
 
-export const DEFAULT_TEMPLATE_ID: BuiltinTemplateId = "modern";
+export const DEFAULT_TEMPLATE_ID: BuiltinTemplateId = "business-block";
 export const DEFAULT_RESUME_MARKDOWN = defaultResumeMarkdown;
 
 const BUILTIN_TEMPLATES: ResumeTemplate[] = [
+  normalizeResumeTemplate({
+    ...(businessBlockTemplate as TemplateManifest),
+    css: businessBlockCss,
+  }),
   normalizeResumeTemplate({
     ...(modernTemplate as TemplateManifest),
     css: modernCss,
@@ -27,10 +31,6 @@ const BUILTIN_TEMPLATES: ResumeTemplate[] = [
   normalizeResumeTemplate({
     ...(businessTemplate as TemplateManifest),
     css: businessCss,
-  }),
-  normalizeResumeTemplate({
-    ...(businessBlockTemplate as TemplateManifest),
-    css: businessBlockCss,
   }),
 ];
 
