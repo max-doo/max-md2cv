@@ -201,7 +201,13 @@ fn load_templates(
     Ok(())
 }
 
-const BUILTIN_ORDER: [&str; 4] = ["business-block", "modern", "classic", "business"];
+const BUILTIN_ORDER: [&str; 5] = [
+    "business-block",
+    "modern",
+    "classic",
+    "business",
+    "slant-badge",
+];
 
 fn insert_template(
     templates: &mut Vec<TemplateInfo>,
@@ -221,10 +227,16 @@ fn insert_template(
             } else {
                 template.description.clone()
             };
+            let official_css = if is_builtin {
+                templates[pos].css.clone()
+            } else {
+                template.css.clone()
+            };
 
             templates[pos] = template;
             templates[pos].name = official_name;
             templates[pos].description = official_description;
+            templates[pos].css = official_css;
             return;
         }
         templates.push(template);

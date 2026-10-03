@@ -20,7 +20,7 @@
   margin-bottom: 6px;
   padding-bottom: 0;
   border: none;
-  color: var(--tpl-theme-color);
+  color: #000000;
 }
 
 .resume-document h2 {
@@ -237,7 +237,7 @@
   font-size: calc(var(--tpl-font-size) * 1.05);
   line-height: 1.35;
   margin-bottom: 6px;
-  color: var(--tpl-theme-color) !important;
+  color: #000000 !important;
 }
 
 .resume-document .job-intention .job-intention-item {

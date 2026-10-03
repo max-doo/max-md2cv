@@ -1,4 +1,4 @@
-/* @name: 轻盈现代 */
+/* @name: 稳健政企 */
 
 @page {
   margin: var(--tpl-page-margin-v) var(--tpl-page-margin-h);
@@ -12,15 +12,21 @@
   position: relative;
 }
 
+.resume-document .resume-header {
+  margin-bottom: var(--tpl-personal-header-spacing);
+  text-align: left;
+}
+
 .resume-document h1 {
   font-size: var(--tpl-h1-size);
   font-weight: 900;
   line-height: 1.2;
   letter-spacing: 0.05em;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   padding-bottom: 0;
   border: none;
   color: #000000;
+  text-align: left;
 }
 
 .resume-document h2 {
@@ -32,86 +38,37 @@
   letter-spacing: 0.05em;
   text-transform: none;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   padding-right: 0 !important;
   background: transparent;
   border: none;
 }
 
+/* 梯形切角色块：上底略窄、下底向右延伸，形成右侧斜切角 */
 .resume-document h2 .section-title-badge {
   display: inline-flex;
   align-items: center;
   background-color: var(--tpl-theme-color);
   color: #ffffff;
-  border-radius: 9999px;
-  padding: 3px 12px 3px 8px;
-  margin-left: -4px;
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%);
+  padding: 3.5px 22px 3.5px 12px;
+  margin-left: 0;
   line-height: 1.35;
   flex-shrink: 0;
   box-sizing: border-box;
 }
 
+/* 隐藏图标，完全还原纯文字梯形色标 */
 .resume-document h2 .section-title-badge::before {
-  content: "label";
-  /* Default fallback icon */
-  font-family: 'Material Symbols Outlined';
-  font-variation-settings: 'FILL' 0;
-  -webkit-font-feature-settings: 'liga';
-  font-feature-settings: 'liga';
-  text-transform: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.15em;
-  font-weight: normal;
-  font-style: normal;
-  margin-right: 6px;
-  line-height: 1;
-  color: inherit;
-  flex-shrink: 0;
+  display: none !important;
 }
 
-.resume-document h2.section-advantage .section-title-badge::before {
-  content: "auto_awesome";
-}
-
-.resume-document h2.section-education .section-title-badge::before {
-  content: "school";
-}
-
-.resume-document h2.section-work .section-title-badge::before {
-  content: "work";
-}
-
-.resume-document h2.section-project .section-title-badge::before {
-  content: "rocket_launch";
-}
-
-.resume-document h2.section-skill .section-title-badge::before {
-  content: "build";
-}
-
-.resume-document h2.section-campus .section-title-badge::before {
-  content: "local_library";
-}
-
-.resume-document h2.section-hobby .section-title-badge::before {
-  content: "palette";
-}
-
-.resume-document h2.section-award .section-title-badge::before {
-  content: "workspace_premium";
-}
-
-.resume-document h2.section-other .section-title-badge::before {
-  content: "more_horiz";
-}
-
+/* 贯穿全宽的底线，稍微加粗以增强稳健感，与梯形色块下底边无缝连接 */
 .resume-document h2::after {
   content: "";
   flex: 1;
-  border-bottom: 1.5px solid var(--tpl-theme-color);
-  margin-left: 14px;
+  border-bottom: 3px solid var(--tpl-theme-color);
 }
 
 .resume-document h3 {
@@ -119,7 +76,7 @@
   font-weight: bold;
   margin-top: var(--tpl-h3-margin-top);
   margin-bottom: var(--tpl-h3-margin-bottom);
-  color: var(--tpl-theme-color);
+  color: #000000;
 }
 
 .resume-document .experience-line {
@@ -167,7 +124,7 @@
 .resume-document .experience-date {
   font-size: var(--tpl-date-size);
   font-weight: var(--tpl-date-weight);
-  color: var(--tpl-theme-color);
+  color: #000000;
   text-align: right;
   white-space: nowrap;
   justify-self: end;
@@ -227,9 +184,10 @@
   color: inherit;
 }
 
-/* Personal Header Container - Unified flow */
+/* Personal Header Container */
 .resume-document .personal-header {
   display: block;
+  text-align: left;
 }
 
 /* Job Intention Title */
@@ -239,6 +197,7 @@
   line-height: 1.35;
   margin-bottom: 6px;
   color: #000000 !important;
+  text-align: left;
 }
 
 .resume-document .job-intention .job-intention-item {
@@ -251,27 +210,29 @@
   color: #ccc;
 }
 
-/* Detailed Info block */
-.resume-document .job-intention+p {
-  font-size: calc(var(--tpl-font-size) * 0.97);
-  line-height: 1.35;
-  margin-bottom: var(--tpl-personal-header-spacing);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+.resume-document .job-intention + p {
+  font-weight: bold;
+  color: #000000;
 }
 
+/* 个人信息栏：左对齐多行规整，加粗样式 */
 .resume-document .contact-info--text {
-  font-size: calc(var(--tpl-font-size) * 1.0);
-  line-height: 1.4;
-  margin-bottom: var(--tpl-paragraph-spacing);
+  font-size: var(--tpl-font-size);
+  line-height: 1.5;
+  font-weight: bold;
+  margin-bottom: var(--tpl-personal-header-spacing);
   padding-right: var(--cv-photo-reserve);
   box-sizing: border-box;
+  text-align: left;
+  color: #000000;
 }
 
 .resume-document .contact-info-text-line {
   max-width: 100%;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
+  line-height: 1.5;
+  text-align: left;
+  font-weight: bold;
 }
 
 .resume-document .contact-info-text-line:last-child {
@@ -279,20 +240,26 @@
 }
 
 .resume-document .contact-info--icon {
-  font-size: calc(var(--tpl-font-size) * 0.97);
-  line-height: 1.35;
+  font-size: var(--tpl-font-size);
+  line-height: 1.5;
+  font-weight: bold;
   margin-bottom: var(--tpl-personal-header-spacing);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
+  justify-content: flex-start;
+  gap: 6px 16px;
+  padding-right: var(--cv-photo-reserve);
+  box-sizing: border-box;
+  color: #000000;
 }
 
 .resume-document .contact-info-item {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  line-height: 1.35;
+  line-height: 1.5;
+  font-weight: bold;
 }
 
 .resume-document .contact-info-item::before {
@@ -305,4 +272,9 @@
   text-decoration: underline;
   text-decoration-thickness: 0.06em;
   text-underline-offset: 0.14em;
+}
+
+/* 直角方正证件照 */
+.resume-document .resume-photo-wrapper {
+  border-radius: 0;
 }

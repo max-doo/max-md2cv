@@ -39,7 +39,7 @@ if (await stat(skillSource).then(() => true).catch(() => false)) {
   await cp(skillSource, join(target, "skills/md2cv"), { recursive: true });
 }
 
-const templateIds = ["modern", "classic", "business", "business-block"];
+const templateIds = ["modern", "classic", "business", "business-block", "slant-badge"];
 for (const id of templateIds) {
   const manifestPath = join(target, "templates", id, "template.json");
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));

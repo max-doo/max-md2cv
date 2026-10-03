@@ -1,0 +1,42 @@
+{
+  "id": "slant-badge",
+  "name": "稳健政企",
+  "version": "1.0.0",
+  "entryCss": "style.css",
+  "description": "深蓝梯形切角标题与加粗通栏底线，左对齐规整信息栏，稳健端庄，适合政企、国企与正式求职。",
+  "schemaPreset": "standard",
+  "defaults": {
+    "themeColor": "#16528e",
+    "fontFamily": "\"Microsoft YaHei\", \"PingFang SC\", sans-serif",
+    "fontSize": 13,
+    "paragraphSpacing": 5,
+    "h2MarginTop": 8,
+    "h2MarginBottom": 4,
+    "h3MarginTop": 5,
+    "h3MarginBottom": 3,
+    "personalHeaderSpacing": 4,
+    "h1Size": 26,
+    "h2Size": 16,
+    "h3Size": 14,
+    "dateSize": 13,
+    "dateWeight": "700",
+    "lineHeight": 1.35,
+    "marginV": 10,
+    "marginH": 12,
+    "personalInfoMode": "text",
+    "headerLayout": "stack",
+    "photoPlacement": "top-right",
+    "sectionTitlePreset": "block-line"
+  },
+  "features": {
+    "photo": true,
+    "pageFooter": true,
+    "contactModes": ["text", "icon"]
+  },
+  "layout": {
+    "headerLayout": "stack",
+    "personalInfoMode": "text",
+    "photoPlacement": "top-right",
+    "sectionTitlePreset": "block-line"
+  }
+}

@@ -9,6 +9,7 @@ import {
   resolveTemplateValues,
 } from "../../../utils/templateStyle";
 import { DEFAULT_TEMPLATE_ID, RENDER_STATE_VERSION } from "../constants";
+import { getBuiltinTemplateById } from "@resume-core";
 import type { ResumeStoreBaseContext } from "../context";
 import type {
   PhotoItem,
@@ -316,6 +317,7 @@ export const createRenderProfileModule = (
     "modern",
     "classic",
     "business",
+    "slant-badge",
   ];
 
   const BUILTIN_TEMPLATE_NAMES: Record<string, string> = {
@@ -323,6 +325,7 @@ export const createRenderProfileModule = (
     modern: "清雅简约",
     classic: "经典极简",
     business: "轻盈现代",
+    "slant-badge": "稳健政企",
   };
 
   const loadTemplates = async () => {
@@ -330,8 +333,13 @@ export const createRenderProfileModule = (
       const templates = await platform.invoke<ResumeTemplate[]>("list_templates");
       const normalizedTemplates = templates.map((template) => {
         const officialName = BUILTIN_TEMPLATE_NAMES[template.id];
+        const builtinDef = getBuiltinTemplateById(template.id);
         const normalizedItem = officialName
-          ? { ...template, name: officialName }
+          ? {
+              ...template,
+              name: officialName,
+              css: builtinDef?.css ?? template.css,
+            }
           : template;
 
         const hasDefaults =
@@ -401,9 +409,11 @@ export const createRenderProfileModule = (
       state.templateValues.value,
     );
     const resolvedStyle = resolveResumeStyle(template, resolvedValues);
+    const builtinDef = getBuiltinTemplateById(template.id);
     const nextTemplate = {
       ...template,
       name: BUILTIN_TEMPLATE_NAMES[template.id] ?? template.name,
+      css: builtinDef?.css ?? template.css,
       defaults: resolveTemplateValues(template, resolvedValues),
       layout: {
         ...template.layout,

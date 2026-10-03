@@ -7,10 +7,12 @@ import classicCss from "../assets/templates/classic/style.css?raw";
 import classicTemplate from "../assets/templates/classic/template.json";
 import modernCss from "../assets/templates/modern/style.css?raw";
 import modernTemplate from "../assets/templates/modern/template.json";
+import slantBadgeCss from "../assets/templates/slant-badge/style.css?raw";
+import slantBadgeTemplate from "../assets/templates/slant-badge/template.json";
 import type { ResumeTemplate, TemplateManifest } from "../types/resume";
 import { normalizeResumeTemplate } from "../utils/templateManifest";
 
-export type BuiltinTemplateId = "modern" | "classic" | "business" | "business-block";
+export type BuiltinTemplateId = "modern" | "classic" | "business" | "business-block" | "slant-badge";
 
 export const DEFAULT_TEMPLATE_ID: BuiltinTemplateId = "business-block";
 export const DEFAULT_RESUME_MARKDOWN = defaultResumeMarkdown;
@@ -31,6 +33,10 @@ const BUILTIN_TEMPLATES: ResumeTemplate[] = [
   normalizeResumeTemplate({
     ...(businessTemplate as TemplateManifest),
     css: businessCss,
+  }),
+  normalizeResumeTemplate({
+    ...(slantBadgeTemplate as TemplateManifest),
+    css: slantBadgeCss,
   }),
 ];
 

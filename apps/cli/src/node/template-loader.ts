@@ -8,7 +8,7 @@ import {
 } from "../../../../packages/resume-core/src/domain";
 import { Md2cvError } from "./errors";
 
-const REQUIRED_TEMPLATE_IDS = ["modern", "classic", "business", "business-block"] as const;
+const REQUIRED_TEMPLATE_IDS = ["modern", "classic", "business", "business-block", "slant-badge"] as const;
 
 export interface TemplateAssetReport {
   root: string;

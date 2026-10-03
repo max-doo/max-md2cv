@@ -79,7 +79,7 @@ try {
   assert.match(version.stdout.trim(), /^0\.1\.0$/);
 
   const list = parseJson(await run(["templates", "list", "--json"], cwd));
-  assert.deepEqual(list.templates.map((template) => template.id), ["business", "business-block", "classic", "modern"]);
+  assert.deepEqual(list.templates.map((template) => template.id), ["business", "business-block", "classic", "modern", "slant-badge"]);
 
   const schema = parseJson(await run(["templates", "schema", "modern", "--json"], cwd));
   assert.ok(schema.template.editorSchema.some((field) => field.key === "fontSize"));

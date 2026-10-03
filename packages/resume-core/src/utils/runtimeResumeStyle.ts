@@ -480,6 +480,7 @@ export const buildRuntimeResumeStyleCss = (
     word-break: break-word;
   }
   .resume-document .job-intention {
+    color: #000000;
     display: flex !important;
     flex-wrap: wrap;
     align-items: baseline;

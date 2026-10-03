@@ -524,9 +524,9 @@ export function enhanceResumeHtml(rawHtml: string, styleConfig: ResumeStyle, tem
         const itemsHtml = segments
           .map((seg: string) => `<span class="job-intention-item">${seg}</span>`)
           .join('<span class="job-intention-sep"> | </span>')
-        return `<p class="job-intention" style="color: ${styleConfig.themeColor};">${itemsHtml}</p>`
+        return `<p class="job-intention">${itemsHtml}</p>`
       }
-      return `<p class="job-intention" style="color: ${styleConfig.themeColor};">${text}</p>`
+      return `<p class="job-intention">${text}</p>`
     }
   )
 

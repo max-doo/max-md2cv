@@ -160,6 +160,7 @@
   font-size: calc(var(--tpl-font-size) * 1.05);
   line-height: 1.35;
   margin-bottom: 6px;
+  color: #000000 !important;
 }
 
 .resume-document .job-intention .job-intention-item {
