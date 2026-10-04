@@ -1,6 +1,6 @@
-import { computed, ref } from "vue";
+import { computed, h, ref } from "vue";
 import { defineStore, storeToRefs } from "pinia";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElNotification } from "element-plus";
 import { usePlaygroundStore } from "./playground";
 import { buildPagedExportDocumentHtml } from "@desktop/utils/pagedExport";
 import {
@@ -57,6 +57,80 @@ const WEB_PRINT_SCRIPT = `
   </script>
 `;
 
+const triggerStarEncouragement = () => {
+  const DISMISSED_KEY = "md2cv_star_prompt_dismissed_v2";
+  const SESSION_KEY = "md2cv_star_prompt_session_shown";
+
+  try {
+    // 若用户已点过 Star 或选择长期免扰
+    if (localStorage.getItem(DISMISSED_KEY) === "1") {
+      return;
+    }
+    // 同一会话内不重复弹出
+    if (sessionStorage.getItem(SESSION_KEY) === "1") {
+      return;
+    }
+  } catch {
+    // 忽略存储读取异常
+  }
+
+  try {
+    sessionStorage.setItem(SESSION_KEY, "1");
+  } catch {}
+
+  setTimeout(() => {
+    ElNotification({
+      title: "🎉 简历已准备导出",
+      customClass: "star-encouragement-notify",
+      duration: 0,
+      position: "bottom-right",
+      message: h("div", { class: "flex flex-col gap-2.5 pt-1 text-xs text-on-surface-variant font-['Manrope']" }, [
+        h("p", { class: "leading-relaxed" }, "如果小简帮到了你，不妨在 GitHub 给我们点个 Star 支持一下开源项目～"),
+        h("div", { class: "flex items-center gap-2 pt-0.5" }, [
+          h(
+            "a",
+            {
+              href: "https://github.com/max-doo/max-md2cv",
+              target: "_blank",
+              rel: "noreferrer",
+              class:
+                "inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-white font-medium hover:opacity-90 transition-opacity cursor-pointer",
+              onClick: () => {
+                try {
+                  localStorage.setItem(DISMISSED_KEY, "1");
+                } catch {}
+                ElNotification.closeAll();
+              },
+            },
+            [
+              h(
+                "span",
+                {
+                  class: "material-symbols-outlined text-[14px]",
+                  style: "font-variation-settings: 'FILL' 1;",
+                },
+                "star",
+              ),
+              "去点个 Star",
+            ],
+          ),
+          h(
+            "button",
+            {
+              class:
+                "inline-flex items-center px-2.5 py-1.5 rounded-full text-on-surface-variant/70 hover:text-on-surface hover:bg-surface-variant transition-colors cursor-pointer text-xs",
+              onClick: () => {
+                ElNotification.closeAll();
+              },
+            },
+            "下次再说",
+          ),
+        ]),
+      ]),
+    });
+  }, 600);
+};
+
 const getPreviewPagesContainer = () => {
   return document.querySelector(".pagedjs_pages");
 };
@@ -88,6 +162,7 @@ export const useResumeStore = defineStore("resume", () => {
 
   const templatesLoaded = ref(true);
   const isExporting = ref(false);
+  const isExportingImage = ref(false);
   const isPreviewRendering = ref(false);
   const isPreviewReady = ref(false);
   const activeFileStatus = ref<ActiveFileStatus>("ready");
@@ -217,6 +292,7 @@ export const useResumeStore = defineStore("resume", () => {
       printWindow.document.write(htmlContent);
       printWindow.document.close();
       printWindow.focus();
+      triggerStarEncouragement();
     } catch (error) {
       console.error("Web PDF export failed:", error);
       ElMessage.error(
@@ -303,6 +379,7 @@ export const useResumeStore = defineStore("resume", () => {
     availableTemplates,
     activeTemplate,
     isExporting,
+    isExportingImage,
     isPreviewRendering,
     isPreviewReady,
     templatesLoaded,
@@ -332,6 +409,7 @@ export const useResumeStore = defineStore("resume", () => {
     loadTemplates,
     saveCurrentTemplate,
     exportCurrentPdf,
+    exportCurrentImage: async () => undefined,
     persistActiveFileRenderState,
     resetActiveFileRenderSettings,
     setActiveTemplateForCurrentFile,
