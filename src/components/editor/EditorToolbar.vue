@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import SoftSelect from '../shared/SoftSelect.vue'
+import SyntaxHelpDialog from './SyntaxHelpDialog.vue'
 import {
   INSERT_MENU_OPTIONS,
   LINE_FORMAT_OPTIONS,
@@ -34,6 +36,8 @@ const handleInsertCommand = (command: string | number | object) => {
 
   emit('insert-command', command as InsertMenuValue)
 }
+
+const isHelpDialogOpen = ref(false)
 </script>
 
 <template>
@@ -159,7 +163,20 @@ const handleInsertCommand = (command: string | number | object) => {
           {{ hasCopiedMarkdown ? 'check' : 'content_copy' }}
         </span>
       </button>
+
+      <button
+        type="button"
+        class="editor-toolbar-icon group"
+        title="语法说明"
+        @click="isHelpDialogOpen = true"
+      >
+        <span class="material-symbols-outlined text-xl transition-transform group-hover:scale-110">
+          help_outline
+        </span>
+      </button>
     </div>
+
+    <SyntaxHelpDialog v-model="isHelpDialogOpen" />
   </div>
 </template>
 
