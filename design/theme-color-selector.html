@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MD2CV 预设主题色决策与简历实时预览实验室</title>
+  <style>
+    :root {
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --surface: #f8fafc;
+      --surface-card: #ffffff;
+      --surface-hover: #f1f5f9;
+      --border-color: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --active-theme-color: #1F4E79;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: #eef2f6;
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 顶部导航条 */
+    header.app-header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      height: 56px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .header-title-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo-badge {
+      background: linear-gradient(135deg, #2477bf, #1f4e79);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .header-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: 6px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #fff;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: var(--surface-hover);
+      border-color: #cbd5e1;
+    }
+
+    .btn-primary {
+      background: #0f172a;
+      color: #fff;
+      border-color: #0f172a;
+    }
+
+    .btn-primary:hover {
+      background: #334155;
+      border-color: #334155;
+    }
+
+    /* 主工作区分割 */
+    .app-workspace {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+    }
+
+    /* 左侧控制栏 */
+    .sidebar-panel {
+      width: 480px;
+      flex-shrink: 0;
+      background: #ffffff;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .sidebar-section {
+      padding: 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar-section:last-child {
+      border-bottom: none;
+    }
+
+    .section-headline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-badge {
+      font-size: 11px;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    /* 快捷方案栏 */
+    .preset-strategy-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .strategy-chip {
+      flex: 1;
+      padding: 8px 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #334155;
+    }
+
+    .strategy-chip:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .strategy-chip.active {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+    }
+
+    /* 冲突分析卡片 */
+    .conflict-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+
+    .conflict-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .delta-e-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 6px;
+      background: #fef3c7;
+      color: #92400e;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    .delta-e-tag.high-similarity {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .conflict-comparison-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .compare-item {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .compare-item:hover {
+      border-color: #3b82f6;
+    }
+
+    .compare-swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      border: 1px solid rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+
+    .compare-meta {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .compare-name {
+      font-weight: 600;
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .compare-hex {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .conflict-options {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .conflict-opt-btn {
+      flex: 1;
+      font-size: 11px;
+      padding: 5px 6px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+
+    .conflict-opt-btn.active {
+      background: #1e293b;
+      color: #ffffff;
+      border-color: #1e293b;
+      font-weight: 600;
+    }
+
+    /* 排序方式选择 */
+    .order-selector {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .order-btn {
+      padding: 6px 4px;
+      font-size: 11px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      border-radius: 6px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 600;
+      color: #475569;
+      transition: all 0.15s;
+    }
+
+    .order-btn.active {
+      background: #0f172a;
+      color: #fff;
+      border-color: #0f172a;
+    }
+
+    /* 实际色盘网格预览器 (5列) */
+    .mock-toolbar-popover {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+      margin-bottom: 14px;
+    }
+
+    .mock-popover-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .swatch-grid-5cols {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .theme-swatch-circle {
+      aspect-ratio: 1;
+      width: 100%;
+      max-width: 44px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      margin: 0 auto;
+    }
+
+    .theme-swatch-circle:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+    }
+
+    .theme-swatch-circle.active {
+      box-shadow: 0 0 0 3px #ffffff, 0 0 0 5px var(--active-theme-color), 0 8px 18px rgba(0, 0, 0, 0.2);
+    }
+
+    .theme-swatch-circle .check-icon {
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: bold;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+    }
+
+    /* 颜色明细列表 */
+    .color-list-group {
+      margin-bottom: 16px;
+    }
+
+    .color-list-header {
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .color-row-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: #f8fafc;
+      margin-bottom: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .color-row-item:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .color-row-item.is-selected-for-preview {
+      background: #eff6ff;
+      border-color: #93c5fd;
+    }
+
+    .color-row-item.is-crossed {
+      opacity: 0.6;
+      background: #fef2f2;
+    }
+
+    .color-row-checkbox {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #0f172a;
+    }
+
+    .color-row-swatch {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.12);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .color-row-info {
+      flex: 1;
+      min-width: 0;
+      cursor: pointer;
+    }
+
+    .color-row-title-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .color-row-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .color-row-tag {
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .tag-new { background: #dcfce7; color: #15803d; }
+    .tag-kept { background: #e0e7ff; color: #4338ca; }
+    .tag-crossed { background: #fee2e2; color: #b91c1c; }
+
+    .color-row-hex {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .color-preview-btn {
+      font-size: 11px;
+      padding: 3px 8px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .color-preview-btn:hover {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    /* 代码输出展示 */
+    .code-export-box {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.5;
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .code-export-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      color: #94a3b8;
+      font-size: 11px;
+    }
+
+    /* 右侧简历实时预览区 */
+    .preview-stage {
+      flex: 1;
+      background: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .preview-stage-toolbar {
+      height: 48px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .preview-tool-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .template-selector-tabs {
+      display: flex;
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 2px;
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .current-theme-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .pill-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--active-theme-color);
+    }
+
+    .preview-canvas-container {
+      flex: 1;
+      overflow: auto;
+      padding: 32px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      background: radial-gradient(circle at top, #ffffff, #e2e8f0 60%);
+    }
+
+    /* 纸张容器 */
+    .resume-sheet {
+      width: 794px; /* A4 标准宽 @96dpi */
+      min-height: 1123px;
+      background: #ffffff;
+      box-shadow: 0 20px 40px -15px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+      border-radius: 4px;
+      padding: 42px 48px;
+      box-sizing: border-box;
+      transition: transform 0.2s ease;
+      color: #1e293b;
+    }
+
+    /* 简历内容样式 (遵循项目实际 CSS) */
+    .resume-header {
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 16px;
+    }
+
+    .resume-name {
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .resume-target {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--active-theme-color);
+      margin-bottom: 8px;
+    }
+
+    .resume-contact {
+      font-size: 12px;
+      color: #64748b;
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    /* 简历区块与标题 */
+    .resume-section {
+      margin-bottom: 22px;
+    }
+
+    /* 经典模板风格 */
+    .tpl-classic .resume-section-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--active-theme-color);
+      border-bottom: 2px solid var(--active-theme-color);
+      padding-bottom: 4px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* 现代胶囊徽章风格 */
+    .tpl-modern .resume-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--active-theme-color);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+    }
+
+    .tpl-modern .section-title-badge {
+      background: var(--active-theme-color);
+      color: #ffffff;
+      padding: 3px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .tpl-modern .resume-section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: color-mix(in srgb, var(--active-theme-color) 25%, transparent);
+      margin-left: 12px;
+    }
+
+    /* 商务块面风格 */
+    .tpl-business .resume-section-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+      background: var(--active-theme-color);
+      padding: 4px 12px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      display: inline-block;
+      letter-spacing: 0.5px;
+    }
+
+    .resume-summary-text {
+      font-size: 13px;
+      line-height: 1.65;
+      color: #334155;
+    }
+
+    .exp-item {
+      margin-bottom: 14px;
+    }
+
+    .exp-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .exp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+
+    .exp-title-box {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .exp-org {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .exp-role {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--active-theme-color);
+    }
+
+    .exp-date {
+      font-size: 12px;
+      color: #64748b;
+      font-family: var(--font-mono);
+    }
+
+    .exp-desc {
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+
+    .exp-points {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .exp-point-li {
+      position: relative;
+      padding-left: 14px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #334155;
+      margin-bottom: 4px;
+    }
+
+    .exp-point-li::before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 8px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--active-theme-color);
+    }
+
+    .tag-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .skill-chip {
+      font-size: 11.5px;
+      padding: 3px 9px;
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--active-theme-color) 8%, #ffffff);
+      color: var(--active-theme-color);
+      border: 1px solid color-mix(in srgb, var(--active-theme-color) 20%, transparent);
+      font-weight: 600;
+    }
+
+    /* Toast 通知 */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast-msg.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部导航 -->
+  <header class="app-header">
+    <div class="header-title-box">
+      <div class="header-logo-badge">MD2CV</div>
+      <h1 class="header-title">预设主题色决策台与简历即时试色</h1>
+      <span class="header-subtitle">去除废色 · 甄别相近色 · 规律排布验证</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn" onclick="copyConfigCode()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        复制 TypeScript 配置代码
+      </button>
+      <button class="btn btn-primary" onclick="applyAndNotify()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        生成最终选定调色盘
+      </button>
+    </div>
+  </header>
+
+  <!-- 工作区 -->
+  <div class="app-workspace">
+    <!-- 左侧配置决策面板 -->
+    <aside class="sidebar-panel">
+
+      <!-- 快捷策略区 -->
+      <div class="sidebar-section">
+        <div class="section-headline">
+          <div class="section-title">
+            <span>预设方案选择</span>
+          </div>
+          <span class="section-badge" id="selectedCountBadge">已选 10 / 15 色</span>
+        </div>
+        <div class="preset-strategy-bar">
+          <div class="strategy-chip active" id="chipStrategyRecommended" onclick="applyStrategy('recommended')">
+            🎯 官方精选合并 (推荐 10 色)
+          </div>
+          <div class="strategy-chip" id="chipStrategyFull" onclick="applyStrategy('full')">
+            🧩 宽松保留 (13 色)
+          </div>
+          <div class="strategy-chip" id="chipStrategyMinimal" onclick="applyStrategy('minimal')">
+            ⚡ 极简高雅 (8 色)
+          </div>
+        </div>
+        <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+          <strong>规则遵循：</strong>已彻底移除用户截图所画红叉的 5 种过亮/过刺色（#0062FF、#2C83EC、#0D98BA、#1AB0A5、#ED7700）。
+        </p>
+      </div>
+
+      <!-- 核心矛盾：相近色分析与取舍合并 -->
+      <div class="sidebar-section">
+        <div class="section-headline">
+          <div class="section-title">
+            <span>相近色对比与取舍建议</span>
+          </div>
+          <span class="section-badge" style="background: #fef3c7; color: #b45309;">需要取舍决策</span>
+        </div>
+
+        <!-- 冲突 1：极简炭黑 vs 深炭灰 -->
+        <div class="conflict-card">
+          <div class="conflict-header">
+            <span>① 炭黑/深灰之争：冷调微蓝 vs 中性纯灰</span>
+            <span class="delta-e-tag high-similarity">ΔE = 6.0 极近</span>
+          </div>
+          <div class="conflict-comparison-row">
+            <div class="compare-item" onclick="previewColor('#242A31')">
+              <div class="compare-swatch" style="background: #242A31;"></div>
+              <div class="compare-meta">
+                <div class="compare-name">极简炭黑 (新增)</div>
+                <div class="compare-hex">#242A31 (冷蓝炭)</div>
+              </div>
+            </div>
+            <div class="compare-item" onclick="previewColor('#242424')">
+              <div class="compare-swatch" style="background: #242424;"></div>
+              <div class="compare-meta">
+                <div class="compare-name">深炭灰 (原色)</div>
+                <div class="compare-hex">#242424 (中性灰)</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">
+            💡 <strong>分析建议：</strong>二者色差仅 6.0，肉眼极难区分。新增的 <code>#242A31</code> 带高雅冷色调，质感更现代，建议直接替代旧灰 <code>#242424</code>。
+          </div>
+          <div class="conflict-options">
+            <button class="conflict-opt-btn active" id="btnConflictBlackNew" onclick="resolveConflictBlack('new')">采用新炭黑 (#242A31)</button>
+            <button class="conflict-opt-btn" id="btnConflictBlackOld" onclick="resolveConflictBlack('old')">保留原炭灰 (#242424)</button>
+            <button class="conflict-opt-btn" id="btnConflictBlackBoth" onclick="resolveConflictBlack('both')">两者都留</button>
+          </div>
+        </div>
+
+        <!-- 冲突 2：青绿系拥挤问题 -->
+        <div class="conflict-card">
+          <div class="conflict-header">
+            <span>② 科技青绿 vs 原水鸭青 / 原深墨青</span>
+            <span class="delta-e-tag high-similarity">ΔE = 9.2 高度相似</span>
+          </div>
+          <div class="conflict-comparison-row">
+            <div class="compare-item" onclick="previewColor('#0F6B66')">
+              <div class="compare-swatch" style="background: #0F6B66;"></div>
+              <div class="compare-meta">
+                <div class="compare-name">科技青绿 (新增)</div>
+                <div class="compare-hex">#0F6B66 (高质感青)</div>
+              </div>
+            </div>
+            <div class="compare-item" onclick="previewColor('#008080')">
+              <div class="compare-swatch" style="background: #008080;"></div>
+              <div class="compare-meta">
+                <div class="compare-name">水鸭青 (原色)</div>
+                <div class="compare-hex">#008080 (传统Teal)</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">
+            💡 <strong>分析建议：</strong>若把新墨绿(#355C4D)、新科技青(#0F6B66)、旧水鸭(#008080)、旧深墨青(#005451)全放进来会导致青绿色泛滥。建议用新科技青替代旧水鸭青，再保留新墨绿，剔除旧深墨青。
+          </div>
+          <div class="conflict-options">
+            <button class="conflict-opt-btn active" id="btnConflictTealMerge" onclick="resolveConflictTeal('merge')">合并精简 (保留新青绿+新墨绿)</button>
+            <button class="conflict-opt-btn" id="btnConflictTealKeepAll" onclick="resolveConflictTeal('all')">全保留 (青绿系占4个)</button>
+          </div>
+        </div>
+
+        <!-- 冲突 3：商务深蓝 vs 深蔚蓝 -->
+        <div class="conflict-card">
+          <div class="conflict-header">
+            <span>③ 商务深蓝 vs 原深蔚蓝</span>
+            <span class="delta-e-tag">同深蓝系 纯度不同</span>
+          </div>
+          <div class="conflict-comparison-row">
+            <div class="compare-item" onclick="previewColor('#1F4E79')">
+              <div class="compare-swatch" style="background: #1F4E79;"></div>
+              <div class="compare-meta">
+                <div class="compare-name">商务深蓝 (新增)</div>
+                <div class="compare-hex">#1F4E79 (59%饱和)</div>
+              </div>
+            </div>
+            <div class="compare-item" onclick="previewColor('#004A99')">
+              <div class="compare-swatch" style="background: #004A99;"></div>
+              <div class="compare-meta">
+                <div class="compare-name">深蔚蓝 (原色)</div>
+                <div class="compare-hex">#004A99 (100%纯度)</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">
+            💡 <strong>分析建议：</strong><code>#1F4E79</code> 克制内敛更具正式感，<code>#004A99</code> 饱和度极高略有数码刺眼感。建议以新深蓝为主力。
+          </div>
+          <div class="conflict-options">
+            <button class="conflict-opt-btn active" id="btnConflictBlueNew" onclick="resolveConflictBlue('new')">选用新商务深蓝 (#1F4E79)</button>
+            <button class="conflict-opt-btn" id="btnConflictBlueBoth" onclick="resolveConflictBlue('both')">两者均保留</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 颜色排列规律与 5 列网格模拟器 -->
+      <div class="sidebar-section">
+        <div class="section-headline">
+          <div class="section-title">
+            <span>颜色排列规律与网格预览</span>
+          </div>
+          <span style="font-size: 11px; color: var(--text-muted);">5 列排列</span>
+        </div>
+
+        <div class="order-selector">
+          <button class="order-btn active" id="orderBtnHue" onclick="changeOrderMode('hue')">🌈 色相律 (推荐)</button>
+          <button class="order-btn" id="orderBtnFamily" onclick="changeOrderMode('family')">👔 商务家族律</button>
+          <button class="order-btn" id="orderBtnLightness" onclick="changeOrderMode('lightness')">🌗 明暗梯度律</button>
+        </div>
+
+        <p id="orderExplainText" style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+          <strong>规律说明：</strong>按照「群青蓝紫 ➔ 经典正蓝 ➔ 冷静蓝灰 ➔ 科技青绿 ➔ 沉稳墨绿 ➔ 勃艮第红 ➔ 炭黑/纯黑」的冷暖色相自然递进，收敛至中性黑灰色，视觉过渡自然舒缓。
+        </p>
+
+        <!-- 模拟实际弹出层网格效果 -->
+        <div class="mock-toolbar-popover">
+          <div class="mock-popover-title">
+            <span>主题色选择器效果预览 (点击圆点切换简历)</span>
+            <span id="gridRowsIndicator" style="font-size: 10px; background:#f1f5f9; padding:2px 6px; border-radius:4px;">2 行 × 5 列 (10 色)</span>
+          </div>
+          <div class="swatch-grid-5cols" id="previewSwatchGrid">
+            <!-- 动态生成 5 列圆点色盘 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 候选颜色清单与勾选取舍 -->
+      <div class="sidebar-section">
+        <div class="section-headline">
+          <div class="section-title">
+            <span>全部候选颜色清单与自由取舍</span>
+          </div>
+          <button class="btn" style="padding: 2px 8px; font-size: 11px;" onclick="toggleAllColors()">全选 / 反选</button>
+        </div>
+
+        <!-- 新增颜色组 -->
+        <div class="color-list-group">
+          <div class="color-list-header">
+            <span>⭐ 第二张截图提供的新颜色 (6 个)</span>
+          </div>
+          <div id="newColorListContainer"></div>
+        </div>
+
+        <!-- 保留的旧颜色组 -->
+        <div class="color-list-group">
+          <div class="color-list-header">
+            <span>✔️ 第一张截图保留的原色 (10 个)</span>
+          </div>
+          <div id="keptColorListContainer"></div>
+        </div>
+
+        <!-- 画叉的旧颜色组 -->
+        <div class="color-list-group">
+          <div class="color-list-header">
+            <span>❌ 画红叉已被剔除的颜色 (5 个，默认不纳入)</span>
+          </div>
+          <div id="crossedColorListContainer"></div>
+        </div>
+
+      </div>
+
+      <!-- 代码输出区 -->
+      <div class="sidebar-section">
+        <div class="section-headline">
+          <div class="section-title">
+            <span>生成常量代码 (PreviewToolbar.vue)</span>
+          </div>
+        </div>
+        <div class="code-export-box">
+          <div class="code-export-header">
+            <span>export const THEME_COLORS = [...]</span>
+            <span id="codeLengthBadge">10 items</span>
+          </div>
+          <pre id="codeExportPre"></pre>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- 右侧：真实简历实时预览主舞台 -->
+    <main class="preview-stage">
+      <!-- 预览工具栏 -->
+      <div class="preview-stage-toolbar">
+        <div class="preview-tool-left">
+          <span style="font-size: 12px; font-weight: 700; color: #475569;">简历模板风格：</span>
+          <div class="template-selector-tabs">
+            <button class="tab-btn active" id="tplBtnClassic" onclick="setResumeTemplate('tpl-classic')">经典极简 (Classic)</button>
+            <button class="tab-btn" id="tplBtnModern" onclick="setResumeTemplate('tpl-modern')">轻盈现代 (Modern)</button>
+            <button class="tab-btn" id="tplBtnBusiness" onclick="setResumeTemplate('tpl-business')">商务块面 (Business)</button>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div class="current-theme-pill">
+            <div class="pill-dot" id="currentPillDot"></div>
+            <span>当前主题色：</span>
+            <span id="currentThemeHex" style="font-family: var(--font-mono); color: #0f172a;">#1F4E79</span>
+            <span id="currentThemeName" style="color: var(--text-muted); font-size: 11px;">(商务深蓝)</span>
+          </div>
+
+          <button class="btn" style="padding: 4px 10px;" onclick="zoomResume(0.1)">🔍 放大</button>
+          <button class="btn" style="padding: 4px 10px;" onclick="zoomResume(-0.1)">缩小</button>
+          <button class="btn" style="padding: 4px 10px;" onclick="resetZoom()">100%</button>
+        </div>
+      </div>
+
+      <!-- 纸张容器 -->
+      <div class="preview-canvas-container">
+        <div class="resume-sheet tpl-classic" id="resumeSheet">
+          
+          <!-- 个人头部 -->
+          <div class="resume-header">
+            <h1 class="resume-name">李小简</h1>
+            <div class="resume-target">求职意向：资深产品经理 / 品牌营销专家</div>
+            <div class="resume-contact">
+              <span>📱 138-0000-8888</span>
+              <span>✉️ lixiaojian@example.com</span>
+              <span>📍 上海市静安区</span>
+              <span>🔗 portfolio.lixiaojian.design</span>
+            </div>
+          </div>
+
+          <!-- 个人优势 -->
+          <div class="resume-section">
+            <div class="resume-section-title">
+              <span class="section-title-badge">个人优势</span>
+              <span>核心专长与职业素养</span>
+            </div>
+            <p class="resume-summary-text">
+              7年互联网与数字化产品创新经验，主导过两款千万级用户产品的从0到1架构与商业化落地；精通用户行为数据分析、复杂交互设计及敏捷产品研发全流程。善于将商业战略拆解为具体功能路径，跨部门协调与抗压推进能力卓越。
+            </p>
+          </div>
+
+          <!-- 工作经历 -->
+          <div class="resume-section">
+            <div class="resume-section-title">
+              <span class="section-title-badge">工作经历</span>
+              <span>职业发展与关键成果</span>
+            </div>
+
+            <div class="exp-item">
+              <div class="exp-header">
+                <div class="exp-title-box">
+                  <span class="exp-org">未来科技集团</span>
+                  <span class="exp-role">高级产品专家 / 核心团队负责人</span>
+                </div>
+                <span class="exp-date">2022.04 - 至今</span>
+              </div>
+              <p class="exp-desc">负责核心 SaaS 工作台与增长闭环系统规划，直接管理 8 人跨职能团队：</p>
+              <ul class="exp-points">
+                <li class="exp-point-li"><strong>用户转化跃升：</strong>重构工作台流转漏斗，简化核心操作步骤 40%，实现新客 7 日留存率从 22% 提升至 38.5%。</li>
+                <li class="exp-point-li"><strong>商业化变现：</strong>设计分层付费模型与权限中心，推动企业客户续费率同比增长 45%，年 ARR 贡献突破 3200 万元。</li>
+                <li class="exp-point-li"><strong>设计系统工程化：</strong>主导推动 Design Token 与组件库统一，产研交付周期缩短 30%。</li>
+              </ul>
+            </div>
+
+            <div class="exp-item">
+              <div class="exp-header">
+                <div class="exp-title-box">
+                  <span class="exp-org">极简智能网络</span>
+                  <span class="exp-role">产品经理</span>
+                </div>
+                <span class="exp-date">2019.07 - 2022.03</span>
+              </div>
+              <p class="exp-desc">主导内容中台与创作者工具矩阵建设，支持多平台图文与音视频快速分发：</p>
+              <ul class="exp-points">
+                <li class="exp-point-li">从 0 到 1 孵化创作者排版引擎，首发当月沉淀创作者 12 万人，日均产出优质文档超 3 万篇。</li>
+                <li class="exp-point-li">搭建基于指标驱动的 A/B 实验平台，累计验证 60+ 迭代假设，核心功能使用频次翻倍。</li>
+              </ul>
+            </div>
+
+          </div>
+
+          <!-- 项目经历 -->
+          <div class="resume-section">
+            <div class="resume-section-title">
+              <span class="section-title-badge">代表项目</span>
+              <span>重大战略项目攻坚</span>
+            </div>
+
+            <div class="exp-item">
+              <div class="exp-header">
+                <div class="exp-title-box">
+                  <span class="exp-org">企业级智能文档协作套件</span>
+                  <span class="exp-role">总负责人</span>
+                </div>
+                <span class="exp-date">2023.01 - 2023.11</span>
+              </div>
+              <p class="exp-desc">面对混合办公场景下的团队协作割裂痛点，打造集实时协作、版本追溯与敏捷导出于一体的协同枢纽：</p>
+              <ul class="exp-points">
+                <li class="exp-point-li">攻克大体积复杂排版渲染性能瓶颈，首屏载入时间由 2.4s 压缩至 680ms。</li>
+                <li class="exp-point-li">荣获年度集团技术创新金奖，并作为样板案例向 30+ 行业头部标杆客户完成交付。</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- 专业技能与证书 -->
+          <div class="resume-section">
+            <div class="resume-section-title">
+              <span class="section-title-badge">技能矩阵</span>
+              <span>专业能力与技术栈</span>
+            </div>
+            <div class="tag-cloud">
+              <div class="skill-chip">产品全生命周期管理</div>
+              <div class="skill-chip">商业模式与商业化定价</div>
+              <div class="skill-chip">交互设计与用户心理学</div>
+              <div class="skill-chip">SQL & 数据可视化分析</div>
+              <div class="skill-chip">敏捷项目管理 (Scrum)</div>
+              <div class="skill-chip">Design System 规范构建</div>
+              <div class="skill-chip">英语流利 (CET-6 612分)</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-msg" id="toastMsg">
+    <span id="toastText">已复制到剪贴板！</span>
+  </div>
+
+  <script>
+    // 基础颜色元数据定义
+    const ALL_COLORS = [
+      // === 新增颜色 (第二张截图) ===
+      { id: 'new-1', hex: '#1F4E79', name: '商务深蓝', en: 'Navy Business Blue', category: 'new', hueGroup: 'blue', lightness: 30, saturation: 59, initialChecked: true, note: '典雅正式，正统商务首选' },
+      { id: 'new-2', hex: '#40566F', name: '冷静蓝灰', en: 'Cool Slate Blue', category: 'new', hueGroup: 'slate', lightness: 34, saturation: 27, initialChecked: true, note: '低饱和高级感，极简现代' },
+      { id: 'new-3', hex: '#0F6B66', name: '科技青绿', en: 'Tech Teal', category: 'new', hueGroup: 'teal', lightness: 24, saturation: 75, initialChecked: true, note: '现代科技感，替代高刺眼水鸭青' },
+      { id: 'new-4', hex: '#355C4D', name: '墨绿色', en: 'Deep Pine Green', category: 'new', hueGroup: 'green', lightness: 28, saturation: 27, initialChecked: true, note: '沉稳自然森林绿，低调雅致' },
+      { id: 'new-5', hex: '#7A3142', name: '勃艮第红', en: 'Burgundy Red', category: 'new', hueGroup: 'warm', lightness: 34, saturation: 43, initialChecked: true, note: '填补唯一暖色空缺，文法商律绝佳' },
+      { id: 'new-6', hex: '#242A31', name: '极简炭黑', en: 'Minimal Slate Charcoal', category: 'new', hueGroup: 'mono', lightness: 17, saturation: 15, initialChecked: true, note: '微蓝冷调炭黑，取代生硬纯灰' },
+
+      // === 保留原色 (第一张截图未画叉) ===
+      { id: 'kept-1', hex: '#4c49cc', name: '深蓝紫 (原)', en: 'Indigo Purple', category: 'kept', hueGroup: 'violet', lightness: 55, saturation: 56, initialChecked: true, note: '经典科技靛紫' },
+      { id: 'kept-2', hex: '#302EA3', name: '群青紫 (原)', en: 'Ultramarine Violet', category: 'kept', hueGroup: 'violet', lightness: 41, saturation: 56, initialChecked: true, note: '沉着内敛深紫蓝' },
+      { id: 'kept-3', hex: '#0050D1', name: '宝蓝 (原)', en: 'Royal Blue', category: 'kept', hueGroup: 'blue', lightness: 41, saturation: 100, initialChecked: true, note: '高饱和亮蓝' },
+      { id: 'kept-4', hex: '#2477BF', name: '经典商务蓝 (原)', en: 'Steel Blue', category: 'kept', hueGroup: 'blue', lightness: 45, saturation: 68, initialChecked: true, note: '目前默认选中色，明度适中' },
+      { id: 'kept-5', hex: '#004A99', name: '深蔚蓝 (原)', en: 'Deep Azure', category: 'kept', hueGroup: 'blue', lightness: 30, saturation: 100, initialChecked: false, note: '与#1F4E79相似，饱和度极高' },
+      { id: 'kept-6', hex: '#003396', name: '藏青 (原)', en: 'Dark Navy', category: 'kept', hueGroup: 'blue', lightness: 29, saturation: 100, initialChecked: false, note: '极深沉藏蓝' },
+      { id: 'kept-7', hex: '#005451', name: '深墨青 (原)', en: 'Dark Teal', category: 'kept', hueGroup: 'teal', lightness: 16, saturation: 100, initialChecked: false, note: '极深青色，与新墨绿相撞' },
+      { id: 'kept-8', hex: '#008080', name: '水鸭青 (原)', en: 'Teal', category: 'kept', hueGroup: 'teal', lightness: 25, saturation: 100, initialChecked: false, note: '与#0F6B66高度相似，但略刺眼' },
+      { id: 'kept-9', hex: '#000000', name: '纯黑 (原)', en: 'Pure Black', category: 'kept', hueGroup: 'mono', lightness: 0, saturation: 0, initialChecked: true, note: '传统全黑排版' },
+      { id: 'kept-10', hex: '#242424', name: '深炭灰 (原)', en: 'Charcoal Gray', category: 'kept', hueGroup: 'mono', lightness: 14, saturation: 0, initialChecked: false, note: '中性灰，与新炭黑ΔE=6.0' },
+
+      // === 画红叉去除的原色 (第一张截图画叉) ===
+      { id: 'cross-1', hex: '#0062FF', name: '亮天蓝 (剔除)', category: 'crossed', hueGroup: 'blue', lightness: 50, saturation: 100, initialChecked: false, note: '过亮刺眼，容易产生廉价荧光感' },
+      { id: 'cross-2', hex: '#2C83EC', name: '湖蓝 (剔除)', category: 'crossed', hueGroup: 'blue', lightness: 55, saturation: 82, initialChecked: false, note: '明度偏高，标题对比度不足' },
+      { id: 'cross-3', hex: '#0D98BA', name: '孔雀蓝 (剔除)', category: 'crossed', hueGroup: 'teal', lightness: 39, saturation: 87, initialChecked: false, note: '饱和偏高，排版不够庄重' },
+      { id: 'cross-4', hex: '#1AB0A5', name: '亮薄荷绿 (剔除)', category: 'crossed', hueGroup: 'teal', lightness: 40, saturation: 74, initialChecked: false, note: '荧光薄荷色，阅读性差' },
+      { id: 'cross-5', hex: '#ED7700', name: '活力橙 (剔除)', category: 'crossed', hueGroup: 'warm', lightness: 46, saturation: 100, initialChecked: false, note: '过于跳脱，在正式简历中极不协调' }
+    ];
+
+    // 当前状态
+    let state = {
+      selectedColorIds: new Set(ALL_COLORS.filter(c => c.initialChecked).map(c => c.id)),
+      currentActiveHex: '#1F4E79',
+      orderMode: 'hue', // 'hue' | 'family' | 'lightness'
+      currentTemplate: 'tpl-classic',
+      currentZoom: 1
+    };
+
+    // 初始化渲染
+    function init() {
+      renderColorLists();
+      updateSelectedAndOrder();
+      previewColor('#1F4E79');
+    }
+
+    // 渲染颜色清单
+    function renderColorLists() {
+      const newContainer = document.getElementById('newColorListContainer');
+      const keptContainer = document.getElementById('keptColorListContainer');
+      const crossedContainer = document.getElementById('crossedColorListContainer');
+
+      newContainer.innerHTML = '';
+      keptContainer.innerHTML = '';
+      crossedContainer.innerHTML = '';
+
+      ALL_COLORS.forEach(c => {
+        const itemEl = createColorRow(c);
+        if (c.category === 'new') {
+          newContainer.appendChild(itemEl);
+        } else if (c.category === 'kept') {
+          keptContainer.appendChild(itemEl);
+        } else {
+          crossedContainer.appendChild(itemEl);
+        }
+      });
+    }
+
+    function createColorRow(color) {
+      const isChecked = state.selectedColorIds.has(color.id);
+      const isCurrent = state.currentActiveHex.toLowerCase() === color.hex.toLowerCase();
+      const div = document.createElement('div');
+      div.className = `color-row-item ${isCurrent ? 'is-selected-for-preview' : ''} ${color.category === 'crossed' ? 'is-crossed' : ''}`;
+      div.id = `row-${color.id}`;
+
+      let tagClass = 'tag-kept';
+      let tagText = '原色保留';
+      if (color.category === 'new') {
+        tagClass = 'tag-new';
+        tagText = '新增';
+      } else if (color.category === 'crossed') {
+        tagClass = 'tag-crossed';
+        tagText = '已剔除';
+      }
+
+      div.innerHTML = `
+        <input type="checkbox" class="color-row-checkbox" id="chk-${color.id}" ${isChecked ? 'checked' : ''} onchange="toggleColorCheck('${color.id}')" />
+        <div class="color-row-swatch" style="background: ${color.hex};" onclick="previewColor('${color.hex}')"></div>
+        <div class="color-row-info" onclick="previewColor('${color.hex}')">
+          <div class="color-row-title-bar">
+            <span class="color-row-name">${color.name}</span>
+            <span class="color-row-tag ${tagClass}">${tagText}</span>
+          </div>
+          <div class="color-row-hex">${color.hex} · ${color.note}</div>
+        </div>
+        <button class="color-preview-btn" onclick="previewColor('${color.hex}')">试色</button>
+      `;
+      return div;
+    }
+
+    // 切换勾选
+    function toggleColorCheck(colorId) {
+      if (state.selectedColorIds.has(colorId)) {
+        state.selectedColorIds.delete(colorId);
+      } else {
+        state.selectedColorIds.add(colorId);
+      }
+      updateSelectedAndOrder();
+    }
+
+    function toggleAllColors() {
+      const allChecked = ALL_COLORS.every(c => state.selectedColorIds.has(c.id));
+      if (allChecked) {
+        state.selectedColorIds.clear();
+      } else {
+        ALL_COLORS.forEach(c => state.selectedColorIds.add(c.id));
+      }
+      renderColorLists();
+      updateSelectedAndOrder();
+    }
+
+    // 策略切换
+    function applyStrategy(strat) {
+      document.querySelectorAll('.strategy-chip').forEach(el => el.classList.remove('active'));
+
+      if (strat === 'recommended') {
+        document.getElementById('chipStrategyRecommended').classList.add('active');
+        // 推荐 10 色：刚好 2 行 × 5 列整齐矩阵！
+        // 紫蓝(2) + 商务蓝(2) + 冷静蓝灰(1) + 青绿(1) + 墨绿(1) + 勃艮第红(1) + 极简炭黑(1) + 纯黑(1) = 10 色！
+        state.selectedColorIds = new Set([
+          'kept-1', // #4c49cc (深蓝紫)
+          'kept-2', // #302EA3 (群青紫)
+          'kept-4', // #2477BF (经典商务蓝)
+          'new-1',  // #1F4E79 (商务深蓝)
+          'new-2',  // #40566F (冷静蓝灰)
+          'new-3',  // #0F6B66 (科技青绿)
+          'new-4',  // #355C4D (墨绿色)
+          'new-5',  // #7A3142 (勃艮第红)
+          'new-6',  // #242A31 (极简炭黑)
+          'kept-9', // #000000 (纯黑)
+        ]);
+        resolveConflictBlack('new');
+        resolveConflictTeal('merge');
+        resolveConflictBlue('new');
+      } else if (strat === 'full') {
+        document.getElementById('chipStrategyFull').classList.add('active');
+        // 宽松保留：保留所有未被画叉的旧色 + 6个新色
+        state.selectedColorIds = new Set(ALL_COLORS.filter(c => c.category !== 'crossed').map(c => c.id));
+      } else if (strat === 'minimal') {
+        document.getElementById('chipStrategyMinimal').classList.add('active');
+        // 极简 8 色：最经典实用的 8 种高频色
+        state.selectedColorIds = new Set([
+          'new-1',  // #1F4E79 (商务深蓝)
+          'kept-4', // #2477BF (经典商务蓝)
+          'new-2',  // #40566F (冷静蓝灰)
+          'new-3',  // #0F6B66 (科技青绿)
+          'new-4',  // #355C4D (墨绿色)
+          'new-5',  // #7A3142 (勃艮第红)
+          'new-6',  // #242A31 (极简炭黑)
+          'kept-9', // #000000 (纯黑)
+        ]);
+      }
+
+      renderColorLists();
+      updateSelectedAndOrder();
+      showToast(`已切换至【${strat === 'recommended' ? '官方精选 10 色推荐' : strat === 'full' ? '宽松保留' : '极简 8 色'}】方案`);
+    }
+
+    // 冲突解决快捷函数
+    function resolveConflictBlack(choice) {
+      document.querySelectorAll('#btnConflictBlackNew, #btnConflictBlackOld, #btnConflictBlackBoth').forEach(b => b.classList.remove('active'));
+      if (choice === 'new') {
+        document.getElementById('btnConflictBlackNew').classList.add('active');
+        state.selectedColorIds.add('new-6');   // #242A31
+        state.selectedColorIds.delete('kept-10'); // #242424
+      } else if (choice === 'old') {
+        document.getElementById('btnConflictBlackOld').classList.add('active');
+        state.selectedColorIds.delete('new-6');
+        state.selectedColorIds.add('kept-10');
+      } else {
+        document.getElementById('btnConflictBlackBoth').classList.add('active');
+        state.selectedColorIds.add('new-6');
+        state.selectedColorIds.add('kept-10');
+      }
+      renderColorLists();
+      updateSelectedAndOrder();
+    }
+
+    function resolveConflictTeal(choice) {
+      document.querySelectorAll('#btnConflictTealMerge, #btnConflictTealKeepAll').forEach(b => b.classList.remove('active'));
+      if (choice === 'merge') {
+        document.getElementById('btnConflictTealMerge').classList.add('active');
+        state.selectedColorIds.add('new-3');    // #0F6B66
+        state.selectedColorIds.add('new-4');    // #355C4D
+        state.selectedColorIds.delete('kept-7'); // #005451
+        state.selectedColorIds.delete('kept-8'); // #008080
+      } else {
+        document.getElementById('btnConflictTealKeepAll').classList.add('active');
+        state.selectedColorIds.add('new-3');
+        state.selectedColorIds.add('new-4');
+        state.selectedColorIds.add('kept-7');
+        state.selectedColorIds.add('kept-8');
+      }
+      renderColorLists();
+      updateSelectedAndOrder();
+    }
+
+    function resolveConflictBlue(choice) {
+      document.querySelectorAll('#btnConflictBlueNew, #btnConflictBlueBoth').forEach(b => b.classList.remove('active'));
+      if (choice === 'new') {
+        document.getElementById('btnConflictBlueNew').classList.add('active');
+        state.selectedColorIds.add('new-1');    // #1F4E79
+        state.selectedColorIds.delete('kept-5'); // #004A99
+      } else {
+        document.getElementById('btnConflictBlueBoth').classList.add('active');
+        state.selectedColorIds.add('new-1');
+        state.selectedColorIds.add('kept-5');
+      }
+      renderColorLists();
+      updateSelectedAndOrder();
+    }
+
+    // 排序逻辑与规律排布
+    function changeOrderMode(mode) {
+      state.orderMode = mode;
+      document.querySelectorAll('.order-btn').forEach(b => b.classList.remove('active'));
+      if (mode === 'hue') {
+        document.getElementById('orderBtnHue').classList.add('active');
+        document.getElementById('orderExplainText').innerHTML = '<strong>规律说明（色相流转律）：</strong>按「紫蓝 ➔ 商务蓝 ➔ 蓝灰 ➔ 科技青绿 ➔ 沉稳墨绿 ➔ 勃艮第红 ➔ 炭黑/纯黑」的冷暖与色轮自然流转，层次分明舒适。';
+      } else if (mode === 'family') {
+        document.getElementById('orderBtnFamily').classList.add('active');
+        document.getElementById('orderExplainText').innerHTML = '<strong>规律说明（商务家族律）：</strong>按「正统商务蓝调族 ➔ 生态科技青绿族 ➔ 人文雅致族 ➔ 极简黑灰族」分门别类聚拢。';
+      } else if (mode === 'lightness') {
+        document.getElementById('orderBtnLightness').classList.add('active');
+        document.getElementById('orderExplainText').innerHTML = '<strong>规律说明（明暗梯度律）：</strong>从最深邃沉着色（纯黑/藏青/深蓝）向中高明度色平滑递进，呈现清晰明度阶梯。';
+      }
+      updateSelectedAndOrder();
+    }
+
+    // 获取当前排好序的颜色列表
+    function getSortedSelectedColors() {
+      const selected = ALL_COLORS.filter(c => state.selectedColorIds.has(c.id));
+
+      if (state.orderMode === 'hue') {
+        // 色相流转定义排序权重
+        const hueWeight = {
+          'violet': 10,
+          'blue': 20,
+          'slate': 30,
+          'teal': 40,
+          'green': 50,
+          'warm': 60,
+          'mono': 70
+        };
+        return selected.sort((a, b) => {
+          const wA = hueWeight[a.hueGroup] || 99;
+          const wB = hueWeight[b.hueGroup] || 99;
+          if (wA !== wB) return wA - wB;
+          return a.lightness - b.lightness;
+        });
+      } else if (state.orderMode === 'family') {
+        const familyWeight = {
+          'blue': 10,
+          'slate': 15,
+          'violet': 20,
+          'teal': 30,
+          'green': 35,
+          'warm': 40,
+          'mono': 50
+        };
+        return selected.sort((a, b) => (familyWeight[a.hueGroup] || 99) - (familyWeight[b.hueGroup] || 99));
+      } else if (state.orderMode === 'lightness') {
+        return selected.sort((a, b) => a.lightness - b.lightness);
+      }
+      return selected;
+    }
+
+    // 更新网格与代码
+    function updateSelectedAndOrder() {
+      const sortedColors = getSortedSelectedColors();
+
+      // 更新已选徽章
+      document.getElementById('selectedCountBadge').textContent = `已选 ${sortedColors.length} 色`;
+
+      // 更新网格指示行数 (5 列矩阵)
+      const rows = Math.ceil(sortedColors.length / 5);
+      document.getElementById('gridRowsIndicator').textContent = `${rows} 行 × 5 列 (${sortedColors.length} 色)`;
+
+      // 渲染 5 列网格圆点
+      const gridContainer = document.getElementById('previewSwatchGrid');
+      gridContainer.innerHTML = '';
+
+      sortedColors.forEach(c => {
+        const circle = document.createElement('div');
+        const isActive = state.currentActiveHex.toLowerCase() === c.hex.toLowerCase();
+        circle.className = `theme-swatch-circle ${isActive ? 'active' : ''}`;
+        circle.style.backgroundColor = c.hex;
+        circle.title = `${c.name} (${c.hex})\n${c.note}`;
+        circle.onclick = () => previewColor(c.hex);
+
+        if (isActive) {
+          circle.innerHTML = '<span class="check-icon">✓</span>';
+        }
+        gridContainer.appendChild(circle);
+      });
+
+      // 更新代码导出
+      updateExportCode(sortedColors);
+    }
+
+    // 预览特定颜色
+    function previewColor(hex) {
+      state.currentActiveHex = hex;
+      document.documentElement.style.setProperty('--active-theme-color', hex);
+
+      const foundColor = ALL_COLORS.find(c => c.hex.toLowerCase() === hex.toLowerCase());
+      document.getElementById('currentPillDot').style.backgroundColor = hex;
+      document.getElementById('currentThemeHex').textContent = hex;
+      document.getElementById('currentThemeName').textContent = foundColor ? `(${foundColor.name})` : '';
+
+      // 高亮列表项
+      document.querySelectorAll('.color-row-item').forEach(el => el.classList.remove('is-selected-for-preview'));
+      if (foundColor) {
+        const row = document.getElementById(`row-${foundColor.id}`);
+        if (row) row.classList.add('is-selected-for-preview');
+      }
+
+      // 重新绘制圆点选中状态
+      updateSelectedAndOrder();
+    }
+
+    // 更新输出代码
+    function updateExportCode(colors) {
+      const lines = colors.map(c => `  '${c.hex}', // ${c.name} (${c.note})`);
+      const codeStr = `// 经优化整理的主题色预设 (${colors.length} 色，5列规律排布)\nexport const THEME_COLORS = [\n${lines.join('\n')}\n] as const;`;
+      document.getElementById('codeExportPre').textContent = codeStr;
+      document.getElementById('codeLengthBadge').textContent = `${colors.length} items`;
+    }
+
+    // 复制配置
+    function copyConfigCode() {
+      const sortedColors = getSortedSelectedColors();
+      const lines = colorsToCode(sortedColors);
+      navigator.clipboard.writeText(lines).then(() => {
+        showToast('代码已成功复制到剪贴板！');
+      }).catch(() => {
+        showToast('复制失败，请手动在下方复制代码框内容');
+      });
+    }
+
+    function colorsToCode(colors) {
+      const hexList = colors.map(c => `  '${c.hex}', // ${c.name}`);
+      return `const THEME_COLORS = [\n${hexList.join('\n')}\n] as const`;
+    }
+
+    function applyAndNotify() {
+      const sortedColors = getSortedSelectedColors();
+      const code = colorsToCode(sortedColors);
+      navigator.clipboard.writeText(code);
+      showToast(`已生成 ${sortedColors.length} 色方案并复制！可随时告知助手替换代码。`);
+    }
+
+    // 模板切换
+    function setResumeTemplate(tplClass) {
+      state.currentTemplate = tplClass;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      if (tplClass === 'tpl-classic') document.getElementById('tplBtnClassic').classList.add('active');
+      if (tplClass === 'tpl-modern') document.getElementById('tplBtnModern').classList.add('active');
+      if (tplClass === 'tpl-business') document.getElementById('tplBtnBusiness').classList.add('active');
+
+      const sheet = document.getElementById('resumeSheet');
+      sheet.className = `resume-sheet ${tplClass}`;
+    }
+
+    // 缩放
+    function zoomResume(delta) {
+      state.currentZoom = Math.max(0.5, Math.min(1.5, state.currentZoom + delta));
+      document.getElementById('resumeSheet').style.transform = `scale(${state.currentZoom})`;
+      document.getElementById('resumeSheet').style.transformOrigin = 'top center';
+    }
+
+    function resetZoom() {
+      state.currentZoom = 1;
+      document.getElementById('resumeSheet').style.transform = 'scale(1)';
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastMsg');
+      document.getElementById('toastText').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2400);
+    }
+
+    // 启动
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
