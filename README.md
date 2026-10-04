@@ -1,158 +1,292 @@
-# 小简-MD2CV简历工作台
+<div align="center">
 
-[![GitHub tag](https://img.shields.io/github/v/tag/mikedoo/max-md2cv?label=%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC&sort=semver&cacheSeconds=300)](https://github.com/mikedoo/max-md2cv/tags)
-[![GitHub all releases](https://img.shields.io/github/downloads/mikedoo/max-md2cv/total?label=%E7%B4%AF%E8%AE%A1%E4%B8%8B%E8%BD%BD%E9%87%8F&cacheSeconds=300)](https://github.com/mikedoo/max-md2cv/releases)
+<img src="src/assets/logo.png" width="88" alt="小简 Logo" />
 
-Max-MD2CV（小简）是依托现代前端架构、Rust 桌面环境打造的纯本地桌面工具，作为轻量化、极速且极具设计感的**基于Markdown的简历编辑+PDF导出+管理工作台**，为求职者提供无缝的「所见即所得」简历编辑与排版体验。产品全程仅需编辑 Markdown 纯文本，无需耗费精力处理复杂排版调整；解决求职海投场景下，内容微调引发布局错位、简历副本杂乱、版本管理混乱的痛点，彻底消除格式焦虑，让求职者回归核心 —— 专注打磨自身真实经历与能力，而非钻研排版软件的使用技巧。
+# 小简 · Max-MD2CV
 
-## ✨ 核心特性
+**专注打磨简历内容，少为排版费心。**
 
-### 📝 大道至简，让注意力回归内容
-摒弃了预设固定填写模板，通过极其简单的 Markdown 文本标记，全程仅需编辑Markdown纯文本，无需耗费精力处理复杂排版调整；同时精准解决求职海投场景下，内容微调引发布局错位、简历副本杂乱、版本管理混乱的痛点，彻底消除格式焦虑，让求职者回归核心——专注打磨自身真实经历与能力，而非钻研排版软件的使用技巧，更无需被固化模板束缚。
+基于 Markdown 的简历工作台：实时预览、五款模板、智能一页，方便与 AI 协作，也方便管理多个岗位版本。
 
-### 👁️ 双屏互联，实时预览与自由编辑
-左侧是文本编辑区，右侧是实时渲染的 A4 纸面预览区，所见即所得，还可在模板的基础上对风格进行自定义，支持字体大小、行距和页边距的调整，精准实现页数控制，消除你的排版焦虑。
+[![GitHub release](https://img.shields.io/github/v/release/max-doo/max-md2cv?label=最新版本&cacheSeconds=300)](https://github.com/max-doo/max-md2cv/releases)
+[![GitHub downloads](https://img.shields.io/github/downloads/max-doo/max-md2cv/total?label=累计下载&cacheSeconds=300)](https://github.com/max-doo/max-md2cv/releases)
+[![MIT License](https://img.shields.io/badge/License-MIT-4c49cc)](LICENSE)
 
-### 🎯 智能一页，算法自适应单页排版
-专为“内容略微超出一页”的排版痛点打造。点击右下角「智能一页」按钮，系统通过分层二分算法自动探索最优参数组合：优先紧凑外间距与留白，适度微调行高与边距，并在守住 11px 正文字号可读性底线的前提下，将简历自适应压缩至单页排版；若内容确实严重超量，将自动呈现最紧凑排版并给出温馨提示。
+[在线体验](https://max-md2cv.vercel.app/) · [下载桌面版](https://github.com/max-doo/max-md2cv/releases) · [快速开始](#quick-start) · [查看模板](#templates) · [反馈问题](https://github.com/max-doo/max-md2cv/issues)
 
-### 📂 本地工作空间，从容管理海投版本
-专为高频投递场景设计了本地“工作空间”面板。在这里，你可以像管理项目文件一样管理你的简历库。基于一份基础简历模板，你可以轻松复制、一键重命名，快速衍生出针对不同公司、不同岗位的专属版本。一岗一历，井然有序。
+**[产品特点](#features) · [与 AI 协作](#ai-workflow) · [使用方式](#editions) · [常见问题](#faq) · [本地开发](#development) · [参与贡献](#contributing) · [许可证](#license)**
 
-### 📄 告别错位，稳定的 PDF 导出交付
-拒绝“排版变形”带来的挫败感。小简的导出功能致力于做到“屏幕上看到什么，导出的文件就是什么”。它能忠实地输出高保真、文本可复制的 PDF 文件，确保 HR 或面试官在打开简历的那一刻，看到的就是你精心打磨的最终形态。
+</div>
 
-### 🎨 模板臻选，内置五款精心设计样式
-*   **📐 稳重商务 (Business Block)**：默认模板。深蓝色块、矩形栏目标题、信息密度高，视觉秩序强，偏传统企业与正式商务感。
-*   **⚡ 清雅简约 (Modern)**：浅紫灰底、留白更柔和，整体克制、干净，排版轻盈文雅，兼顾屏幕阅读与打印输出。
-*   **🖋️ 经典极简 (Classic)**：纯黑白、依靠字体层级和横线建立结构，没有装饰性元素，最接近经典纸质简历，适配学术、法律、金融及严肃行业投递。
-*   **🏆 轻盈现代 (Business)**：圆角胶囊标题、图标、细蓝线，视觉更年轻、更有产品感，也更偏互联网与新锐岗位风格。
-*   **🏛️ 稳健政企 (Slant Badge)**：深蓝右斜切梯形标题与加粗通栏底线，搭配左对齐规整文本信息栏，稳健端庄，适配政企、事业单位、高校及严肃正式岗位。
+![小简工作台：左侧编辑 Markdown，右侧实时预览简历](doc/images/workbench.png)
 
-## 设计哲学
+求职时，一份简历往往需要反复修改：补充一段经历、突出某个岗位需要的能力，再为下一次投递保存一个版本。小简将内容和样式分开，让你用清晰的文本维护经历，用模板完成排版，在同一个工作台里查看效果、调整版式并导出 PDF。
 
-本项目的设计语言被称为 ：**柔和极简美学 (Soft Minimalist)**：
-- **"No-Line" Rule (无边框法则)**：彻底摒弃 Web 时代遗留的 1px 机械边框界线，利用 `surface`, `surface-container-low` 等细腻的背景色带层级和悬浮卡片来划分空间。
-- **Ambient Shadows (环境阴影)**：为卡片或互动元素引入带有主色调 (`#4c49cc`) 漫反射的宽大而柔和的阴影，创造更真实的数字物理空间。
-- **Modern Typography (现代版式)**：引入 `Manrope` 几何无衬线字体，字间距略宽，兼具专业性与可读性。
+<a id="features"></a>
 
-## 🛠️ 技术栈
+## ✨ 产品特点
 
-*   **框架**：[Tauri v2](https://v2.tauri.app/) (为底层构建注入原生性能与极小的体积)
-*   **前端**：[Vue 3](https://vuejs.org/) + [Vite](https://vite.dev/) + TS + Vite Auto Import
-*   **状态管理**：Pinia
-*   **核心功能组件**：
-    *   **代码编辑器**：[CodeMirror 6](https://codemirror.net/) (带 Markdown 语法高亮)
-    *   **转换器**：marked
-    *   **PDF 排版预览**：[Paged.js](https://pagedjs.org/) (W3C 打印/排版规范 Polyfill)
-*   **UI 与样式**：[Tailwind CSS v4](https://tailwindcss.com/docs/v4-beta) + [Element Plus](https://element-plus.org/)
-*   **系统调用 (Rust)**：使用 Tauri 多插件体系 (`fs`, `dialog`, `persisted-scope`, `opener`) 确保文件系统安全访问。后台打印调用 `tokio` 异步执行 `std::process::Command`。
+| 你想完成的事 | 小简如何帮你 |
+| --- | --- |
+| 改内容时，马上看到效果 | 左侧 Markdown 编辑，右侧实时 A4 分页预览，随时检查内容长度和页面布局。 |
+| 为不同岗位准备不同简历 | 桌面版支持本地工作空间、复制与重命名，从基础简历派生岗位版本，一岗一历。 |
+| 让版式符合自己的习惯 | 调整字体、字号、行高、间距、页边距和主题色；可调项目随模板提供。 |
+| 处理第二页多出的几行 | 点击「智能一页」，自动尝试更紧凑的排版，减少反复手调参数的时间。 |
+| 选一套合适的简历风格 | 内置五款模板，同一份内容可以切换不同风格，无需重新填写。 |
+| 和 AI 一起润色、压缩经历 | 用 Markdown 传递结构化内容，配合内置格式提示词，修改后直接粘回编辑器。 |
+| 交付一份可阅读的简历 | 导出文本可复制的 PDF 或高清图片（PNG），预览与导出共用分页和样式规则。 |
 
-## 📂 项目结构
+### 内容先行，格式交给模板
+
+姓名、教育背景、经历和技能通过标题与列表组织。你只需维护一份 Markdown 文本，就能切换模板、继续修改内容，也能把某一段经历单独交给 AI 优化。即使不熟悉 Markdown，也可以从内置示例开始，借助编辑器工具栏和语法说明逐步上手。
+
+### 多个岗位版本，放进一个工作空间
+
+桌面版将本地文件夹作为简历工作空间。保留一份基础简历，复制后针对岗位调整经历顺序、关键词和成果表达，再用清楚的名字保存，便于持续维护和查找。
 
 ```text
-max-md2cv/
-├── apps/
-│   ├── cli/                         # 独立 Markdown 简历命令行工具 (@max-md2cv/cli)
-│   └── web/                         # Web Playground 子应用
-├── packages/
-│   ├── resume-core/                # Web / Desktop / CLI 共享的核心解析与样式库
-│   └── resume-renderer/            # 独立浏览器端简历渲染器 Host
-├── skills/
-│   └── md2cv/                       # 面向 AI 智能体的 Agent Skill 工具包
-├── scripts/                         # CLI 集成、渲染器回归与安装包验证测试脚本
-├── src-tauri/                         # Rust 后端与 Tauri 桌面壳
-│   ├── src/                           # Tauri 命令与应用入口
-│   │   ├── lib.rs
-│   │   └── main.rs
-│   ├── capabilities/                 # Tauri 权限声明
-│   ├── gen/                          # Tauri 生成的 schema 文件
-│   ├── icons/                        # 应用图标资源
-│   ├── templates/                    # 安装器模板
-│   ├── build.rs                      # Rust 构建脚本
-│   ├── Cargo.toml                    # Rust 包配置
-│   └── tauri.conf.json               # Tauri 窗口与打包配置
-├── src/                               # Vue 3 前端源码 (Desktop)
-│   ├── assets/                        # 样式、字体与内置模板资源
-│   │   ├── fonts/
-│   │   ├── templates/
-│   │   └── tailwind.css
-│   ├── components/                    # 页面主组件与分层子组件
-│   │   ├── editor/
-│   │   ├── preview/
-│   │   ├── shared/
-│   │   ├── sidebar/
-│   │   ├── EditorPane.vue
-│   │   ├── PreviewPane.vue
-│   │   ├── Sidebar.vue
-│   │   └── TopNavBar.vue
-│   ├── source/                        # 前端静态图片资源
-│   ├── stores/                        # Pinia 状态管理
-│   │   └── resume.ts
-│   ├── utils/                         # Markdown、分页、导出相关工具
-│   ├── App.vue
-│   ├── main.ts
-│   └── vite-env.d.ts
-├── public/                            # Vite 公共静态资源
-├── design/                            # 设计稿与设计系统文档
-├── doc/                               # 项目说明与开发/模板文档
-├── index.html                         # 应用 HTML 入口
-├── package.json                       # Node 依赖与脚本
-├── tsconfig.json                      # TypeScript 配置
-├── vite.config.ts                     # Vite 配置
-└── README.md                          # 项目文档
+我的简历工作空间/
+├── 基础简历.md
+├── 品牌营销.md
+└── 内容运营.md
 ```
 
-## 🚀 启动指引
+### 智能一页，减少排版试错
 
-请确保您的系统已安装：[Node.js (>= 18)](https://nodejs.org/) 和 [Rust](https://www.rust-lang.org/tools/install)。
+当简历只是略微超出一页时，「智能一页」会尝试调整留白、间距、行高、页边距和字号，在可读性约束下寻找单页方案。它调整的是版式，简历正文由你决定；如果内容过多，仍可能保留多页并提示你进一步精简。
 
-### 1. 安装前端依赖
-```bash
+<a id="templates"></a>
+
+## 🎨 五款模板，同一份内容的不同表达
+
+所有内置模板均随项目免费提供。先选择接近投递场景的风格，再按需要微调颜色、字号和间距。
+
+| 模板 | 视觉特点 | 可参考的使用场景 |
+| --- | --- | --- |
+| **稳重商务** · 默认 | 深蓝色块、矩形栏目标题，结构鲜明、信息紧凑 | 传统企业、商务及正式岗位 |
+| **轻盈现代** | 圆角胶囊标题、图标与细蓝线 | 互联网、产品、运营等岗位 |
+| **清雅简约** | 浅紫灰底、柔和留白，整体干净轻盈 | 通用求职、希望版面更舒展的场景 |
+| **经典极简** | 黑白配色，以文字层级和横线组织内容 | 学术、金融、法律等偏正式场景 |
+| **稳健政企** | 深蓝梯形切角标题、通栏底线，信息排列规整 | 政企、事业单位、高校等正式场景 |
+
+下面展示同一份演示简历在五款模板中的效果，点击图片可查看完整尺寸。
+
+| 稳重商务 | 轻盈现代 |
+| :---: | :---: |
+| [![稳重商务模板预览](doc/images/template-business-block.png)](doc/images/template-business-block.png) | [![轻盈现代模板预览](doc/images/template-business.png)](doc/images/template-business.png) |
+
+| 清雅简约 | 经典极简 | 稳健政企 |
+| :---: | :---: | :---: |
+| [![清雅简约模板预览](doc/images/template-modern.png)](doc/images/template-modern.png) | [![经典极简模板预览](doc/images/template-classic.png)](doc/images/template-classic.png) | [![稳健政企模板预览](doc/images/template-slant-badge.png)](doc/images/template-slant-badge.png) |
+
+<a id="quick-start"></a>
+
+## 🚀 快速开始
+
+### 使用桌面版
+
+1. 在 [Releases](https://github.com/max-doo/max-md2cv/releases) 下载 Windows 安装包并安装。
+2. 打开小简，选择一个本地文件夹作为简历工作空间，从示例开始编辑或打开已有 Markdown 简历。
+3. 左侧修改内容，右侧查看预览；选择模板，按需调整字号、间距和主题色。
+4. 内容略超一页时，可以尝试「智能一页」；投递其他岗位时，复制并重命名简历后再修改。
+5. 检查最终分页效果，点击「导出为 PDF」或「导出图片」。桌面版导出需要系统中可用的 Edge 或 Chrome 等 Chromium 内核浏览器。侧边栏「导出」标签页可统一管理所有生成的 PDF 与图片文件。
+
+### 从这份 Markdown 开始
+
+以下为虚构的精简示例，可直接复制到编辑器。更完整的内容见 [内置演示简历](packages/resume-core/src/assets/templates/default-resume.md)。
+
+```markdown
+# 李小简
+
+**求职意向：品牌营销 / 内容运营**
+
+手机号码：13812345678 | 电子邮箱：lixiaojian@example.com | 现居地：上海 | 作品集：https://example.com
+
+## 个人优势
+
+熟悉内容策划、社交媒体运营与数据复盘，能够围绕用户需求组织选题和传播内容。
+
+## 教育背景
+
+### 本科 - 广告学 | 某综合类高校 [2020.09 - 2024.06]
+- 核心课程：品牌管理、消费者行为、数字营销
+
+## 实习经历
+
+### 内容运营实习生 | 某互联网内容平台 [2025.07 - 2025.11]
+- **内容策划：** 围绕用户兴趣制定周度选题计划，累计产出内容 30 篇。
+- **数据复盘：** 跟踪阅读量、收藏率和互动率，持续调整选题方向。
+
+## 专业技能
+
+**内容与营销：** 文案撰写、内容运营、用户调研、活动策划
+
+**工具：** Excel、Figma、剪映
+```
+
+`#` 表示姓名，`##` 划分模块，`###` 组织每段经历，`-` 展开职责与成果。经历标题中的日期请使用英文半角方括号，例如 `[2025.07 - 2025.11]`，模板会将其作为时间信息排版。标题信息按书写顺序分列，三项信息分别居左、居中、居右。例如 `### [2024.09 - 2027.06] 硕士 - 新闻与传播 | 某综合类高校` 会将日期放在左侧、学位与专业放在中间、学校放在右侧。`|` 用于分列，方括号日期旁的 `|` 可省略，排版后列间使用留白。需要手动分页时，可单独成行输入 `\page`。
+
+<a id="ai-workflow"></a>
+
+## 🤖 和 AI 一起改简历
+
+Markdown 让简历成为易于复制、比较和修改的结构化文本。你可以把整份简历交给 AI 整理格式，也可以只修改一段经历，再粘回小简查看效果。
+
+1. 打开编辑器工具栏中的语法说明，复制内置 AI 提示词。
+2. 将提示词与原始经历交给你使用的 AI 工具，说明目标岗位和修改要求。
+3. 核对生成内容中的事实、数据和日期，将 Markdown 正文粘回小简。
+4. 查看实时预览，选择模板并调整版式，最后导出 PDF。
+
+例如，你可以提出这样的修改要求：
+
+> 请保留事实，将这段经历压缩为两条列表；突出与内容运营岗位相关的工作和成果，沿用现有 Markdown 层级与方括号日期格式。
+
+当前产品通过格式提示词和 Markdown 编辑支持这一协作流程，AI 内容生成在你选择的外部工具中完成。需要让 AI 智能体调用渲染工具时，仓库另提供 [md2cv Agent Skill](skills/md2cv/SKILL.md)。
+
+<a id="editions"></a>
+
+## 🧭 选择适合你的使用方式
+
+| 使用方式 | 适合什么需求 | 内容存储与输出 |
+| --- | --- | --- |
+| **桌面版** | 长期维护简历，为多个岗位准备不同版本 | 本地文件夹工作空间，管理 Markdown 与 PDF 文件，支持 PDF 导出 |
+| **[Web Playground](https://max-md2cv.vercel.app/)** | 在浏览器中体验编辑、模板和版式调整 | 当前草稿保存在浏览器本地，支持 Markdown 导入与内容复制，使用浏览器打印另存为 PDF |
+| **CLI** | 在终端或 AI 智能体流程中生成简历文件 | 读取 Markdown，输出 PDF、逐页 PNG，并可返回 JSON 结果 |
+
+无需安装，打开 [Web Playground](https://max-md2cv.vercel.app/) 即可在线体验。Web 的本地运行方法见 [本地开发](#development)。它提供单份草稿体验；需要文件夹工作空间与多版本管理时，使用桌面版。
+
+### CLI 与 Agent Skill
+
+CLI 使用系统中的 Edge、Chrome 或 Chromium 渲染，与桌面版和 Web 共用核心模板与排版规则。以下命令从仓库源码构建并安装 CLI，需要 Node.js 20+ 和可用的浏览器：
+
+```powershell
+npm install
+npm run build:cli
+npm install --global ./apps/cli
+
+md2cv doctor
+md2cv templates list
+md2cv render ./resume.md --template classic --output-dir ./output
+```
+
+默认生成 PDF 和每页一张 PNG。需要机器可读结果时使用 `--json`；浏览器不在常见安装路径时，可通过 `--browser-path` 或 `MD2CV_BROWSER_PATH` 指定。更多说明见 [CLI README](apps/cli/README.md)，智能体使用规则见 [Agent Skill](skills/md2cv/SKILL.md)。
+
+<a id="faq"></a>
+
+## 💬 常见问题
+
+### 不会 Markdown，可以使用吗？
+
+可以从内置示例开始修改。简历主要使用标题、加粗和列表，编辑器工具栏与语法说明提供常用操作，也可以使用内置提示词让 AI 将草稿整理为所需格式。
+
+### 智能一页一定能压到一页吗？
+
+它更适合内容略微超出一页的情况。经历较多时，建议精简与岗位关联较弱的内容，或保留清晰的多页排版；自动调整完成后仍应检查阅读效果。
+
+### 简历保存在哪里？
+
+桌面版的简历文件保存在你选择的本地工作空间。Web 草稿保存在当前浏览器的本地存储中，清理站点数据会移除草稿，建议复制 Markdown 内容并保存到本地文件留存。使用外部 AI 工具时，分享哪些内容由你自行选择。
+
+### PDF 导出失败怎么办？
+
+桌面版先检查 Edge 或 Chrome 等浏览器是否可用，并等待预览完成后重试。Web 版需要允许打印窗口弹出，在浏览器打印界面选择「另存为 PDF」。CLI 可以先运行 `md2cv doctor` 检查运行环境。
+
+### 可以制作自己的模板吗？
+
+桌面版支持用户模板与样式覆盖。模板定义、字段和加载规则见 [模板创建指南](doc/模板创建指南.md)，可从内置模板出发制作自己的风格。
+
+<a id="development"></a>
+
+## 🛠️ 本地开发
+
+本项目采用 npm workspaces，包含 Tauri 桌面应用、Web Playground、独立 CLI，以及共享的简历核心与浏览器渲染器。
+
+### 环境准备
+
+- **Web / CLI / 前端开发：** Node.js 20+ 与 npm。
+- **桌面开发：** 在上述环境基础上安装 Rust；Windows 还需要 MSVC 构建工具与 WebView2 运行环境。
+- **桌面 PDF 导出 / CLI 渲染：** 可用的 Edge、Chrome 或 Chromium 浏览器。
+
+### 获取源码并运行
+
+```powershell
+git clone https://github.com/max-doo/max-md2cv.git
+cd max-md2cv
 npm install
 ```
 
-### 2. 启动桌面端开发模式 (Tauri Dev)
-这将会同时启动 Vite 热更新服务器，并利用 Cargo 编译 Rust 桌面壳。
-```bash
-npm run tauri dev
+| 目标 | 命令 | 说明 |
+| --- | --- | --- |
+| 桌面开发 | `npm run tauri dev` | 启动前端开发服务并编译 Tauri 桌面应用 |
+| Web 开发 | `npm run dev:web` | 默认访问 `http://localhost:4173` |
+| 前端构建 | `npm run build` | 执行桌面前端类型检查与构建 |
+| Web 构建 | `npm run build:web` | 执行 Web 类型检查与构建 |
+| Web 构建预览 | `npm run preview:web` | 本地预览已构建的 Web 应用 |
+| CLI 构建 | `npm run build:cli` | 构建命令行入口、渲染器及运行资源 |
+| 桌面安装包 | `npm run tauri build` | 输出位于 `src-tauri/target/release/bundle` |
+
+桌面打包的详细步骤见 [打包指南](doc/打包指南.md)。当前仓库的桌面打包目标为 Windows NSIS 安装包。
+
+### 项目结构
+
+```text
+max-md2cv/
+├── src/                         # 桌面 Vue 前端，部分组件供 Web 复用
+│   ├── components/              # 编辑器、预览、侧栏及共享组件
+│   ├── stores/resume/           # 桌面 Pinia 状态与工作空间逻辑
+│   ├── assets/                  # 主题样式、字体与 Logo
+│   └── utils/                   # 分页、导出及编辑辅助工具
+├── src-tauri/                   # Rust 后端、文件操作与桌面打包
+├── apps/
+│   ├── web/                     # Web Playground 与浏览器草稿状态
+│   └── cli/                     # 独立 md2cv 命令行工具
+├── packages/
+│   ├── resume-core/             # 共享解析、模板定义、样式与工具
+│   │   └── src/assets/templates/ # 五款内置模板与演示简历
+│   └── resume-renderer/         # 共享浏览器端渲染器
+├── skills/md2cv/                # 简历渲染 Agent Skill
+├── scripts/                     # CLI 集成、渲染及打包验证
+├── doc/                         # 模板、打包与开发文档
+├── design/                      # 设计稿与设计系统资料
+└── LICENSE                      # MIT 许可证
 ```
 
-### 3. 启动 Web Playground 开发服务器
-如果只需要调试 Web 端，不需要启动 Rust/Tauri，直接运行：
-```bash
-npm run dev:web
-```
+### 技术与设计
 
-默认会启动 `apps/web` 下的 Vite 开发服务器，访问终端输出的本地地址即可，当前固定端口为 `4173`。
+界面采用柔和极简的设计方向，以层次、留白和柔和阴影组织编辑空间。前端使用 **Vue 3、TypeScript、Vite、Pinia 和 Tailwind CSS v4**，配合 CodeMirror 6 提供 Markdown 编辑；简历解析使用 marked，分页使用 Paged.js。桌面应用由 **Tauri v2 与 Rust** 提供文件操作和系统集成，CLI 通过 Playwright Core 调用系统浏览器。
 
-Web 端常用命令：
-```bash
-npm run build:web
-npm run preview:web
-```
+<a id="contributing"></a>
 
-### 4. CLI 命令行工具与测试
-CLI 工具支持在无桌面环境下将 Markdown 简历批量渲染为 PDF、按页 PNG 和 JSON 元数据，并支持与 Agent Skill 联动。
+## 🤝 参与贡献
 
-常用 CLI 脚本：
-```bash
-npm run build:cli          # 构建 CLI、内置渲染器及静态资源
-npm run test:cli           # 运行 CLI 单元测试
-npm run test:cli:renderer  # 运行渲染器无头浏览器核心回归测试
-npm run test:cli:e2e       # 运行 CLI 端到端渲染测试
-npm run test:cli:pack      # 运行 CLI npm 打包与全局运行校验
-```
+欢迎提交使用反馈、模板改进、文档修正和代码贡献。
 
-### 5. 构建桌面端生产包
-当应用开发完毕后，可执行打包命令生成对应平台的独立安装包：
-```bash
-npm run tauri build
-```
-*(构建出的文件将位于 `src-tauri/target/release/bundle`)*
+- **反馈问题：** 在 [Issues](https://github.com/max-doo/max-md2cv/issues) 描述使用端、版本、系统或浏览器、复现步骤，以及预期和实际结果。排版问题可附脱敏后的最小 Markdown 示例和截图。
+- **提出功能建议：** 说明你想完成的任务、遇到的阻碍，以及现有功能为何不能满足需求。
+- **提交代码：** Fork 仓库并创建分支，保持修改范围清晰，在 Pull Request 中说明问题、改动和验证结果。较大的功能或架构调整建议先通过 Issue 讨论。
+- **贡献模板：** 参考 [模板创建指南](doc/模板创建指南.md)，同时检查预览、分页与 PDF 导出效果。
 
-## 🤝 协作与修改建议
+开发前请阅读 [AGENTS.md](AGENTS.md)。共享组件修改会同时影响桌面版和 Web；验证应覆盖受影响的使用端。
 
-由于我们在本项目中混用了 Tailwind CSS v4 与 Element Plus，如果要进行二次开发：
-- 建议遵循 `src/assets/tailwind.css` 中的色彩变量 (如 `.bg-surface`, `text-on-surface-variant`)。
-- 只有在极为复杂的交互组件（如 Dialog、Notification 弹出层）才应去调用 Element Plus 及其专属变量，以防破坏全局的 The Digital Curator 设计美感。
+按修改范围选择已有检查：
+
+| 检查 | 命令 |
+| --- | --- |
+| 桌面前端类型检查与构建 | `npm run build` |
+| Web 类型检查与构建 | `npm run build:web` |
+| CLI 单元测试 | `npm run test:cli` |
+| 共享渲染器回归 | `npm run test:cli:renderer` |
+| CLI 端到端渲染 | `npm run test:cli:e2e` |
+| CLI 打包与安装验证 | `npm run test:cli:pack` |
+
+渲染相关检查需要可用的系统浏览器。具体测试准备和命令以仓库现有脚本为准。
+
+<a id="license"></a>
+
+## 📄 许可证与致谢
+
+本项目采用 [MIT License](LICENSE)，允许使用、修改和分发，具体权利与条件以许可证正文为准。
+
+感谢 Tauri、Vue、Vite、Pinia、CodeMirror、marked、Paged.js、Tailwind CSS、Element Plus 和 Playwright 等开源项目，以及提交反馈与贡献的每一位参与者。
+
+如果小简帮你减少了修改简历的时间，欢迎 [Star 项目](https://github.com/max-doo/max-md2cv)，或分享你的使用建议。
