@@ -19,6 +19,10 @@ export interface FileItem {
   path: string;
 }
 
+export interface ExportFileItem extends FileItem {
+  fileType: "pdf" | "image";
+}
+
 export interface PhotoItem extends FileItem {
   isIdPhoto: boolean;
 }

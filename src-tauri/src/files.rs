@@ -18,6 +18,14 @@ pub struct ImageEntry {
     pub is_id_photo: bool,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExportFileEntry {
+    pub name: String,
+    pub path: String,
+    pub file_type: String,
+}
+
 const IMAGE_EXTENSIONS: [&str; 6] = ["png", "jpg", "jpeg", "webp", "bmp", "gif"];
 
 fn list_files_by_extension(dir_path: &str, extension: &str) -> Result<Vec<FileEntry>, String> {
@@ -341,4 +349,106 @@ pub async fn open_directory(app: tauri::AppHandle, path: String) -> Result<(), S
     app.opener()
         .open_path(&path, None::<&str>)
         .map_err(|e| format!("Failed to open directory: {}", e))
+}
+
+#[tauri::command]
+pub async fn list_export_files(dir_path: String) -> Result<Vec<ExportFileEntry>, String> {
+    let mut files = Vec::new();
+    let entries = fs::read_dir(dir_path).map_err(|e| e.to_string())?;
+
+    for entry in entries.flatten() {
+        if let Ok(file_type) = entry.file_type() {
+            if !file_type.is_file() {
+                continue;
+            }
+
+            let path = entry.path();
+            let name = entry.file_name().to_string_lossy().to_string();
+
+            let extension = path
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .unwrap_or_default();
+
+            if extension.eq_ignore_ascii_case("pdf") {
+                files.push(ExportFileEntry {
+                    name,
+                    path: path.to_string_lossy().to_string(),
+                    file_type: "pdf".to_string(),
+                });
+            } else if is_image_extension(extension) && !is_id_photo_name(&name) {
+                files.push(ExportFileEntry {
+                    name,
+                    path: path.to_string_lossy().to_string(),
+                    file_type: "image".to_string(),
+                });
+            }
+        }
+    }
+
+    files.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    Ok(files)
+}
+
+#[tauri::command]
+pub async fn open_exported_file(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    let file_path = Path::new(&path);
+
+    if !file_path.exists() {
+        return Err("文件不存在".into());
+    }
+
+    let is_valid = file_path
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.eq_ignore_ascii_case("pdf") || is_image_extension(ext))
+        .unwrap_or(false);
+
+    if !is_valid {
+        return Err("仅支持打开 PDF 或图片文件".into());
+    }
+
+    app.opener()
+        .open_path(&path, None::<&str>)
+        .map_err(|e| format!("打开文件失败: {}", e))
+}
+
+#[tauri::command]
+pub async fn rename_export_file(old_path: String, new_path: String) -> Result<(), String> {
+    let old_file = Path::new(&old_path);
+    let new_file = Path::new(&new_path);
+
+    let old_ext = old_file.extension().and_then(|ext| ext.to_str()).unwrap_or_default();
+    let new_ext = new_file.extension().and_then(|ext| ext.to_str()).unwrap_or_default();
+
+    if !old_ext.eq_ignore_ascii_case(new_ext) {
+        return Err("文件扩展名必须保持一致".into());
+    }
+
+    let is_valid = old_ext.eq_ignore_ascii_case("pdf") || is_image_extension(old_ext);
+    if !is_valid {
+        return Err("仅支持重命名 PDF 或图片文件".into());
+    }
+
+    fs::rename(old_path, new_path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn duplicate_export_file(path: String, new_path: String) -> Result<(), String> {
+    let old_file = Path::new(&path);
+    let new_file = Path::new(&new_path);
+
+    let old_ext = old_file.extension().and_then(|ext| ext.to_str()).unwrap_or_default();
+    let new_ext = new_file.extension().and_then(|ext| ext.to_str()).unwrap_or_default();
+
+    if !old_ext.eq_ignore_ascii_case(new_ext) {
+        return Err("文件扩展名必须保持一致".into());
+    }
+
+    let is_valid = old_ext.eq_ignore_ascii_case("pdf") || is_image_extension(old_ext);
+    if !is_valid {
+        return Err("仅支持复制 PDF 或图片文件".into());
+    }
+
+    fs::copy(path, new_path).map_err(|e| e.to_string()).map(|_| ())
 }

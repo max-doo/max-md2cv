@@ -3,11 +3,12 @@ mod files;
 mod templates;
 mod workspace;
 
-use export::export_pdf_command;
+use export::{export_image_command, export_pdf_command};
 use files::{
-    delete_resume, duplicate_pdf, duplicate_resume, import_id_photo, list_images, list_pdfs,
-    list_resumes, open_directory, open_pdf, path_exists, read_image_as_data_url, read_resume,
-    rename_pdf, rename_resume, write_resume,
+    delete_resume, duplicate_export_file, duplicate_pdf, duplicate_resume, import_id_photo,
+    list_export_files, list_images, list_pdfs, list_resumes, open_directory, open_exported_file,
+    open_pdf, path_exists, read_image_as_data_url, read_resume, rename_export_file, rename_pdf,
+    rename_resume, write_resume,
 };
 use templates::{list_templates, save_template_package};
 use workspace::{
@@ -26,10 +27,12 @@ pub fn run() {
         .manage(WorkspaceWatchState::default())
         .invoke_handler(tauri::generate_handler![
             export_pdf_command,
+            export_image_command,
             list_templates,
             save_template_package,
             list_resumes,
             list_pdfs,
+            list_export_files,
             list_images,
             read_image_as_data_url,
             import_id_photo,
@@ -41,9 +44,12 @@ pub fn run() {
             delete_resume,
             rename_resume,
             rename_pdf,
+            rename_export_file,
             duplicate_resume,
             duplicate_pdf,
+            duplicate_export_file,
             open_pdf,
+            open_exported_file,
             open_directory,
             set_workspace_watch
         ])

@@ -3,6 +3,7 @@ import type { ComputedRef, Ref } from "vue";
 import type {
   ActiveFileStatus,
   EditorJumpRequest,
+  ExportFileItem,
   FileItem,
   PhotoItem,
   ResumeRenderProfile,
@@ -24,6 +25,7 @@ export interface ResumeStoreState {
   availableTemplates: Ref<ResumeTemplate[]>;
   activeTemplate: Ref<string>;
   isExporting: Ref<boolean>;
+  isExportingImage: Ref<boolean>;
   isPreviewRendering: Ref<boolean>;
   isPreviewReady: Ref<boolean>;
   templatesLoaded: Ref<boolean>;
@@ -33,6 +35,7 @@ export interface ResumeStoreState {
   workspacePath: Ref<string | null>;
   fileList: Ref<FileItem[]>;
   pdfFileList: Ref<FileItem[]>;
+  exportFileList: Ref<ExportFileItem[]>;
   photoFileList: Ref<PhotoItem[]>;
   activeFilePath: Ref<string | null>;
   activeFileStatus: Ref<ActiveFileStatus>;

@@ -243,3 +243,104 @@ pub async fn export_pdf_command(html_content: String, output_path: String) -> Re
     cleanup_export_session(&session_paths);
     export_result
 }
+
+#[tauri::command]
+pub async fn export_image_command(
+    html_content: String,
+    output_path: String,
+    page_count: u32,
+) -> Result<(), String> {
+    use std::fs::File;
+    use std::io::Write;
+    use std::process::Command;
+
+    let session_paths = create_export_session_paths()?;
+    let out_path = Path::new(&output_path);
+
+    if out_path.exists() {
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(out_path)
+            .map_err(|e| {
+                if cfg!(target_os = "windows") && e.kind() == std::io::ErrorKind::PermissionDenied {
+                    "无法覆盖导出文件。请检查该图片是否已被其他程序打开锁定，关闭后再试。".to_string()
+                } else {
+                    format!("无法写入: {}", e)
+                }
+            })?;
+    }
+
+    let export_result = (|| -> Result<(), String> {
+        let mut file = File::create(&session_paths.html_path)
+            .map_err(|e| format!("无法创建导出临时 HTML: {}", e))?;
+        file.write_all(html_content.as_bytes())
+            .map_err(|e| format!("无法写入导出临时 HTML: {}", e))?;
+        file.sync_all()
+            .map_err(|e| format!("无法刷新导出临时 HTML: {}", e))?;
+        drop(file);
+
+        let browser_path = find_browser()?;
+        let base_args = build_browser_base_args(&session_paths.profile_dir);
+
+        let preflight_output = {
+            let mut args = base_args.clone();
+            args.push(OsString::from("--dump-dom"));
+            args.push(session_paths.html_path.clone().into_os_string());
+
+            Command::new(&browser_path)
+                .args(&args)
+                .output()
+                .map_err(|e| format!("浏览器预检启动失败 ({}): {}", browser_path, e))?
+        };
+
+        if !preflight_output.status.success() {
+            return Err(format!(
+                "浏览器预检失败: {}",
+                summarize_browser_stderr(&preflight_output.stderr)
+            ));
+        }
+
+        let preflight_dom = String::from_utf8_lossy(&preflight_output.stdout);
+        if !preflight_dom.contains(EXPORT_DOCUMENT_MARKER) {
+            return Err(format!(
+                "浏览器未能正确加载导出页面，已中止导出。预检输出未找到导出标记。stderr: {}",
+                summarize_browser_stderr(&preflight_output.stderr)
+            ));
+        }
+
+        let page_num = page_count.max(1);
+        let height = 1123 * page_num;
+
+        let screenshot_output = {
+            let mut args = base_args;
+            args.push(OsString::from("--force-device-scale-factor=2"));
+            args.push(OsString::from(format!("--window-size=794,{}", height)));
+            args.push(OsString::from(format!("--screenshot={}", output_path)));
+            args.push(session_paths.html_path.clone().into_os_string());
+
+            Command::new(&browser_path)
+                .args(&args)
+                .output()
+                .map_err(|e| format!("浏览器启动失败 ({}): {}", browser_path, e))?
+        };
+
+        if !screenshot_output.status.success() {
+            return Err(format!(
+                "浏览器导出图片错误: {}",
+                summarize_browser_stderr(&screenshot_output.stderr)
+            ));
+        }
+
+        let img_metadata = fs::metadata(out_path)
+            .map_err(|e| format!("浏览器导出完成，但未找到图片文件: {}", e))?;
+        if img_metadata.len() == 0 {
+            return Err("浏览器导出完成，但生成的图片文件为空。".into());
+        }
+
+        Ok(())
+    })();
+
+    cleanup_export_session(&session_paths);
+    export_result
+}
+

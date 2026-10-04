@@ -23,6 +23,10 @@ const currentFileStatusLabel = computed(() => {
 const handleExport = async () => {
   await store.exportCurrentPdf()
 }
+
+const handleExportImage = async () => {
+  await store.exportCurrentImage()
+}
 </script>
 
 <template>
@@ -59,15 +63,25 @@ const handleExport = async () => {
         </div>
       </div>
 
-      <div class="flex shrink-0 items-center gap-4">
+      <div class="flex shrink-0 items-center gap-3">
         <button
           @click="handleExport"
           :disabled="store.isExporting || store.isPreviewRendering || !store.isPreviewReady"
-          class="btn-primary shrink-0"
+          class="btn-primary shrink-0 cursor-pointer"
         >
-          <span v-if="store.isExporting" class="material-symbols-outlined animate-spin text-base">refresh</span>
+          <span v-if="store.isExporting && !store.isExportingImage" class="material-symbols-outlined animate-spin text-base">refresh</span>
           <span v-else class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">download</span>
           <span>导出为 PDF</span>
+        </button>
+
+        <button
+          @click="handleExportImage"
+          :disabled="store.isExporting || store.isPreviewRendering || !store.isPreviewReady"
+          class="btn-secondary shrink-0 cursor-pointer"
+        >
+          <span v-if="store.isExportingImage" class="material-symbols-outlined animate-spin text-base">refresh</span>
+          <span v-else class="material-symbols-outlined text-base">image</span>
+          <span>导出图片</span>
         </button>
       </div>
     </div>

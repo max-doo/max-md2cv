@@ -113,7 +113,7 @@ const photoAdjustments = computed<PhotoAdjustments>(() =>
 )
 
 const PHOTO_SLIDERS = [
-  { key: 'photoSize', label: '大小', min: 50, max: 112, step: 1, unit: '%' },
+  { key: 'photoSize', label: '大小', min: 75, max: 100, step: 1, unit: '%' },
   { key: 'photoOffsetY', label: '上下', min: -24, max: 24, step: 1, unit: 'px' },
   { key: 'photoOffsetX', label: '左右', min: -24, max: 24, step: 1, unit: 'px' },
 ] as const
@@ -150,9 +150,6 @@ const handleThemeColorHexInput = (fieldKey: string, event: Event) => {
 const isThemeColorSelected = (field: TemplateFieldSchema, color: string) =>
   String(getFieldValue(field)).toLowerCase() === color.toLowerCase()
 
-const isSegmentedSelectField = (field: TemplateFieldSchema) =>
-  field.key === 'dateWeight' && (field.options?.length ?? 0) > 0
-
 const setPhotoVisibility = (visible: boolean) => {
   setFieldValue('photoVisible', visible)
 }
@@ -171,8 +168,15 @@ const setPhotoSliderValue = (
   setFieldValue(key, value)
 }
 
-const getPhotoSliderValue = (key: typeof PHOTO_SLIDERS[number]['key']) =>
-  Number(resolvedTemplateValues.value[key] ?? 0)
+const getPhotoSliderValue = (key: typeof PHOTO_SLIDERS[number]['key']) => {
+  if (key === 'photoSize') {
+    return photoAdjustments.value.size
+  }
+  if (key === 'photoOffsetY') {
+    return photoAdjustments.value.offsetY
+  }
+  return photoAdjustments.value.offsetX
+}
 </script>
 
 <template>
@@ -437,22 +441,6 @@ const getPhotoSliderValue = (key: typeof PHOTO_SLIDERS[number]['key']) =>
                     :show-tooltip="false"
                     @update:model-value="setFieldValue(field.key, Number($event))"
                   />
-                </template>
-
-                <template v-else-if="field.type === 'select' && isSegmentedSelectField(field)">
-                  <div class="mb-2 text-xs font-bold text-on-surface-variant">{{ field.label }}</div>
-                  <div class="preview-segmented-control">
-                    <button
-                      v-for="option in field.options ?? []"
-                      :key="String(option.value)"
-                      type="button"
-                      class="preview-segmented-button"
-                      :class="{ 'is-active': String(getFieldValue(field)) === String(option.value) }"
-                      @click="setFieldValue(field.key, String(option.value))"
-                    >
-                      {{ option.label }}
-                    </button>
-                  </div>
                 </template>
 
                 <template v-else-if="field.type === 'select'">

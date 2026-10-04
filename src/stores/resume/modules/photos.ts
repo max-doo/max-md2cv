@@ -51,9 +51,10 @@ export const createPhotoModule = (context: PhotoModuleContext) => {
       const entries = await platform.invoke<PhotoItem[]>("list_images", {
         dirPath,
       });
-      state.photoFileList.value = entries;
+      const idPhotos = entries.filter((entry) => entry.isIdPhoto);
+      state.photoFileList.value = idPhotos;
 
-      const nextPhotoPath = resolveNextPhotoPath(entries);
+      const nextPhotoPath = resolveNextPhotoPath(idPhotos);
       if (!nextPhotoPath) {
         await loadPhoto(null);
       } else if (
@@ -63,7 +64,7 @@ export const createPhotoModule = (context: PhotoModuleContext) => {
         await loadPhoto(nextPhotoPath);
       }
 
-      return entries;
+      return idPhotos;
     } catch (error) {
       console.error("Failed to read image directory:", error);
       state.photoFileList.value = [];

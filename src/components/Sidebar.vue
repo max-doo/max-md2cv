@@ -20,7 +20,7 @@ const ResumeLibraryPanel = defineAsyncComponent(() => import('./sidebar/ResumeLi
 const newFileName = ref('')
 const isCreating = ref(false)
 const isOutlineOnly = computed(() => props.mode === 'outline-only')
-const sidebarWidth = '20rem'
+const sidebarWidth = '22.5rem'
 const sidebarInlineStyle = computed<CSSProperties>(() => {
   if (store.isSidebarOpen) {
     return {
@@ -108,7 +108,7 @@ const handleCreateFile = async () => {
     class="sidebar-shell relative z-20 flex h-full flex-shrink-0 flex-col overflow-hidden bg-surface-container-lowest transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)]"
     :style="sidebarInlineStyle"
   >
-    <div class="sidebar-frame absolute left-0 top-0 flex h-full w-80 flex-col font-['Manrope'] antialiased">
+    <div class="sidebar-frame absolute left-0 top-0 flex h-full w-[22.5rem] flex-col font-['Manrope'] antialiased">
       <div class="sidebar-header flex shrink-0 items-center gap-3 bg-surface-container-lowest px-4 py-5 pb-4">
         <div class="min-w-0 flex-1">
           <div v-if="!isOutlineOnly" class="sidebar-segmented">
@@ -162,11 +162,12 @@ const handleCreateFile = async () => {
           <button
             v-if="store.workspacePath"
             type="button"
-            class="flex min-h-[1.5rem] w-full cursor-pointer rounded-xl px-2 py-1 text-left text-xs leading-5 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
-            :title="store.workspacePath"
+            class="group flex min-h-[1.5rem] w-full cursor-pointer items-center justify-between gap-1.5 rounded-xl px-2 py-1 text-left text-xs leading-5 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
+            :title="`打开文件夹：${store.workspacePath}`"
             @click="handleOpenWorkspaceDirectory"
           >
-            <span class="break-all">{{ workspaceDisplayText }}</span>
+            <span class="min-w-0 flex-1 truncate">{{ workspaceDisplayText }}</span>
+            <span class="material-symbols-outlined shrink-0 text-[15px] text-on-surface-variant/50 transition-colors group-hover:text-on-surface">open_in_new</span>
           </button>
 
           <div

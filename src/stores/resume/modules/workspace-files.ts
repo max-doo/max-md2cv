@@ -3,10 +3,9 @@ import { DEFAULT_FILE_NAME, DEFAULT_MARKDOWN } from "../constants";
 import type { ResumeStoreBaseContext } from "../context";
 import {
   ensureMarkdownFileName,
-  ensurePdfFileName,
   normalizePathKey,
 } from "../path-utils";
-import type { FileItem } from "../types";
+import type { ExportFileItem, FileItem } from "../types";
 
 interface WorkspaceFilesModuleContext extends ResumeStoreBaseContext {
   setWorkspacePath: (path: string | null) => void;
@@ -47,21 +46,28 @@ export const createWorkspaceFilesModule = (
     }
   };
 
-  const refreshPdfList = async (dirPath: string) => {
+  const refreshExportList = async (dirPath: string) => {
     try {
-      const entries = await platform.invoke<FileItem[]>("list_pdfs", { dirPath });
-      state.pdfFileList.value = entries;
+      const entries = await platform.invoke<ExportFileItem[]>("list_export_files", { dirPath });
+      state.exportFileList.value = entries;
+      state.pdfFileList.value = entries.filter((e) => e.fileType === "pdf");
       return entries;
     } catch (error) {
-      console.error("Failed to read pdf directory:", error);
+      console.error("Failed to read export files directory:", error);
+      state.exportFileList.value = [];
       state.pdfFileList.value = [];
       throw error;
     }
   };
 
+  const refreshPdfList = async (dirPath: string) => {
+    await refreshExportList(dirPath);
+    return state.pdfFileList.value;
+  };
+
   const refreshWorkspaceLists = async (dirPath: string) => {
     const files = await refreshFileList(dirPath);
-    await refreshPdfList(dirPath);
+    await refreshExportList(dirPath);
     await context.refreshPhotoList(dirPath);
     return files;
   };
@@ -127,9 +133,9 @@ export const createWorkspaceFilesModule = (
       }
 
       let content = defaultResumeTemplate;
-      content = content.replace(/^# 姓名/m, `# ${name || "姓名"}`);
+      content = content.replace(/^# .+/m, `# ${name || "姓名"}`);
       content = content.replace(
-        /\*\*求职意向：某某岗位\*\*/,
+        /\*\*求职意向：[^*]+\*\*/,
         `**求职意向：${position || "某某岗位"}**`,
       );
 
@@ -173,20 +179,24 @@ export const createWorkspaceFilesModule = (
     }
   };
 
-  const deletePdf = async (path: string) => {
+  const deleteExportFile = async (path: string) => {
     try {
       context.registerLocalMutation(path);
       await platform.invoke("delete_resume", { path });
 
       if (state.workspacePath.value) {
-        await refreshPdfList(state.workspacePath.value);
+        await refreshExportList(state.workspacePath.value);
       }
 
-      ui.message.success("PDF 已移至回收站");
+      ui.message.success("已移至回收站");
     } catch (error) {
-      console.error("Failed to delete pdf:", error);
-      ui.message.error("删除 PDF 失败");
+      console.error("Failed to delete export file:", error);
+      ui.message.error("删除文件失败");
     }
+  };
+
+  const deletePdf = async (path: string) => {
+    await deleteExportFile(path);
   };
 
   const renameFile = async (oldPath: string, newName: string) => {
@@ -264,15 +274,19 @@ export const createWorkspaceFilesModule = (
     }
   };
 
-  const renamePdf = async (oldPath: string, newName: string) => {
+  const renameExportFile = async (oldPath: string, newName: string) => {
     if (!state.workspacePath.value) {
       return;
     }
 
     try {
+      const ext = oldPath.split(".").pop() || "";
+      const baseName = newName.replace(new RegExp(`\\.${ext}$`, "i"), "");
+      const newFullName = ext ? `${baseName}.${ext}` : baseName;
+
       const newPath = await platform.join(
         state.workspacePath.value,
-        ensurePdfFileName(newName),
+        newFullName,
       );
       if (normalizePathKey(oldPath) === normalizePathKey(newPath)) {
         return;
@@ -284,47 +298,67 @@ export const createWorkspaceFilesModule = (
       }
 
       context.registerLocalMutation(oldPath, newPath);
-      await platform.invoke("rename_pdf", { oldPath, newPath });
-      await refreshPdfList(state.workspacePath.value);
-      ui.message.success("PDF 文件名已更新");
+      await platform.invoke("rename_export_file", { oldPath, newPath });
+      await refreshExportList(state.workspacePath.value);
+      ui.message.success("文件名已更新");
     } catch (error) {
-      console.error("Failed to rename pdf:", error);
-      ui.message.error("重命名 PDF 失败");
+      console.error("Failed to rename export file:", error);
+      ui.message.error("重命名文件失败");
     }
   };
 
-  const duplicatePdf = async (path: string) => {
+  const duplicateExportFile = async (path: string) => {
     if (!state.workspacePath.value) {
       return;
     }
 
     try {
-      const originalFile = state.pdfFileList.value.find(
+      const originalFile = state.exportFileList.value.find(
         (file) => normalizePathKey(file.path) === normalizePathKey(path),
       );
       if (!originalFile) {
         return;
       }
 
-      const baseName = originalFile.name.replace(/\.pdf$/i, "");
+      const dotIndex = originalFile.name.lastIndexOf(".");
+      const baseName = dotIndex !== -1 ? originalFile.name.slice(0, dotIndex) : originalFile.name;
+      const ext = dotIndex !== -1 ? originalFile.name.slice(dotIndex) : "";
+
       let counter = 1;
-      let nextName = `${baseName}-副本.pdf`;
+      let nextName = `${baseName}-副本${ext}`;
       let nextPath = await platform.join(state.workspacePath.value, nextName);
 
       while (await context.ensurePathExists(nextPath)) {
         counter += 1;
-        nextName = `${baseName}-副本(${counter}).pdf`;
+        nextName = `${baseName}-副本(${counter})${ext}`;
         nextPath = await platform.join(state.workspacePath.value, nextName);
       }
 
       context.registerLocalMutation(nextPath);
-      await platform.invoke("duplicate_pdf", { path, newPath: nextPath });
-      await refreshPdfList(state.workspacePath.value);
-      ui.message.success("已创建 PDF 副本");
+      await platform.invoke("duplicate_export_file", { path, newPath: nextPath });
+      await refreshExportList(state.workspacePath.value);
+      ui.message.success("已创建副本");
     } catch (error) {
-      console.error("Failed to duplicate pdf:", error);
-      ui.message.error("创建 PDF 副本失败");
+      console.error("Failed to duplicate export file:", error);
+      ui.message.error("创建副本失败");
     }
+  };
+
+  const openExportedFile = async (path: string) => {
+    try {
+      await platform.invoke("open_exported_file", { path });
+    } catch (error) {
+      console.error("Failed to open export file:", error);
+      ui.message.error("打开文件失败");
+    }
+  };
+
+  const renamePdf = async (oldPath: string, newName: string) => {
+    await renameExportFile(oldPath, newName);
+  };
+
+  const duplicatePdf = async (path: string) => {
+    await duplicateExportFile(path);
   };
 
   const selectWorkspace = async () => {
@@ -370,16 +404,21 @@ export const createWorkspaceFilesModule = (
     hasFile,
     refreshFileList,
     refreshPdfList,
+    refreshExportList,
     refreshWorkspaceLists,
     openDefaultFile,
     createFile,
     createFromTemplate,
     deleteFile,
     deletePdf,
+    deleteExportFile,
     renameFile,
     duplicateFile,
     renamePdf,
     duplicatePdf,
+    renameExportFile,
+    duplicateExportFile,
+    openExportedFile,
     selectWorkspace,
     openWorkspaceDirectory,
   };

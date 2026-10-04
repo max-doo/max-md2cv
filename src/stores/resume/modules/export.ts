@@ -4,6 +4,7 @@ import type { ResumeStoreBaseContext } from "../context";
 
 interface ExportModuleContext extends ResumeStoreBaseContext {
   refreshPdfList: (dirPath: string) => Promise<unknown>;
+  refreshExportList: (dirPath: string) => Promise<unknown>;
 }
 
 export const createExportModule = (context: ExportModuleContext) => {
@@ -97,7 +98,7 @@ export const createExportModule = (context: ExportModuleContext) => {
       });
 
       if (state.workspacePath.value) {
-        await context.refreshPdfList(state.workspacePath.value);
+        await context.refreshExportList(state.workspacePath.value);
       }
 
       ui.message.success(`导出成功：${targetPdfName}`);
@@ -115,7 +116,103 @@ export const createExportModule = (context: ExportModuleContext) => {
     }
   };
 
+  const exportCurrentImage = async () => {
+    if (!state.activeFilePath.value || !state.workspacePath.value) {
+      ui.message.error("未找到当前打开的文件或工作区");
+      return;
+    }
+
+    state.isExporting.value = true;
+    state.isExportingImage.value = true;
+    try {
+      const fileNameWithExt =
+        state.activeFilePath.value.split(/[/\\]/).pop() || "简历.md";
+      const documentTitle = fileNameWithExt.replace(/\.[^/.]+$/, "");
+      const targetImageName = `${documentTitle}.png`;
+      const targetImagePath = await platform.join(
+        state.workspacePath.value,
+        targetImageName,
+      );
+
+      const exists = state.exportFileList.value.some(
+        (file) => file.name === targetImageName,
+      );
+      if (exists) {
+        try {
+          await ui.messageBox.confirm(
+            `工作区已存在名为 "${targetImageName}" 的图片，是否覆盖？`,
+            "导出确认",
+            {
+              confirmButtonText: "覆盖",
+              cancelButtonText: "取消",
+              type: "warning",
+            },
+          );
+        } catch {
+          return;
+        }
+      }
+
+      await waitForPreviewReady();
+
+      const pagesContainer = platform.document?.querySelector(
+        '[data-preview-root="true"] > .pagedjs_pages',
+      );
+      if (!pagesContainer) {
+        throw new Error("预览内容尚未准备好，请稍后重试。");
+      }
+
+      const pages = pagesContainer.querySelectorAll(".pagedjs_page");
+      if (pages.length === 0) {
+        throw new Error("预览分页尚未完成，请稍后重试。");
+      }
+      const pageCount = pages.length;
+
+      const htmlContent = await buildPagedExportDocumentHtml({
+        documentTitle,
+        pagesContainer: pagesContainer as HTMLElement,
+        cvStyle: state.resumeStyle.value,
+        photoAdjustments: resolvePhotoAdjustments(
+          resolveTemplateValues(
+            state.availableTemplates.value.find(
+              (template) => template.id === state.activeTemplate.value,
+            ) ?? {
+              defaults: {},
+              editorSchema: [],
+            },
+            state.templateValues.value,
+          ),
+        ),
+      });
+
+      await platform.invoke("export_image_command", {
+        htmlContent,
+        outputPath: targetImagePath,
+        pageCount,
+      });
+
+      if (state.workspacePath.value) {
+        await context.refreshExportList(state.workspacePath.value);
+      }
+
+      ui.message.success(`导出图片成功：${targetImageName}`);
+    } catch (error: any) {
+      console.error("导出图片失败:", error);
+      const errorMsg =
+        typeof error === "string" ? error : error.message || JSON.stringify(error);
+      ui.message.error({
+        message: `导出图片失败: ${errorMsg}`,
+        duration: 5000,
+        showClose: true,
+      });
+    } finally {
+      state.isExporting.value = false;
+      state.isExportingImage.value = false;
+    }
+  };
+
   return {
     exportCurrentPdf,
+    exportCurrentImage,
   };
 };
