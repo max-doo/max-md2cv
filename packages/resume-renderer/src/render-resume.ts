@@ -1,4 +1,5 @@
 import { Previewer } from "pagedjs";
+import { fitOnePage } from "../../resume-core/src/utils/autoOnePage";
 import {
   enhanceResumeHtml,
   renderMarkdownToHtml,
@@ -112,6 +113,21 @@ export const renderResume = async (
   request: RenderRequest,
   target: HTMLElement,
 ): Promise<RenderResult> => {
+  if (request.options.onePage) {
+    const probeOptions = { ...request.options, onePage: false, maxPages: undefined };
+    const fitted = await fitOnePage(request.values, async (values) => {
+      const result = await renderResume({ ...request, values, options: probeOptions }, target);
+      return result.pageCount;
+    });
+    // Only the final layout is exported; probe renders never write artifacts.
+    const result = await renderResume({
+      ...request,
+      values: fitted.values,
+      options: { ...probeOptions, maxPages: 1 },
+    }, target);
+    result.onePage = { fitted: result.pageCount === 1, probes: fitted.probes };
+    return result;
+  }
   const timeoutMs = request.options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const warnings: RenderWarning[] = [];
   const effectiveValues = request.template
@@ -121,6 +137,7 @@ export const renderResume = async (
   const photoAdjustments = resolvePhotoAdjustments(effectiveValues);
   const layoutConfig = normalizeLayoutConfig(request.template, effectiveValues);
   let rendered = false;
+  let paged: InstanceType<typeof Previewer> | null = null;
 
   removePreviousRender(target);
 
@@ -172,7 +189,7 @@ export const renderResume = async (
     const previousPagedStyles = new Set(
       Array.from(document.querySelectorAll("style[data-pagedjs-inserted-styles], style[data-md2cv-render-style='paged']")),
     );
-    const paged = new Previewer();
+    paged = new Previewer();
     const suppressPagedjsErrors = (event: ErrorEvent) => {
       const sourceName = event.filename ?? "";
       if (sourceName.includes("dom.js") || sourceName.includes("layout.js") || sourceName.includes("page.js")) {
@@ -235,6 +252,9 @@ export const renderResume = async (
       error instanceof Error ? error.message : String(error),
     );
   } finally {
+    // Each render is a fixed snapshot. Detach observers before a probe or preview
+    // replaces the pages, so old Paged.js instances cannot reflow removed DOM.
+    paged?.chunker.pages.forEach((page: { removeListeners: () => void }) => page.removeListeners());
     if (!rendered) {
       target.replaceChildren();
     }

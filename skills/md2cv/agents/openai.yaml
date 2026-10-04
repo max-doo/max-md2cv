@@ -1,7 +1,7 @@
 interface:
-  display_name: "MD2CV Resume Renderer"
-  short_description: "Render and visually verify Markdown resumes"
-  default_prompt: "Use $md2cv to render resume.md and verify every page."
+  display_name: "小简 · MD2CV"
+  short_description: "Edit Xiaojian resumes, fit to one page, and export PDF"
+  default_prompt: "Use $md2cv to revise my resume in Xiaojian Markdown format, fit it to one page, and verify the exported pages."
 
 policy:
   allow_implicit_invocation: true

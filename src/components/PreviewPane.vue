@@ -6,8 +6,7 @@ import { ElMessage } from 'element-plus'
 import { renderResume } from '../../packages/resume-renderer/src'
 import PreviewToolbar from './preview/PreviewToolbar.vue'
 import {
-  interpolateOnePageValues,
-  relaxOnePageCandidate,
+  fitOnePage,
   resolveTemplateValues,
   type ResumeTemplate,
 } from '@resume-core'
@@ -332,70 +331,13 @@ const runSmartOnePage = async () => {
 
     const currentEffectiveValues = resolveTemplateValues(activeTemplateData, store.templateValues)
 
-    // 1. 快速检查极限最小参数配置 (lambda = 1.0)
-    const minValues = interpolateOnePageValues(currentEffectiveValues, 1.0)
-    const minPages = await probeRenderPageCount(minValues)
-
-    if (minPages > 1) {
-      // 极限压缩后依然超出 1 页，内容严重超量
-      store.setTemplateValues(minValues)
+    const result = await fitOnePage(currentEffectiveValues, probeRenderPageCount)
+    store.setTemplateValues(result.values)
+    if (result.pageCount > 1) {
       ElMessage.warning('内容超出单页上限，已呈现最紧凑排版，建议适当精简文字')
-      return
+    } else {
+      ElMessage.success('已通过智能算法自适应为最佳单页排版')
     }
-
-    // 2. 检查舒适上限配置 (lambda = 0.0)
-    const maxValues = interpolateOnePageValues(currentEffectiveValues, 0.0)
-    const maxPages = await probeRenderPageCount(maxValues)
-
-    if (maxPages <= 1) {
-      // 在最舒适舒展状态下就已经能放下单页（内容排得过紧时自动舒展撑满）
-      store.setTemplateValues(maxValues)
-      ElMessage.success('已自适应优化为饱满舒适单页排版')
-      return
-    }
-
-    // 3. 在 [0.0, 1.0] 区间内进行 6 次二分探测，找到满足 <= 1 页的最大字号与最舒适间距
-    let low = 0.0
-    let high = 1.0
-    let bestValues = minValues
-    const iterations = 6
-
-    for (let i = 0; i < iterations; i++) {
-      const mid = (low + high) / 2
-      const candidateValues = interpolateOnePageValues(currentEffectiveValues, mid)
-      const pages = await probeRenderPageCount(candidateValues)
-
-      if (pages <= 1) {
-        bestValues = candidateValues
-        high = mid
-      } else {
-        low = mid
-      }
-    }
-
-    // 4. 留白回填补偿优化 (Relaxation / Vertical Redistribution)
-    // 当内容成功收纳至单页后，若底部由于量子化分块留有较多空白，
-    // 在保证依然 <= 1 页的前提下，将剩余空间逐级回填给行高与各级间距，消除底部突兀留白
-    for (let r = 0; r < 4; r++) {
-      const relaxedCandidate = relaxOnePageCandidate(bestValues, 1)
-      if (
-        relaxedCandidate.lineHeight === bestValues.lineHeight &&
-        relaxedCandidate.paragraphSpacing === bestValues.paragraphSpacing &&
-        relaxedCandidate.h2MarginTop === bestValues.h2MarginTop &&
-        relaxedCandidate.h3MarginTop === bestValues.h3MarginTop
-      ) {
-        break
-      }
-      const pages = await probeRenderPageCount(relaxedCandidate)
-      if (pages <= 1) {
-        bestValues = relaxedCandidate
-      } else {
-        break
-      }
-    }
-
-    store.setTemplateValues(bestValues)
-    ElMessage.success('已通过智能算法自适应为最佳单页排版')
   } catch (error) {
     console.error('Smart fit to one page error:', error)
     ElMessage.error('智能一页处理失败，请重试')

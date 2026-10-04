@@ -36,6 +36,8 @@ const configureRenderOptions = (command: Command) => command
   .option("--no-images", "Do not write page PNGs")
   .option("--image-scale <number>", "PNG device scale factor (1-3)")
   .option("--max-pages <number>", "Warn when the rendered page count exceeds this value")
+  .option("--one-page", "Fit to one page using the shared smart layout algorithm")
+  .option("--no-one-page", "Disable smart one-page fitting from config")
   .option("--strict-fonts", "Fail when requested fonts are unavailable")
   .option("--allow-network", "Allow remote resources")
   .option("--browser <browser>", "Browser channel: auto, edge, chrome, or chromium", "auto")
@@ -58,7 +60,7 @@ const buildProgram = () => {
 
   const render = program
     .command("render")
-    .description("Render a Markdown resume once and write a PDF and/or page images.")
+    .description("Render a Markdown resume, optionally fit to one page, and write a PDF and/or page images.")
     .argument("[input.md]", "Markdown input path; omit it with --stdin")
     .addHelpText("after", "\nDefaults: outputs go to cwd; existing files are never overwritten without --force. Browser: Edge, then Chrome, then Chromium.\n")
     .action(async (input: string | undefined, options: RenderCommandOptions) => {

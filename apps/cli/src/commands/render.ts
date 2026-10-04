@@ -29,6 +29,7 @@ export interface RenderCommandOptions {
   images?: boolean;
   imageScale?: number;
   maxPages?: number;
+  onePage?: boolean;
   strictFonts?: boolean;
   allowNetwork?: boolean;
   browser?: "auto" | "edge" | "chrome" | "chromium";
@@ -105,7 +106,7 @@ export const executeRender = async (
     values: normalized.values,
     photoDataUrl: photo?.dataUrl ?? null,
     sourceDirectory: input.sourceDirectory,
-    options: { maxPages, strictFonts, allowNetwork, timeoutMs },
+    options: { maxPages, onePage: options.onePage ?? config?.render?.onePage ?? false, strictFonts, allowNetwork, timeoutMs },
   } as const;
   const renderStartedAt = now();
   const captured = await renderInBrowser(request, {
@@ -134,6 +135,7 @@ export const executeRender = async (
     },
     pageCount: captured.result.pageCount,
     effectiveValues: captured.result.effectiveValues,
+    ...(captured.result.onePage ? { onePage: captured.result.onePage } : {}),
     artifacts: {
       pdf: artifacts.pdf,
       images: outputOptions.images ? artifacts.images : [],

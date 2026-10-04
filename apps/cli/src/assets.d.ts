@@ -15,6 +15,7 @@ declare module "*.md?raw" {
 
 declare module "pagedjs" {
   export class Previewer {
+    chunker: { pages: Array<{ removeListeners: () => void }> };
     preview(source: HTMLElement, stylesheets: unknown[], target: HTMLElement): Promise<unknown>;
   }
 }

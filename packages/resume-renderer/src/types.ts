@@ -22,6 +22,7 @@ export interface RenderRequest {
   photoDataUrl: string | null;
   sourceDirectory: string | null;
   options: {
+    onePage?: boolean;
     maxPages?: number;
     strictFonts: boolean;
     allowNetwork: boolean;
@@ -44,6 +45,7 @@ export interface RenderFontReport {
 }
 
 export interface RenderResult {
+  onePage?: { fitted: boolean; probes: number };
   pageCount: number;
   effectiveValues: TemplateValues;
   pages: RenderPageMetrics[];

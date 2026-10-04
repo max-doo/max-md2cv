@@ -167,7 +167,7 @@ const isHelpDialogOpen = ref(false)
       <button
         type="button"
         class="editor-toolbar-icon group"
-        title="语法说明"
+        title="简历使用指南"
         @click="isHelpDialogOpen = true"
       >
         <span class="material-symbols-outlined text-xl transition-transform group-hover:scale-110">

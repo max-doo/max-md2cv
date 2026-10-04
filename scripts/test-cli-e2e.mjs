@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
@@ -16,6 +16,7 @@ const brokenImage = resolve(root, "apps/cli/tests/fixtures/broken-image.md");
 const config = resolve(root, "apps/cli/tests/fixtures/resume.render.json");
 const cliOverridesConfig = resolve(root, "apps/cli/tests/fixtures/cli-overrides.render.json");
 const photo = resolve(root, "public/favicon.png");
+const sampleResume = resolve(root, "packages/resume-core/src/assets/templates/default-resume.md");
 
 const run = (args, cwd, input) => new Promise((resolveResult) => {
   const child = spawn(process.execPath, [cli, ...args], { cwd, windowsHide: true });
@@ -95,6 +96,7 @@ try {
   const defaultRender = parseJson(await run(["render", onePage, "--json"], cwd));
   assert.equal(defaultRender.ok, true);
   assert.equal(defaultRender.pageCount, 1);
+  assert.equal(defaultRender.onePage, undefined, "Smart fitting must remain opt-in.");
   assert.equal(defaultRender.artifacts.images.length, 1);
   assert.equal(resolve(defaultRender.artifacts.pdf.path), defaultRender.artifacts.pdf.path);
   await assertPdf(defaultRender.artifacts.pdf.path, 1);
@@ -128,6 +130,45 @@ try {
   assert.equal(classic.artifacts.images[0].height, classic.artifacts.images[1].height);
   await assertPdf(classic.artifacts.pdf.path, 2, "李四");
   await Promise.all(classic.artifacts.images.map((image) => assertPng(image.path)));
+
+  const sampleBefore = await readFile(sampleResume, "utf8");
+  const looseSample = parseJson(await run(["render", sampleResume, "--template", "classic", "--set", "lineHeight=1.8", "--set", "paragraphSpacing=12", "--output-dir", join(tempRoot, "loose-sample"), "--json"], cwd));
+  assert.ok(looseSample.pageCount > 1);
+  const fittedSample = parseJson(await run(["render", sampleResume, "--template", "classic", "--set", "lineHeight=1.8", "--set", "paragraphSpacing=12", "--set", "themeColor=#16a34a", "--one-page", "--output-dir", join(tempRoot, "fitted-sample"), "--json"], cwd));
+  assert.equal(fittedSample.pageCount, 1);
+  assert.equal(fittedSample.onePage.fitted, true);
+  assert.ok(fittedSample.onePage.probes > 2 && fittedSample.onePage.probes <= 12);
+  assert.equal(fittedSample.effectiveValues.themeColor, "#16a34a");
+  assert.ok(fittedSample.effectiveValues.fontSize >= 11);
+  assert.equal(fittedSample.artifacts.images.length, 1);
+  assert.ok(!fittedSample.warnings.some((warning) => warning.code === "RESOURCE_LOAD_FAILED"), "Repeated probes must detach old page observers.");
+  assert.equal(await readFile(sampleResume, "utf8"), sampleBefore);
+  const fittedPdf = await assertPdf(fittedSample.artifacts.pdf.path, 1, "李小简");
+  // Verify that content near the end survives the search and export.
+  const fittedDocument = await pdfjs.getDocument({ data: new Uint8Array(fittedPdf), disableWorker: true }).promise;
+  try {
+    const content = await (await fittedDocument.getPage(1)).getTextContent();
+    assert.match(content.items.map((item) => ("str" in item ? item.str : "")).join(""), /英文资料阅读与日常沟通能力/);
+  } finally {
+    await fittedDocument.destroy();
+  }
+  await assertPng(fittedSample.artifacts.images[0].path);
+
+  const fitConfig = join(tempRoot, "one-page.render.json");
+  await writeFile(fitConfig, JSON.stringify({ version: 1, template: "classic", render: { onePage: true } }));
+  const cannotFit = parseJson(await run(["render", twoPage, "--config", fitConfig, "--output-dir", join(tempRoot, "cannot-fit"), "--json"], cwd));
+  assert.equal(cannotFit.onePage.fitted, false);
+  assert.equal(cannotFit.onePage.probes, 1);
+  assert.equal(cannotFit.pageCount, 2);
+  assert.ok(cannotFit.warnings.some((warning) => warning.code === "PAGE_COUNT_EXCEEDED"));
+  await assertPdf(cannotFit.artifacts.pdf.path, 2, "李四");
+  await Promise.all(cannotFit.artifacts.images.map((image) => assertPng(image.path)));
+  const fittingDisabled = parseJson(await run(["render", onePage, "--config", fitConfig, "--no-one-page", "--output-dir", join(tempRoot, "fit-disabled"), "--json"], cwd));
+  assert.equal(fittingDisabled.onePage, undefined);
+  const shortFit = parseJson(await run(["render", onePage, "--config", fitConfig, "--output-dir", join(tempRoot, "short-fit"), "--json"], cwd));
+  assert.equal(shortFit.onePage.fitted, true);
+  assert.equal(shortFit.onePage.probes, 2);
+  assert.equal(shortFit.effectiveValues.fontSize, 14.5);
 
   const maxPagesDir = join(tempRoot, "max-pages-output");
   const maxPages = parseJson(await run(["render", twoPage, "--template", "classic", "--max-pages", "1", "--output-dir", maxPagesDir, "--json"], cwd));
@@ -204,7 +245,7 @@ try {
   const smoke = parseJson(await run(["doctor", "--render-smoke", "--json"], cwd));
   assert.equal(smoke.checks.smokeRender.ok, true);
 
-  console.log("CLI E2E passed: real Edge render, PDF/PNG artifacts, config, paths, stdin, errors, and doctor smoke.");
+  console.log("CLI E2E passed: real Edge render, smart one-page fitting and fallback, PDF/PNG artifacts, config, paths, stdin, errors, and doctor smoke.");
 } finally {
   await rm(tempRoot, { recursive: true, force: true });
 }

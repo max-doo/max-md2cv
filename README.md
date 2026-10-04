@@ -14,7 +14,7 @@
 
 [在线体验](https://max-md2cv.vercel.app/) · [下载桌面版](https://github.com/max-doo/max-md2cv/releases) · [快速开始](#quick-start) · [查看模板](#templates) · [反馈问题](https://github.com/max-doo/max-md2cv/issues)
 
-**[产品特点](#features) · [与 AI 协作](#ai-workflow) · [使用方式](#editions) · [常见问题](#faq) · [本地开发](#development) · [参与贡献](#contributing) · [许可证](#license)**
+**[产品特点](#features) · [与 AI 协作](#ai-workflow) · [安装 Agent Skill](#agent-skill) · [使用方式](#editions) · [常见问题](#faq) · [本地开发](#development) · [参与贡献](#contributing) · [许可证](#license)**
 
 </div>
 
@@ -132,7 +132,7 @@
 
 Markdown 让简历成为易于复制、比较和修改的结构化文本。你可以把整份简历交给 AI 整理格式，也可以只修改一段经历，再粘回小简查看效果。
 
-1. 打开编辑器工具栏中的语法说明，复制内置 AI 提示词。
+1. 打开编辑器工具栏中的「简历使用指南」，在「语法说明」标签页复制内置 AI 提示词。
 2. 将提示词与原始经历交给你使用的 AI 工具，说明目标岗位和修改要求。
 3. 核对生成内容中的事实、数据和日期，将 Markdown 正文粘回小简。
 4. 查看实时预览，选择模板并调整版式，最后导出 PDF。
@@ -141,7 +141,53 @@ Markdown 让简历成为易于复制、比较和修改的结构化文本。你�
 
 > 请保留事实，将这段经历压缩为两条列表；突出与内容运营岗位相关的工作和成果，沿用现有 Markdown 层级与方括号日期格式。
 
-当前产品通过格式提示词和 Markdown 编辑支持这一协作流程，AI 内容生成在你选择的外部工具中完成。需要让 AI 智能体调用渲染工具时，仓库另提供 [md2cv Agent Skill](skills/md2cv/SKILL.md)。
+AI 内容生成在你选择的外部工具中完成。使用支持 Agent Skill 的工具时，还可以安装下面的 `md2cv` Skill，让 Agent 持续按小简的格式修改、排版和导出简历。
+
+<a id="agent-skill"></a>
+
+### 安装与使用 md2cv Agent Skill
+
+[md2cv Skill](skills/md2cv/SKILL.md) 将小简的格式规范与 CLI 工作流提供给 Agent。它可以：
+
+- **整理与修改内容：** 根据原始经历或现有简历生成小简 Markdown，按目标岗位调整表达，保留真实事实、数据和日期。
+- **参考格式与骨架：** 使用随 Skill 安装的 [格式参考](skills/md2cv/references/resume-format.md) 和 [简历骨架](skills/md2cv/assets/resume-template.md)，规范标题、联系方式、经历日期和列表。
+- **排版与交付：** 通过 CLI 选择模板、生成 PDF 与逐页 PNG、调用智能一页，并在 Agent 能查看图片时检查所有页面。
+- **按需准备 CLI：** 仅修改正文无需 CLI；导出、智能一页或排版验证时检查环境，缺少 CLI 则读取 [CLI 安装指引](skills/md2cv/references/cli-installation.md)。
+
+**让 Agent 帮你安装。** 打开编辑器的「简历使用指南」，在「Skill 安装说明」标签页点击「复制安装提示词」，也可以直接复制以下内容：
+
+```text
+请帮我安装小简（Max-MD2CV）的 md2cv Agent Skill，供当前 Agent 在之后的简历任务中使用。
+
+官方仓库：https://github.com/max-doo/max-md2cv
+Skill 目录：skills/md2cv
+
+请将完整的 md2cv 目录（包括 SKILL.md、references、assets 和 agents）安装到当前 Agent 支持的用户级 Skill 目录，保留已有的其他 Skill。可以使用以下命令，并指定当前 Agent 对应的 --agent 参数完成安装：
+npx skills add max-doo/max-md2cv --skill md2cv --global --copy
+若无法使用该安装工具，请从官方仓库获取完整 Skill 目录后安装，不要只复制 SKILL.md；已有同名 Skill 时先检查并保留本地修改。
+
+安装后确认格式参考、简历骨架和 CLI 安装文档均存在，告诉我安装位置和如何调用；如果需要开启新会话才能加载，请说明。
+仅修改简历正文不需要 CLI。之后我要求导出 PDF、检查排版或使用智能一页时，请检查 md2cv 是否可用；未安装时按 Skill 中的 references/cli-installation.md 引导我安装。
+```
+
+**在终端安装。** 安装 Node.js 和 Git 后，使用 [Skills CLI](https://github.com/vercel-labs/skills) 将 Skill 安装到所选 Agent 的用户目录：
+
+```sh
+npx skills add max-doo/max-md2cv --skill md2cv --global --copy
+```
+
+按安装工具提示选择 Agent。`--global` 表示跨项目使用；去掉该参数可安装到当前项目。`--copy` 复制完整目录，便于不支持符号链接的环境使用。也可以从本仓库的 `skills/md2cv` 手动复制完整目录到 Agent 的 Skill 目录。Skill 安装与 CLI 安装相互独立；安装 Skill 不会自动安装 CLI 或桌面版。
+
+**开始使用。** 安装后在 Agent 中输入以下请求，并提供简历内容或文件路径。支持 `$md2cv` 的工具可以显式调用，其他工具按其 Skill 调用方式使用：
+
+```text
+用 $md2cv 把我的经历整理成小简格式的 Markdown 简历，目标岗位是内容运营。
+用 $md2cv 修改 resume.md 的实习经历，保留事实，突出与目标岗位相关的贡献，其他部分不变。
+用 $md2cv 将 resume.md 导出为 PDF 和逐页 PNG，使用 classic 模板，检查每一页。
+用 $md2cv 对 resume.md 调用智能一页，输出到 output；如果内容仍超页，请说明原因，不删减正文。
+```
+
+仅修改内容时，可以把结果粘回桌面版或 Web；要求导出时，Agent 会使用 CLI。智能一页只调整版式，内容过多或存在手动分页时可能仍保留多页，结果会附超页提示。
 
 <a id="editions"></a>
 
@@ -155,7 +201,7 @@ Markdown 让简历成为易于复制、比较和修改的结构化文本。你�
 
 无需安装，打开 [Web Playground](https://max-md2cv.vercel.app/) 即可在线体验。Web 的本地运行方法见 [本地开发](#development)。它提供单份草稿体验；需要文件夹工作空间与多版本管理时，使用桌面版。
 
-### CLI 与 Agent Skill
+### CLI 渲染与智能一页
 
 CLI 使用系统中的 Edge、Chrome 或 Chromium 渲染，与桌面版和 Web 共用核心模板与排版规则。以下命令从仓库源码构建并安装 CLI，需要 Node.js 20+ 和可用的浏览器：
 
@@ -167,9 +213,12 @@ npm install --global ./apps/cli
 md2cv doctor
 md2cv templates list
 md2cv render ./resume.md --template classic --output-dir ./output
+md2cv render ./resume.md --template classic --one-page --output-dir ./one-page --json
 ```
 
-默认生成 PDF 和每页一张 PNG。需要机器可读结果时使用 `--json`；浏览器不在常见安装路径时，可通过 `--browser-path` 或 `MD2CV_BROWSER_PATH` 指定。更多说明见 [CLI README](apps/cli/README.md)，智能体使用规则见 [Agent Skill](skills/md2cv/SKILL.md)。
+默认生成 PDF 和每页一张 PNG。`--one-page` 调用与界面相同的智能一页算法；JSON 中的 `onePage.fitted` 表示是否成功适配，`effectiveValues` 返回最终排版参数。无法压到一页时仍导出完整内容并附超页警告。`--max-pages 1` 仅提示超页，不执行自动适配。
+
+需要机器可读结果时使用 `--json`；浏览器不在常见安装路径时，可通过 `--browser-path` 或 `MD2CV_BROWSER_PATH` 指定。完整安装步骤见 [CLI 安装指引](skills/md2cv/references/cli-installation.md)，命令与配置见 [CLI README](apps/cli/README.md)。npm 包发布后也可通过 `npm install --global @max-md2cv/cli` 安装；官方源返回 `E404` 时使用源码安装方式。
 
 <a id="faq"></a>
 
@@ -244,7 +293,7 @@ max-md2cv/
 │   ├── resume-core/             # 共享解析、模板定义、样式与工具
 │   │   └── src/assets/templates/ # 五款内置模板与演示简历
 │   └── resume-renderer/         # 共享浏览器端渲染器
-├── skills/md2cv/                # 简历渲染 Agent Skill
+├── skills/md2cv/                # 简历修改、格式参考与渲染 Agent Skill
 ├── scripts/                     # CLI 集成、渲染及打包验证
 ├── doc/                         # 模板、打包与开发文档
 ├── design/                      # 设计稿与设计系统资料

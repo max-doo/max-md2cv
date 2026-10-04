@@ -170,3 +170,45 @@ export const relaxOnePageCandidate = (
     lineHeight: Math.min(SMART_ONE_PAGE_MAX_VALUES.lineHeight, roundToStep(Number(values.lineHeight ?? 1.25) + 0.05 * stepMultiplier, 0.05)),
   };
 };
+
+/** Search the same bounded layout candidates in the UI and CLI. */
+export const fitOnePage = async (
+  baseValues: TemplateValues,
+  probePageCount: (values: TemplateValues) => Promise<number>,
+): Promise<{ values: TemplateValues; pageCount: number; probes: number }> => {
+  let probes = 0;
+  const probe = async (values: TemplateValues) => {
+    probes += 1;
+    return probePageCount(values);
+  };
+
+  const minValues = interpolateOnePageValues(baseValues, 1);
+  const minPages = await probe(minValues);
+  if (minPages > 1) return { values: minValues, pageCount: minPages, probes };
+
+  const maxValues = interpolateOnePageValues(baseValues, 0);
+  const maxPages = await probe(maxValues);
+  if (maxPages <= 1) return { values: maxValues, pageCount: maxPages, probes };
+
+  let low = 0;
+  let high = 1;
+  let bestValues = minValues;
+  for (let i = 0; i < 6; i++) {
+    const mid = (low + high) / 2;
+    const candidate = interpolateOnePageValues(baseValues, mid);
+    if (await probe(candidate) <= 1) {
+      bestValues = candidate;
+      high = mid;
+    } else {
+      low = mid;
+    }
+  }
+
+  for (let i = 0; i < 4; i++) {
+    const candidate = relaxOnePageCandidate(bestValues);
+    if (Object.keys(candidate).every((key) => candidate[key] === bestValues[key])) break;
+    if (await probe(candidate) > 1) break;
+    bestValues = candidate;
+  }
+  return { values: bestValues, pageCount: 1, probes };
+};

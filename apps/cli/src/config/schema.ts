@@ -29,6 +29,7 @@ export const md2cvConfigSchema = z
       .optional(),
     render: z
       .object({
+        onePage: z.boolean().optional(),
         maxPages: z.number().int().positive().optional(),
         strictFonts: z.boolean().optional(),
         allowNetwork: z.boolean().optional(),

@@ -64,7 +64,14 @@ try {
   }
   const imageBytes = await readFile(renderOutput.artifacts.images[0].path);
   assert.equal(imageBytes.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
-  await access(join(installDirectory, "node_modules", "@max-md2cv", "cli", "dist", "runtime", "skills", "md2cv", "SKILL.md"));
+  const skillDirectory = join(installDirectory, "node_modules", "@max-md2cv", "cli", "dist", "runtime", "skills", "md2cv");
+  await Promise.all([
+    "SKILL.md",
+    "references/resume-format.md",
+    "references/cli-installation.md",
+    "assets/resume-template.md",
+    "agents/openai.yaml",
+  ].map((path) => access(join(skillDirectory, path))));
   console.log("CLI pack install passed: npm tarball, Windows bin shim, runtime assets, PDF, PNG, and JSON.");
 } finally {
   await rm(tempRoot, { recursive: true, force: true });

@@ -41,6 +41,7 @@ This file defines project rules for agents working in this repository.
 - User template behavior must remain compatible with the current template loading and override model.
 - Respect the existing `/* @user-overrides */` convention when updating template merge behavior.
 - Keep the preview and export styling model consistent so preview behavior remains a useful approximation of final PDF output.
+- Smart one-page fitting shares the bounded search in `packages/resume-core/src/utils/autoOnePage.ts`; the CLI exposes it through `render --one-page` without changing Markdown content.
 
 ## Design System Rules
 - Follow the Soft Minimalist visual direction already established in the project.
@@ -63,7 +64,7 @@ This file defines project rules for agents working in this repository.
 - Shared browser renderer: `packages/resume-renderer/src`
 - CLI package: `apps/cli`
 - CLI/renderer/pack tests: `scripts/test-cli-e2e.mjs`, `scripts/test-cli-renderer.mjs`, `scripts/test-cli-pack.mjs`
-- Agent Skill: `skills/md2cv`
+- Agent Skill and bundled format/install references: `skills/md2cv`
 - Shared theme and utilities: `src/assets/tailwind.css`
 - Desktop store entry: `src/stores/resume.ts`
 - Desktop store implementation: `src/stores/resume`

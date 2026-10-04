@@ -1,4 +1,5 @@
 @import "../../../../src/assets/tailwind.css";
+@source "../../../../src/components/editor/SyntaxHelpDialog.vue";
 
 html,
 body,
