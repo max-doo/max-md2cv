@@ -75,7 +75,6 @@ export const createDefaultResumeStyle = (): ResumeStyle => ({
   h2Size: 16,
   h3Size: 14,
   dateSize: 13,
-  dateWeight: "400",
   lineHeight: 1.35,
   marginV: 10,
   marginH: 12,
@@ -291,26 +290,6 @@ export const parseResumeStyleFromTemplateCss = (css: string): ResumeStyle => {
   );
   const fontSize = toNum(bodyFontRaw, fallback.fontSize);
 
-  const dateWeightRaw = resolveCssFallbackValue(
-    extractCssProp(
-      css,
-      ".resume-document .experience-date",
-      "font-weight",
-      extractCssProp(
-        css,
-        ".resume-document",
-        "--cv-date-weight",
-        fallback.dateWeight ?? "400",
-      ),
-    ),
-    fallback.dateWeight ?? "400",
-  ).toLowerCase();
-  const dateWeight = ["bold", "bolder", "700", "800", "900"].includes(
-    dateWeightRaw,
-  )
-    ? "700"
-    : "400";
-
   const dateSizeRaw = resolveCssFallbackValue(
     extractCssProp(
       css,
@@ -455,7 +434,6 @@ export const parseResumeStyleFromTemplateCss = (css: string): ResumeStyle => {
     h3Size,
     themeColor,
     fontSize,
-    dateWeight,
     dateSize,
     paragraphSpacing,
     h2MarginTop,

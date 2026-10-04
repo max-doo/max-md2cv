@@ -153,6 +153,15 @@
     @apply opacity-50 cursor-not-allowed active:scale-100;
   }
 
+  /* 专属次级按钮 (Soft Minimalist) */
+  .btn-secondary {
+    @apply flex items-center gap-1.5 px-3.5 py-2 bg-surface-container text-on-surface rounded-full font-bold shadow-sm hover:bg-surface-container-highest active:scale-95 transition-all text-xs;
+  }
+
+  .btn-secondary:disabled {
+    @apply opacity-50 cursor-not-allowed active:scale-100;
+  }
+
   /* 轻量化滚动条 */
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
@@ -381,6 +390,15 @@
   .soft-dropdown-popper .el-dropdown-menu__item.soft-dropdown-item-danger:not(.is-disabled):hover {
     background-color: color-mix(in srgb, var(--color-error) 10%, var(--color-surface-container-lowest));
     color: var(--color-error);
+  }
+
+  .soft-delete-popover.el-popover.el-popper,
+  .soft-delete-popover.el-popper {
+    border: none !important;
+    border-radius: 1rem !important;
+    background-color: color-mix(in srgb, var(--color-surface-container-lowest) 96%, white) !important;
+    box-shadow: var(--shadow-ambient) !important;
+    padding: 0.75rem 0.875rem !important;
   }
 }
 

@@ -68,6 +68,64 @@ describe("enhanceResumeHtml - experience line splitting", () => {
     expect(result).toContain('<span class="experience-col experience-col--right experience-date">2020.01 - 2022.01</span>');
     expect(result).not.toContain("experience-col--center");
   });
+
+  it.each([
+    "[2024.09 - 2027.06] 硕士 - 新闻与传播 | 某综合类高校",
+    "[2024.09 - 2027.06] | 硕士 - 新闻与传播 | 某综合类高校",
+    "[2024.09 - 2027.06] ｜ 硕士 - 新闻与传播 ｜ 某综合类高校",
+  ])("places a leading date in the left column: %s", (heading) => {
+    const result = enhanceResumeHtml(`<h3>${heading}</h3>`, defaultStyle);
+    expect(result).toBe('<h3 class="experience-line experience-line--3col"><span class="experience-col experience-col--left experience-date">2024.09 - 2027.06</span><span class="experience-col experience-col--center">硕士 - 新闻与传播</span><span class="experience-col experience-col--right">某综合类高校</span></h3>');
+  });
+
+  it.each([
+    "硕士 - 新闻与传播 [2024.09 - 2027.06] | 某综合类高校",
+    "硕士 - 新闻与传播 | [2024.09 - 2027.06] | 某综合类高校",
+  ])("places a middle date in the center column: %s", (heading) => {
+    const result = enhanceResumeHtml(`<h3>${heading}</h3>`, defaultStyle);
+    expect(result).toContain('<span class="experience-col experience-col--center experience-date">2024.09 - 2027.06</span>');
+    expect(result).toContain('<span class="experience-col experience-col--right">某综合类高校</span>');
+  });
+
+  it("uses two columns for a leading date and a single title", () => {
+    const result = enhanceResumeHtml("<h3>[2024.09 - 2027.06] 某综合类高校</h3>", defaultStyle);
+    expect(result).toContain('class="experience-line experience-line--2col"');
+    expect(result).toContain('<span class="experience-col experience-col--left experience-date">2024.09 - 2027.06</span><span class="experience-col experience-col--right">某综合类高校</span>');
+  });
+
+  it("fills left and right columns when there are only two pipe-separated items", () => {
+    const result = enhanceResumeHtml("<h3>硕士 - 新闻与传播 | 某综合类高校</h3>", defaultStyle);
+    expect(result).toContain('class="experience-line experience-line--2col"');
+    expect(result).toContain('<span class="experience-col experience-col--right">某综合类高校</span>');
+  });
+
+  it("keeps explicit three-column headings without a date in source order", () => {
+    const result = enhanceResumeHtml("<h3>硕士 | 新闻与传播 | 某综合类高校</h3>", defaultStyle);
+    expect(result).toContain('<span class="experience-col experience-col--left experience-title">硕士</span><span class="experience-col experience-col--center">新闻与传播</span><span class="experience-col experience-col--right">某综合类高校</span>');
+  });
+
+  it("preserves inline formatting and does not split pipes in link URLs", () => {
+    const result = enhanceResumeHtml('<h3><strong>[2024.09 - 2027.06] 硕士</strong> | <a href="https://example.com/a|b">某综合类高校</a></h3>', defaultStyle);
+    expect(result).toContain('<span class="experience-col experience-col--center"><strong> 硕士</strong></span>');
+    expect(result).toContain('<span class="experience-col experience-col--right"><a href="https://example.com/a|b">某综合类高校</a></span>');
+    expect(result).not.toContain('<strong></span>');
+  });
+
+  it("keeps extra items in the center while preserving their order", () => {
+    const result = enhanceResumeHtml("<h3>岗位 | 公司 | 部门 [2024.09 - 至今]</h3>", defaultStyle);
+    expect(result).toContain('<span class="experience-col experience-col--center">公司 <span class="experience-col-sep">|</span> 部门</span>');
+    expect(result).toContain('<span class="experience-col experience-col--right experience-date">2024.09 - 至今</span>');
+  });
+
+  it("keeps list items in the existing two-column layout", () => {
+    const result = enhanceResumeHtml("<li>[2024.09 - 至今] 岗位 | 公司</li>", defaultStyle);
+    expect(result).toContain('<div class="experience-line experience-line--2col"><span class="experience-col experience-col--left experience-title">岗位 | 公司</span><span class="experience-col experience-col--right experience-date">2024.09 - 至今</span></div>');
+  });
+
+  it("recognizes a trailing date without brackets", () => {
+    const result = enhanceResumeHtml("<h3>岗位 | 公司 2024.09 - 至今</h3>", defaultStyle);
+    expect(result).toContain('<span class="experience-col experience-col--right experience-date">2024.09 - 至今</span>');
+  });
 });
 
 describe("enhanceResumeHtml - personal info rendering", () => {

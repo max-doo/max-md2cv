@@ -85,20 +85,23 @@
   justify-self: center;
 }
 
-.resume-document .experience-col--right,
-.resume-document .experience-date {
-  font-size: var(--tpl-date-size);
-  font-weight: var(--tpl-date-weight);
-  color: var(--tpl-theme-color);
+.resume-document .experience-col--right {
   text-align: right;
-  white-space: nowrap;
   justify-self: end;
 }
+.resume-document .experience-date {
+  font-size: var(--tpl-date-size);
+  font-weight: inherit;
+  color: var(--tpl-theme-color);
+  white-space: nowrap;
+}
 
-.resume-document .experience-line--2col .experience-col--right,
+.resume-document .experience-line--2col .experience-col--right {
+  flex: 0 1 auto;
+  margin-left: auto;
+}
 .resume-document .experience-line--2col .experience-date {
   flex: 0 0 auto;
-  margin-left: auto;
 }
 
 .resume-document .experience-col-sep {

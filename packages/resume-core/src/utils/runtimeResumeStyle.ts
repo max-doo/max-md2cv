@@ -68,7 +68,7 @@ export const buildRuntimeResumeStyleCss = (
     --tpl-h3-margin-top: ${cvStyle.h3MarginTop}px;
     --tpl-h3-margin-bottom: ${cvStyle.h3MarginBottom}px;
     --tpl-date-size: ${cvStyle.dateSize ?? cvStyle.fontSize}px;
-    --tpl-date-weight: ${cvStyle.dateWeight ?? "400"};
+    --tpl-date-weight: inherit;
     --tpl-personal-header-spacing: ${cvStyle.personalHeaderSpacing}px;
     --tpl-page-margin-v: ${cvStyle.marginV}mm;
     --tpl-page-margin-h: ${cvStyle.marginH}mm;
@@ -104,14 +104,14 @@ export const buildRuntimeResumeStyleCss = (
     transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
   }
   .resume-document .resume-photo-wrapper.is-empty {
-    background-color: #f8f9fa;
-    border: 1px dashed #ced4da;
+    background-color: #f8fafc;
+    border: 1.5px dashed #cbd5e1;
     border-radius: var(--cv-photo-radius);
     overflow: hidden;
   }
   .resume-document .resume-photo-wrapper.is-empty:hover {
     border-color: ${cvStyle.themeColor};
-    background-color: color-mix(in srgb, ${cvStyle.themeColor} 5%, #f8f9fa);
+    background-color: color-mix(in srgb, ${cvStyle.themeColor} 6%, #f8fafc);
   }
   .resume-document .resume-photo-wrapper.has-photo {
     background: transparent;
@@ -142,8 +142,8 @@ export const buildRuntimeResumeStyleCss = (
     inset: 0;
   }
   .resume-document .resume-photo-wrapper .photo-placeholder-text {
-    color: #adb5bd;
-    font-size: calc(12px * var(--cv-photo-size-factor));
+    color: #64748b;
+    font-size: calc(11px * var(--cv-photo-size-factor));
     text-align: center;
     line-height: 1.2;
     display: flex;
@@ -152,18 +152,40 @@ export const buildRuntimeResumeStyleCss = (
     justify-content: center;
     width: 100%;
     height: 100%;
-    padding: calc(10px * var(--cv-photo-size-factor));
+    padding: calc(6px * var(--cv-photo-size-factor));
     box-sizing: border-box;
+    user-select: none;
   }
   .resume-document .resume-photo-wrapper .photo-placeholder-icon {
-    display: block;
-    font-size: calc(24px * var(--cv-photo-size-factor));
+    display: flex;
+    align-items: center;
+    justify-content: center;
     line-height: 1;
-    margin-bottom: calc(4px * var(--cv-photo-size-factor));
+    margin-bottom: calc(6px * var(--cv-photo-size-factor));
+    color: #94a3b8;
+    transition: color 0.2s ease, transform 0.2s ease;
+  }
+  .resume-document .resume-photo-wrapper .photo-placeholder-icon svg {
+    width: calc(26px * var(--cv-photo-size-factor));
+    height: calc(26px * var(--cv-photo-size-factor));
+    display: block;
   }
   .resume-document .resume-photo-wrapper .photo-placeholder-label {
     display: block;
     text-align: center;
+    font-size: calc(11px * var(--cv-photo-size-factor));
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: #64748b;
+    line-height: 1.2;
+    transition: color 0.2s ease;
+  }
+  .resume-document .resume-photo-wrapper.is-empty:hover .photo-placeholder-icon {
+    color: ${cvStyle.themeColor};
+    transform: translateY(-1px);
+  }
+  .resume-document .resume-photo-wrapper.is-empty:hover .photo-placeholder-label {
+    color: ${cvStyle.themeColor};
   }
   .resume-document .dodge-photo:not(h2) {
     box-sizing: border-box;
@@ -222,18 +244,24 @@ export const buildRuntimeResumeStyleCss = (
     text-align: center;
     justify-self: center;
   }
-  .resume-document .experience-col--right,
-  .resume-document .experience-date {
-    font-size: var(--tpl-date-size, inherit);
-    font-weight: var(--tpl-date-weight, inherit);
+  .resume-document .experience-col--right {
     text-align: right;
-    white-space: nowrap;
     justify-self: end;
   }
-  .resume-document .experience-line--2col .experience-col--right,
+  .resume-document .experience-date {
+    font-size: var(--tpl-date-size, inherit);
+    font-weight: inherit;
+    white-space: nowrap;
+  }
+  .resume-document h3 .experience-date {
+    font-weight: inherit;
+  }
+  .resume-document .experience-line--2col .experience-col--right {
+    flex: 0 1 auto;
+    margin-left: auto;
+  }
   .resume-document .experience-line--2col .experience-date {
     flex: 0 0 auto;
-    margin-left: auto;
   }
   .resume-document .experience-col-sep {
     display: inline;
@@ -530,8 +558,8 @@ export const buildRuntimeResumeStyleCss = (
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 6c1.11 0 2-.9 2-2 0-.38-.1-.73-.29-1.03L12 0l-1.71 2.97c-.19.3-.29.65-.29 1.03 0 1.1.9 2 2 2zm4.6 9.99-1.07-1.07-1.08 1.07c-1.3 1.3-3.58 1.31-4.89 0l-1.07-1.07-1.09 1.07C6.75 16.64 5.88 17 4.96 17c-.73 0-1.4-.23-1.96-.61V21c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-4.61c-.56.38-1.23.61-1.96.61-.92 0-1.79-.36-2.44-1.01zM18 9h-5V7h-2v2H6c-1.66 0-3 1.34-3 3v1.54c0 1.08.88 1.96 1.96 1.96.52 0 1.02-.2 1.38-.57l2.14-2.13 2.13 2.13c.74.74 2.03.74 2.77 0l2.14-2.13 2.13 2.13c.37.37.86.57 1.38.57 1.08 0 1.96-.88 1.96-1.96V12c.01-1.66-1.33-3-2.99-3z'/%3E%3C/svg%3E");
   }
   .resume-document .contact-info-item[data-icon="link_2"]::before {
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z'/%3E%3C/svg%3E");
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/%3E%3C/svg%3E");
   }
   .resume-document .contact-info-item[data-icon="work"]::before {
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z'/%3E%3C/svg%3E");

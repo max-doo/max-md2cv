@@ -64,11 +64,6 @@ const DEFAULT_FONT_OPTIONS = [
   },
 ] as const;
 
-const DEFAULT_DATE_WEIGHT_OPTIONS = [
-  { label: "常规", value: "400" },
-  { label: "加粗", value: "700" },
-] as const;
-
 const DEFAULT_HEADER_LAYOUT_OPTIONS = [
   { label: "纵向堆叠", value: "stack" },
   { label: "左右分栏", value: "split" },
@@ -161,25 +156,18 @@ export const DEFAULT_TEMPLATE_EDITOR_SCHEMA: TemplateFieldSchema[] = [
     unit: "px",
   },
   {
-    key: "dateWeight",
-    type: "select",
-    label: "日期字重",
-    group: "字号",
-    options: [...DEFAULT_DATE_WEIGHT_OPTIONS],
-  },
-  {
     key: "lineHeight",
     type: "number",
     label: "行高",
     group: "间距",
     min: 1,
-    max: 2.5,
-    step: 0.1,
+    max: 1.8,
+    step: 0.05,
   },
   {
     key: "paragraphSpacing",
     type: "number",
-    label: "正文块间距",
+    label: "段落间距",
     group: "间距",
     min: 0,
     max: 20,
@@ -288,8 +276,8 @@ export const DEFAULT_TEMPLATE_EDITOR_SCHEMA: TemplateFieldSchema[] = [
     type: "number",
     label: "照片大小",
     group: "布局",
-    min: 50,
-    max: 112,
+    min: 75,
+    max: 100,
     step: 1,
     unit: "%",
   },
@@ -338,7 +326,6 @@ const TEMPLATE_VALUE_KEYS = [
   "h2Size",
   "h3Size",
   "dateSize",
-  "dateWeight",
   "lineHeight",
   "marginV",
   "marginH",
@@ -390,7 +377,6 @@ export const resumeStyleToTemplateValues = (
     h2Size: normalized.h2Size,
     h3Size: normalized.h3Size,
     dateSize: normalized.dateSize ?? normalized.fontSize,
-    dateWeight: normalized.dateWeight ?? "400",
     lineHeight: normalized.lineHeight,
     marginV: normalized.marginV,
     marginH: normalized.marginH,
@@ -405,11 +391,24 @@ export const resumeStyleToTemplateValues = (
   };
 };
 
-const toClampedNumber = (value: TemplateValue | undefined, fallback: number) => {
+const toClampedNumber = (
+  value: TemplateValue | undefined,
+  fallback: number,
+  min?: number,
+  max?: number,
+) => {
   const numericValue =
     typeof value === "number" ? value : Number.parseFloat(String(value ?? ""));
 
-  return Number.isFinite(numericValue) ? numericValue : fallback;
+  if (!Number.isFinite(numericValue)) {
+    return fallback;
+  }
+
+  if (typeof min === "number" && typeof max === "number") {
+    return Math.min(max, Math.max(min, numericValue));
+  }
+
+  return numericValue;
 };
 
 export const resolvePhotoAdjustments = (
@@ -419,14 +418,23 @@ export const resolvePhotoAdjustments = (
     typeof values?.photoVisible === "boolean"
       ? values.photoVisible
       : DEFAULT_PHOTO_ADJUSTMENTS.visible,
-  size: toClampedNumber(values?.photoSize, DEFAULT_PHOTO_ADJUSTMENTS.size),
+  size: toClampedNumber(
+    values?.photoSize,
+    DEFAULT_PHOTO_ADJUSTMENTS.size,
+    75,
+    100,
+  ),
   offsetX: toClampedNumber(
     values?.photoOffsetX,
     DEFAULT_PHOTO_ADJUSTMENTS.offsetX,
+    -24,
+    24,
   ),
   offsetY: toClampedNumber(
     values?.photoOffsetY,
     DEFAULT_PHOTO_ADJUSTMENTS.offsetY,
+    -24,
+    24,
   ),
 });
 
@@ -706,9 +714,6 @@ export const templateValuesToResumeStyle = (
     h2Size: Number(normalized.h2Size ?? createDefaultResumeStyle().h2Size),
     h3Size: Number(normalized.h3Size ?? createDefaultResumeStyle().h3Size),
     dateSize: Number(normalized.dateSize ?? createDefaultResumeStyle().dateSize),
-    dateWeight: String(
-      normalized.dateWeight ?? createDefaultResumeStyle().dateWeight ?? "400",
-    ),
     lineHeight: Number(
       normalized.lineHeight ?? createDefaultResumeStyle().lineHeight,
     ),

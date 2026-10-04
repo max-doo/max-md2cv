@@ -133,6 +133,62 @@ try {
   });
   assert.equal(singlePageMarginDisplay, "none");
 
+  const orderedHeadings = [
+    "[2024.09 - 2027.06] 硕士 - 新闻与传播 | 某综合类高校",
+    "[2024.09 - 2027.06] | 硕士 - 新闻与传播 | 某综合类高校",
+    "硕士 - 新闻与传播 | [2024.09 - 2027.06] | 某综合类高校",
+    "硕士 - 新闻与传播 | 某综合类高校 [2024.09 - 2027.06]",
+    "[2024.09 - 2027.06] 某综合类高校",
+    "硕士 - 新闻与传播 | 某综合类高校",
+  ];
+  const expectedColumns = [
+    ["2024.09 - 2027.06", "硕士 - 新闻与传播", "某综合类高校"],
+    ["2024.09 - 2027.06", "硕士 - 新闻与传播", "某综合类高校"],
+    ["硕士 - 新闻与传播", "2024.09 - 2027.06", "某综合类高校"],
+    ["硕士 - 新闻与传播", "某综合类高校", "2024.09 - 2027.06"],
+    ["2024.09 - 2027.06", "某综合类高校"],
+    ["硕士 - 新闻与传播", "某综合类高校"],
+  ];
+  for (const templateId of ["modern", "classic", "business", "business-block", "slant-badge"]) {
+    const schema = await runJson(["templates", "schema", templateId, "--json"]);
+    const orderedTemplate = {
+      ...schema.template,
+      entryCss: "style.css",
+      css: await readFile(resolve(root, `apps/cli/dist/runtime/templates/${templateId}/style.css`), "utf8"),
+    };
+    const orderedRender = await evaluateRender(page, {
+      ...baseRequest,
+      markdown: "# 标题顺序测试\n\n## 教育背景\n\n" + orderedHeadings.map((heading) => `### ${heading}`).join("\n\n"),
+      template: orderedTemplate,
+      values: { ...orderedTemplate.defaults, h3Size: 16, dateSize: 12 },
+    });
+    assert.equal(orderedRender.ok, true);
+    const headings = await page.evaluate(() => Array.from(document.querySelectorAll(".pagedjs_page h3.experience-line")).map((heading) => {
+      const bounds = heading.getBoundingClientRect();
+      return {
+        left: bounds.left,
+        right: bounds.right,
+        columns: Array.from(heading.children).map((column) => {
+          const rect = column.getBoundingClientRect();
+          const style = getComputedStyle(column);
+          return { text: column.textContent.trim(), left: rect.left, right: rect.right, align: style.textAlign, fontSize: style.fontSize, isDate: column.classList.contains("experience-date") };
+        }),
+      };
+    }));
+    assert.equal(headings.length, expectedColumns.length, templateId);
+    headings.forEach((heading, index) => {
+      assert.deepEqual(heading.columns.map((column) => column.text), expectedColumns[index], templateId);
+      assert.deepEqual(heading.columns.map((column) => column.align), heading.columns.length === 3 ? ["left", "center", "right"] : ["left", "right"], templateId);
+      heading.columns.forEach((column, colIndex) => {
+        assert.equal(column.fontSize, column.isDate ? "12px" : "16px", templateId);
+        assert.ok(column.left >= heading.left - 1 && column.right <= heading.right + 1, `${templateId}: columns stay within heading`);
+        if (colIndex > 0) assert.ok(column.left >= heading.columns[colIndex - 1].right, `${templateId}: columns do not overlap`);
+      });
+      assert.ok(Math.abs(heading.columns[0].left - heading.left) < 1, `${templateId}: first column stays on the left`);
+      assert.ok(Math.abs(heading.columns.at(-1).right - heading.right) < 1, `${templateId}: last column stays on the right`);
+    });
+  }
+
   const multiPageMarkdown = "# 测试姓名\n\n测试职位 | 13800000000\n\n" +
     Array.from({ length: 40 }, (_, i) => `## 项目经历 ${i + 1}\n\n- 项目描述内容，占用空间以触发分页。\n- 详细要点。`).join("\n\n");
   const multiPageRender = await evaluateRender(page, { ...baseRequest, markdown: multiPageMarkdown });
@@ -160,7 +216,7 @@ try {
 
   const smallPhotoRender = await evaluateRender(page, {
     ...baseRequest,
-    values: { ...template.defaults, photoSize: 50 },
+    values: { ...template.defaults, photoSize: 75 },
     photoDataUrl,
   });
   assert.equal(smallPhotoRender.ok, true);
@@ -168,7 +224,20 @@ try {
     const wrapper = document.querySelector(".pagedjs_page .resume-photo-wrapper");
     return wrapper ? getComputedStyle(wrapper).width : null;
   });
-  assert.equal(smallPhotoWidth, "42px");
+  assert.equal(smallPhotoWidth, "63px");
+
+  const clampedUnderflowRender = await evaluateRender(page, {
+    ...baseRequest,
+    values: { ...template.defaults, photoSize: 50 },
+    photoDataUrl,
+  });
+  assert.equal(clampedUnderflowRender.ok, true);
+  const clampedUnderflowWidth = await page.evaluate(() => {
+    const wrapper = document.querySelector(".pagedjs_page .resume-photo-wrapper");
+    return wrapper ? getComputedStyle(wrapper).width : null;
+  });
+  assert.equal(clampedUnderflowWidth, "63px");
+
   const visiblePhoto = await page.evaluate(() => {
     const wrapper = document.querySelector(".pagedjs_page .resume-photo-wrapper");
     const image = wrapper?.querySelector("img");

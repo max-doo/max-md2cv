@@ -12,5 +12,21 @@ describe("built-in template assets", () => {
     const modern = await findTemplate("modern");
     expect(modern.editorSchema.some((field) => field.key === "fontSize")).toBe(true);
     expect(modern.defaults.themeColor).toBe("#4c49cc");
+    const photoSizeField = modern.editorSchema.find((field) => field.key === "photoSize");
+    expect(photoSizeField?.min).toBe(75);
+    expect(photoSizeField?.max).toBe(100);
+    const lineHeightField = modern.editorSchema.find((field) => field.key === "lineHeight");
+    expect(lineHeightField?.min).toBe(1);
+    expect(lineHeightField?.max).toBe(1.8);
+    expect(lineHeightField?.step).toBe(0.05);
+  });
+
+  it("does not include dateWeight in template defaults or editorSchema", async () => {
+    const templates = await loadTemplates();
+    for (const template of templates) {
+      expect(template.defaults.dateWeight).toBeUndefined();
+      expect(template.editorSchema.some((field) => field.key === "dateWeight")).toBe(false);
+      expect(template.css).toContain("font-weight: inherit");
+    }
   });
 });

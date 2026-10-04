@@ -78,7 +78,7 @@ export const applyResumeDocumentLayoutHooks = (
 export const createPhotoMarkup = (photoDataUrl: string | null): HTMLDivElement => {
   const wrapper = document.createElement("div");
   wrapper.className = `resume-photo-wrapper ${photoDataUrl ? "has-photo" : "is-empty"}`;
-  wrapper.title = "Resume photo";
+  wrapper.title = photoDataUrl ? "Resume photo" : "点击添加证件照";
 
   if (photoDataUrl) {
     const image = document.createElement("img");
@@ -86,11 +86,23 @@ export const createPhotoMarkup = (photoDataUrl: string | null): HTMLDivElement =
     image.src = photoDataUrl;
     wrapper.appendChild(image);
   } else {
-    const placeholder = document.createElement("span");
-    placeholder.className = "photo-placeholder-label";
-    placeholder.textContent = "Photo";
-    wrapper.appendChild(placeholder);
+    const textContainer = document.createElement("div");
+    textContainer.className = "photo-placeholder-text";
+
+    const iconContainer = document.createElement("div");
+    iconContainer.className = "photo-placeholder-icon";
+    iconContainer.setAttribute("aria-hidden", "true");
+    iconContainer.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-1a5 5 0 0 0-5-5H10a5 5 0 0 0-5 5v1"></path><circle cx="12" cy="7.5" r="4"></circle></svg>`;
+
+    const label = document.createElement("span");
+    label.className = "photo-placeholder-label";
+    label.textContent = "添加证件照";
+
+    textContainer.appendChild(iconContainer);
+    textContainer.appendChild(label);
+    wrapper.appendChild(textContainer);
   }
 
   return wrapper;
 };
+

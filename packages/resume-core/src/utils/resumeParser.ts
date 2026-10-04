@@ -476,31 +476,85 @@ function enhanceContactInfo(html: string, styleConfig: ResumeStyle, _templateId?
 }
 
 
+interface ExperienceItem {
+  html: string
+  isDate: boolean
+}
+
+function splitExperienceHeading(content: string, dateMatch: RegExpMatchArray | null): ExperienceItem[] {
+  const items: ExperienceItem[] = []
+  const openTags: { name: string; html: string }[] = []
+  const dateLiteral = dateMatch?.[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const delimiter = new RegExp(dateLiteral ? `${dateLiteral}|[|｜]` : '[|｜]', 'g')
+  let currentHtml = ''
+
+  const flush = () => {
+    // Keep inline emphasis and links balanced when a column boundary falls inside them.
+    if (stripHtml(currentHtml).trim()) {
+      items.push({
+        html: currentHtml.trim() + [...openTags].reverse().map((tag) => `</${tag.name}>`).join(''),
+        isDate: false,
+      })
+    }
+    currentHtml = openTags.map((tag) => tag.html).join('')
+  }
+
+  for (const token of content.split(/(<[^>]+>)/)) {
+    if (token.startsWith('<')) {
+      const closing = token.match(/^<\/([\w-]+)/)
+      const opening = token.match(/^<([\w-]+)/)
+      if (closing) openTags.pop()
+      currentHtml += token
+      if (opening && !/\/>$/.test(token) && !/^(?:br|img|hr|wbr)$/i.test(opening[1])) {
+        openTags.push({ name: opening[1], html: token })
+      }
+      continue
+    }
+
+    let offset = 0
+    for (const match of token.matchAll(delimiter)) {
+      currentHtml += token.slice(offset, match.index)
+      // Preserve the existing convention of omitting punctuation before a trailing date.
+      if (dateMatch && match[0] === dateMatch[0]) {
+        currentHtml = currentHtml.replace(/[\s\-|–—:：,，]+$/, '')
+        flush()
+        items.push({ html: dateMatch[1], isDate: true })
+      } else {
+        flush()
+      }
+      offset = match.index! + match[0].length
+    }
+    currentHtml += token.slice(offset)
+  }
+  flush()
+  return items
+}
+
 function renderExperienceLine(
   tag: string,
   attrs: string,
-  titleHtml: string,
-  dateText: string,
-  allowThreeCol: boolean = true,
+  content: string,
+  dateMatch: RegExpMatchArray | null,
 ): string {
-  const hasPipe = allowThreeCol && (titleHtml.includes('|') || titleHtml.includes('｜'))
-  const segments = hasPipe
-    ? titleHtml.split(/\s*[|｜]\s*/).map((s) => s.trim()).filter(Boolean)
-    : [titleHtml]
-  let lineHtml = ''
-  const isThreeCol = hasPipe && segments.length >= 2
+  // List items retain their existing title/date layout; headings follow source order.
+  const items = tag === 'li'
+    ? [
+      { html: content.replace(dateMatch![0], '').trim().replace(/[\s\-|–—:：,，]+$/, '').trim(), isDate: false },
+      { html: dateMatch![1], isDate: true },
+    ]
+    : splitExperienceHeading(content, dateMatch)
+  const isThreeCol = items.length >= 3
   const colClass = isThreeCol ? 'experience-line experience-line--3col' : 'experience-line experience-line--2col'
-
-  if (isThreeCol) {
-    const leftHtml = segments[0]
-    const centerHtml = segments.slice(1).join(' <span class="experience-col-sep">|</span> ')
-    const dateHtml = dateText ? `<span class="experience-col experience-col--right experience-date">${dateText}</span>` : ''
-    lineHtml = `<span class="experience-col experience-col--left experience-title">${leftHtml}</span><span class="experience-col experience-col--center">${centerHtml}</span>${dateHtml}`
-  } else {
-    const mainHtml = segments[0] || titleHtml
-    const dateHtml = dateText ? `<span class="experience-col experience-col--right experience-date">${dateText}</span>` : ''
-    lineHtml = `<span class="experience-col experience-col--left experience-title">${mainHtml}</span>${dateHtml}`
-  }
+  const columns = isThreeCol ? [[items[0]], items.slice(1, -1), [items[items.length - 1]]] : items.map((item) => [item])
+  const positions = isThreeCol ? ['left', 'center', 'right'] : ['left', 'right']
+  const lineHtml = columns.map((column, index) => {
+    const isDate = column.length === 1 && column[0].isDate
+    const itemClass = isDate ? ' experience-date' : index === 0 ? ' experience-title' : ''
+    const columnHtml = column.map((item) => item.isDate && !isDate
+      ? `<span class="experience-date">${item.html}</span>`
+      : item.html).join(' <span class="experience-col-sep">|</span> ')
+    return `<span class="experience-col experience-col--${positions[index]}${itemClass}">${columnHtml}</span>`
+  }).join('')
 
   if (tag === 'li') {
     return `<${tag}${attrs}><div class="${colClass}">${lineHtml}</div></${tag}>`
@@ -533,7 +587,7 @@ export function enhanceResumeHtml(rawHtml: string, styleConfig: ResumeStyle, tem
   html = enhanceContactInfo(html, styleConfig, templateId)
 
   html = html.replace(/<(h[1-6]|p|li)([^>]*)>([\s\S]*?)<\/\1>/g, (match, tag, attrs, content) => {
-    if (content.includes('experience-date')) return match
+    if (content.includes('experience-col')) return match
 
     // Body paragraphs (<p>) never trigger experience line formatting
     if (tag === 'p') {
@@ -566,18 +620,12 @@ export function enhanceResumeHtml(rawHtml: string, styleConfig: ResumeStyle, tem
     if (!bracketedMatch && !rangeMatch) {
       // If it's a heading with a pipe (|), render as experience line even without date
       if (isHeading && (content.includes('|') || content.includes('｜'))) {
-        return renderExperienceLine(finalTag, finalAttrs, content.trim(), '', true)
+        return renderExperienceLine(finalTag, finalAttrs, content.trim(), null)
       }
       return `<${finalTag}${finalAttrs}>${content}</${finalTag}>`
     }
 
-    const dateText = bracketedMatch?.[1] ?? rangeMatch?.[1] ?? ''
-    const datePattern = bracketedMatch ? DATE_BRACKETED_PATTERN : DATE_RANGE_PATTERN
-    const rawCleaned = content.replace(datePattern, '').trim()
-    const titleHtml = rawCleaned.replace(/[\s\-|–—:：,，]+$/, '').trim()
-
-    // Only headings allow 3-column pipe layout; list items (<li>) are kept as 2-column if they contain dates
-    return renderExperienceLine(finalTag, finalAttrs, titleHtml, dateText, isHeading)
+    return renderExperienceLine(finalTag, finalAttrs, content.trim(), bracketedMatch ?? rangeMatch)
   })
 
   return html
