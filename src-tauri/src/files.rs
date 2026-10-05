@@ -452,3 +452,16 @@ pub async fn duplicate_export_file(path: String, new_path: String) -> Result<(),
 
     fs::copy(path, new_path).map_err(|e| e.to_string()).map(|_| ())
 }
+
+#[tauri::command]
+pub async fn open_external_url(app: tauri::AppHandle, url: String) -> Result<(), String> {
+    let parsed = tauri::Url::parse(&url).map_err(|e| format!("无效的 URL: {}", e))?;
+    let scheme = parsed.scheme();
+    if scheme != "http" && scheme != "https" && scheme != "mailto" && scheme != "tel" {
+        return Err("不支持的链接协议".into());
+    }
+    app.opener()
+        .open_url(&url, None::<&str>)
+        .map_err(|e| format!("打开链接失败: {}", e))
+}
+

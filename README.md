@@ -284,7 +284,7 @@ max-md2cv/
 │   ├── components/              # 编辑器、预览、侧栏及共享组件
 │   ├── stores/resume/           # 桌面 Pinia 状态与工作空间逻辑
 │   ├── assets/                  # 主题样式、字体与 Logo
-│   └── utils/                   # 分页、导出及编辑辅助工具
+│   └── utils/                   # 分页、导出、外部链接与编辑辅助工具
 ├── src-tauri/                   # Rust 后端、文件操作与桌面打包
 ├── apps/
 │   ├── web/                     # Web Playground 与浏览器草稿状态
@@ -323,6 +323,7 @@ max-md2cv/
 | --- | --- |
 | 桌面前端类型检查与构建 | `npm run build` |
 | Web 类型检查与构建 | `npm run build:web` |
+| 外部链接单元测试 | `npx vitest run src/utils/externalLink.test.ts` |
 | CLI 单元测试 | `npm run test:cli` |
 | 共享渲染器回归 | `npm run test:cli:renderer` |
 | CLI 端到端渲染 | `npm run test:cli:e2e` |
