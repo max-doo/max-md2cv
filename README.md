@@ -12,7 +12,7 @@
 [![GitHub downloads](https://img.shields.io/github/downloads/max-doo/max-md2cv/total?label=累计下载&cacheSeconds=300)](https://github.com/max-doo/max-md2cv/releases)
 [![MIT License](https://img.shields.io/badge/License-MIT-4c49cc)](LICENSE)
 
-[在线体验](https://max-md2cv.vercel.app/) · [下载桌面版](https://github.com/max-doo/max-md2cv/releases) · [快速开始](#quick-start) · [查看模板](#templates) · [反馈问题](https://github.com/max-doo/max-md2cv/issues)
+[在线体验](https://md2cv-resume.app.workbuddy.host/) · [下载桌面版](https://github.com/max-doo/max-md2cv/releases) · [快速开始](#quick-start) · [查看模板](#templates) · [反馈问题](https://github.com/max-doo/max-md2cv/issues)
 
 **[产品特点](#features) · [与 AI 协作](#ai-workflow) · [安装 Agent Skill](#agent-skill) · [使用方式](#editions) · [常见问题](#faq) · [本地开发](#development) · [参与贡献](#contributing) · [许可证](#license)**
 
@@ -196,10 +196,10 @@ npx skills add max-doo/max-md2cv --skill md2cv --global --copy
 | 使用方式 | 适合什么需求 | 内容存储与输出 |
 | --- | --- | --- |
 | **桌面版** | 长期维护简历，为多个岗位准备不同版本 | 本地文件夹工作空间，管理 Markdown 与 PDF 文件，支持 PDF 导出 |
-| **[Web Playground](https://max-md2cv.vercel.app/)** | 在浏览器中体验编辑、模板和版式调整 | 当前草稿保存在浏览器本地，支持 Markdown 导入与内容复制，使用浏览器打印另存为 PDF |
+| **[Web Playground](https://md2cv-resume.app.workbuddy.host/)** | 在浏览器中体验编辑、模板和版式调整 | 当前草稿保存在浏览器本地，支持 Markdown 导入与内容复制，使用浏览器打印另存为 PDF |
 | **CLI** | 在终端或 AI 智能体流程中生成简历文件 | 读取 Markdown，输出 PDF、逐页 PNG，并可返回 JSON 结果 |
 
-无需安装，打开 [Web Playground](https://max-md2cv.vercel.app/) 即可在线体验。Web 的本地运行方法见 [本地开发](#development)。它提供单份草稿体验；需要文件夹工作空间与多版本管理时，使用桌面版。
+无需安装，打开 [Web Playground](https://md2cv-resume.app.workbuddy.host/) 即可在线体验。Web 的本地运行方法见 [本地开发](#development)。它提供单份草稿体验；需要文件夹工作空间与多版本管理时，使用桌面版。
 
 ### CLI 渲染与智能一页
 
