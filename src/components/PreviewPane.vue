@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useResumeStore } from '@resume-store'
-import { useDebounceFn } from '@vueuse/core'
+import { useDebounceFn, useResizeObserver } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import { renderResume } from '../../packages/resume-renderer/src'
 import PreviewToolbar from './preview/PreviewToolbar.vue'
@@ -10,6 +10,15 @@ import {
   resolveTemplateValues,
   type ResumeTemplate,
 } from '@resume-core'
+
+const props = withDefaults(
+  defineProps<{
+    autoFitWidth?: boolean
+  }>(),
+  {
+    autoFitWidth: false,
+  }
+)
 
 const store = useResumeStore()
 const previewContainer = ref<HTMLElement | null>(null)
@@ -56,6 +65,27 @@ const waitForStablePreviewLayout = async (stableFrameTarget = 3) => {
 const zoomLevel = ref(100)
 const zoomIn = () => { if (zoomLevel.value < 200) zoomLevel.value += 10 }
 const zoomOut = () => { if (zoomLevel.value > 50) zoomLevel.value -= 10 }
+
+const fitToWidth = () => {
+  const currentWidth = getPreviewLayoutWidth()
+  if (!currentWidth) return
+  const horizontalPadding = props.autoFitWidth ? 16 : 64
+  const targetWidth = Math.max(0, currentWidth - horizontalPadding)
+  const computedZoom = Math.max(35, Math.min(100, Math.floor((targetWidth / 794) * 100)))
+  zoomLevel.value = computedZoom
+}
+
+useResizeObserver(previewScrollContainer, () => {
+  if (props.autoFitWidth) {
+    fitToWidth()
+  }
+})
+
+watch(() => props.autoFitWidth, (enabled) => {
+  if (enabled) {
+    fitToWidth()
+  }
+})
 
 const totalPages = ref(0)
 interface PreviewRenderRequest {
@@ -117,6 +147,9 @@ onMounted(async () => {
     await store.loadTemplates()
   }
   await waitForStablePreviewLayout()
+  if (props.autoFitWidth) {
+    fitToWidth()
+  }
   queuePreviewRender(store.markdownContent)
 
   if (previewContainer.value) {
@@ -345,21 +378,41 @@ const runSmartOnePage = async () => {
     isAutoFitting.value = false
   }
 }
+
+defineExpose({
+  runSmartOnePage,
+  isAutoFitting,
+  totalPages,
+  zoomLevel,
+  fitToWidth,
+})
 </script>
 
 <template>
   <section class="preview-pane-shell flex flex-col card-soft ghost-border shadow-ambient overflow-hidden relative">
     <!-- Preview Controls -->
-    <PreviewToolbar :zoom-level="zoomLevel" @zoom-in="zoomIn" @zoom-out="zoomOut" />
+    <slot name="toolbar" :zoom-level="zoomLevel" :zoom-in="zoomIn" :zoom-out="zoomOut" :fit-to-width="fitToWidth">
+      <PreviewToolbar :zoom-level="zoomLevel" @zoom-in="zoomIn" @zoom-out="zoomOut" />
+    </slot>
 
     <!-- Scrollable Preview Area -->
-    <div ref="previewScrollContainer" class="preview-scroll-area flex flex-1 justify-center overflow-auto bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.92),_rgba(225,226,232,0.86)_52%,_rgba(236,238,243,0.92)_100%)] px-8 py-9">
+    <div
+      ref="previewScrollContainer"
+      class="preview-scroll-area flex flex-1 justify-center overflow-auto bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.92),_rgba(225,226,232,0.86)_52%,_rgba(236,238,243,0.92)_100%)]"
+      :class="props.autoFitWidth ? 'px-2 py-4' : 'px-8 py-9'"
+    >
       <!-- Paged.js Render Container -->
       <div ref="previewContainer" data-preview-root="true" class="pagedjs-wrapper overflow-visible transition-transform duration-200" :style="{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }"></div>
     </div>
 
     <!-- Footer -->
-    <div class="preview-footer h-10 shrink-0 flex items-center px-5 justify-between bg-surface-container-high/30 backdrop-blur-sm border-t border-outline-variant/10">
+    <slot
+      name="footer"
+      :is-auto-fitting="isAutoFitting"
+      :run-smart-one-page="runSmartOnePage"
+      :total-pages="totalPages"
+    >
+      <div class="preview-footer h-10 shrink-0 flex items-center px-5 justify-between bg-surface-container-high/30 backdrop-blur-sm border-t border-outline-variant/10">
       <!-- Left: Actions -->
       <div class="flex items-center gap-3">
         <button
@@ -396,7 +449,8 @@ const runSmartOnePage = async () => {
         <span v-if="totalPages > 0">共 {{ totalPages }} 页</span>
         <span v-else>渲染中...</span>
       </span>
-    </div>
+      </div>
+    </slot>
   </section>
 </template>
 
