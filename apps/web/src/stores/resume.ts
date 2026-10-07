@@ -175,6 +175,26 @@ export const useResumeStore = defineStore("resume", () => {
   const editorJumpToken = ref(0);
   let previewRenderToken = 0;
 
+  const isMobileViewport = ref(false);
+  const mobileActiveTab = ref<'editor' | 'preview'>('editor');
+  const isMobileAdjustSheetOpen = ref(false);
+
+  const setMobileActiveTab = (tab: 'editor' | 'preview') => {
+    mobileActiveTab.value = tab;
+  };
+
+  const setMobileAdjustSheetOpen = (open: boolean) => {
+    isMobileAdjustSheetOpen.value = open;
+  };
+
+  const toggleMobileAdjustSheet = () => {
+    isMobileAdjustSheetOpen.value = !isMobileAdjustSheetOpen.value;
+  };
+
+  const updateViewportWidth = (width: number) => {
+    isMobileViewport.value = width < 768;
+  };
+
   const fileList = ref<FileItem[]>([
     {
       name: WEB_FILE_PATH,
@@ -445,5 +465,12 @@ export const useResumeStore = defineStore("resume", () => {
     },
     importMarkdownFile,
     resetDraft,
+    isMobileViewport,
+    mobileActiveTab,
+    isMobileAdjustSheetOpen,
+    setMobileActiveTab,
+    setMobileAdjustSheetOpen,
+    toggleMobileAdjustSheet,
+    updateViewportWidth,
   };
 });
