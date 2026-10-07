@@ -22,6 +22,9 @@ interface FileItem {
 
 type ActiveFileStatus = "ready" | "missing" | "conflict";
 
+export type MobileActiveTab = "editor" | "preview";
+export const MOBILE_BREAKPOINT = 768;
+
 const WEB_FILE_PATH = "web-playground.md";
 
 const readFileAsText = (file: File) =>
@@ -175,11 +178,13 @@ export const useResumeStore = defineStore("resume", () => {
   const editorJumpToken = ref(0);
   let previewRenderToken = 0;
 
-  const isMobileViewport = ref(false);
-  const mobileActiveTab = ref<'editor' | 'preview'>('editor');
+  const isMobileViewport = ref(
+    typeof window !== "undefined" ? window.innerWidth < MOBILE_BREAKPOINT : false,
+  );
+  const mobileActiveTab = ref<MobileActiveTab>("editor");
   const isMobileAdjustSheetOpen = ref(false);
 
-  const setMobileActiveTab = (tab: 'editor' | 'preview') => {
+  const setMobileActiveTab = (tab: MobileActiveTab) => {
     mobileActiveTab.value = tab;
   };
 
@@ -192,7 +197,7 @@ export const useResumeStore = defineStore("resume", () => {
   };
 
   const updateViewportWidth = (width: number) => {
-    isMobileViewport.value = width < 768;
+    isMobileViewport.value = width < MOBILE_BREAKPOINT;
   };
 
   const fileList = ref<FileItem[]>([

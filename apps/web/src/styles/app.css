@@ -452,3 +452,69 @@ body {
     margin: 0 !important;
   }
 }
+
+/* Mobile Safe Area & Layout */
+@media (max-width: 767px) {
+  html, body, #app {
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .web-app-shell {
+    padding: 0 !important;
+    gap: 0 !important;
+    height: 100% !important;
+    height: 100dvh !important;
+  }
+
+  .web-content-shell {
+    height: 100% !important;
+    height: 100dvh !important;
+  }
+
+  .web-main-container {
+    padding: 0 !important;
+    gap: 0 !important;
+  }
+
+  /* 移动端安全区底部适配 */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* 浮动选区工具条与抽屉通用动效 */
+.mobile-bubble-toolbar {
+  transform: translateY(8px) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+.mobile-bubble-toolbar--visible {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mobile-sheet-backdrop {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-sheet-backdrop--open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mobile-sheet-panel {
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-sheet-panel--open {
+  transform: translateY(0);
+}
+
