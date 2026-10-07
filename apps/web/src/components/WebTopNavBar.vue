@@ -6,6 +6,10 @@ const WEB_REPOSITORY_URL = "https://github.com/max-doo/max-md2cv";
 const PRODUCT_NAME = "小简-MD2CV简历工作台";
 const PRODUCT_TAGLINE = "Web Playground";
 
+const emit = defineEmits<{
+  (e: "open-outline"): void;
+}>();
+
 const store = useResumeStore();
 
 const handleExport = async () => {
@@ -20,46 +24,23 @@ const handleExport = async () => {
       v-if="store.isMobileViewport"
       class="flex h-14 min-w-0 items-center justify-between gap-2 px-3"
     >
-      <!-- Left: Compact Brand -->
+      <!-- Left: Compact Brand & Outline Toggle -->
       <div class="flex min-w-0 shrink items-center gap-1.5">
+        <button
+          type="button"
+          @click="emit('open-outline')"
+          class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-variant active:scale-95"
+          title="打开大纲"
+        >
+          <span class="material-symbols-outlined text-[20px]">dock_to_right</span>
+        </button>
+
         <img
           src="/favicon.png"
           alt="小简简历"
           class="h-5 w-5 shrink-0 rounded object-contain"
         />
         <span class="truncate text-sm font-bold text-on-surface">小简简历</span>
-      </div>
-
-      <!-- Center: Segmented Switcher -->
-      <div
-        role="tablist"
-        aria-label="视图模式切换"
-        class="flex shrink-0 items-center rounded-full border border-outline-variant/10 bg-surface-container-high/60 p-0.5 text-xs shadow-ambient"
-      >
-        <button
-          type="button"
-          role="tab"
-          :aria-selected="store.mobileActiveTab === 'editor'"
-          @click="store.setMobileActiveTab('editor')"
-          class="cursor-pointer transition-all"
-          :class="store.mobileActiveTab === 'editor'
-            ? 'rounded-full bg-white px-3 py-1.5 font-bold text-primary shadow-xs'
-            : 'px-3 py-1.5 text-on-surface-variant hover:text-on-surface'"
-        >
-          编辑
-        </button>
-        <button
-          type="button"
-          role="tab"
-          :aria-selected="store.mobileActiveTab === 'preview'"
-          @click="store.setMobileActiveTab('preview')"
-          class="cursor-pointer transition-all"
-          :class="store.mobileActiveTab === 'preview'
-            ? 'rounded-full bg-white px-3 py-1.5 font-bold text-primary shadow-xs'
-            : 'px-3 py-1.5 text-on-surface-variant hover:text-on-surface'"
-        >
-          预览
-        </button>
       </div>
 
       <!-- Right: GitHub Link & Export Button -->

@@ -1,4 +1,5 @@
 export * from "./constants/storage";
+export * from "./constants/themeColors";
 export * from "./domain";
 export * from "./templates/loader";
 export * from "./types/resume";

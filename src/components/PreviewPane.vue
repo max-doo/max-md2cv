@@ -69,7 +69,7 @@ const zoomOut = () => { if (zoomLevel.value > 50) zoomLevel.value -= 10 }
 const fitToWidth = () => {
   const currentWidth = getPreviewLayoutWidth()
   if (!currentWidth) return
-  const horizontalPadding = props.autoFitWidth ? 16 : 64
+  const horizontalPadding = props.autoFitWidth ? 32 : 64
   const targetWidth = Math.max(0, currentWidth - horizontalPadding)
   const computedZoom = Math.max(35, Math.min(100, Math.floor((targetWidth / 794) * 100)))
   zoomLevel.value = computedZoom
@@ -399,7 +399,7 @@ defineExpose({
     <div
       ref="previewScrollContainer"
       class="preview-scroll-area flex flex-1 justify-center overflow-auto bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.92),_rgba(225,226,232,0.86)_52%,_rgba(236,238,243,0.92)_100%)]"
-      :class="props.autoFitWidth ? 'px-2 py-4' : 'px-8 py-9'"
+      :class="props.autoFitWidth ? 'px-3 py-4' : 'px-8 py-9'"
     >
       <!-- Paged.js Render Container -->
       <div ref="previewContainer" data-preview-root="true" class="pagedjs-wrapper overflow-visible transition-transform duration-200" :style="{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }"></div>

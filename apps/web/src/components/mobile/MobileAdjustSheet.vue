@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted } from "vue";
 import { ElMessage } from "element-plus";
 import { useResumeStore } from "@resume-store";
+import { THEME_COLOR_PRESETS } from "@resume-core";
 
 const props = defineProps<{
   visible: boolean;
@@ -26,15 +27,6 @@ const handleSelectTemplate = (id: string) => {
 };
 
 // 主题色候选板
-const THEME_COLORS = [
-  "#4c49cc", // 默认靛蓝
-  "#0050d1", // 经典蓝
-  "#0ea5e9", // 天空蓝
-  "#10b981", // 翡翠绿
-  "#b91c1c", // 绯红
-  "#334155", // 雅致灰
-];
-
 const currentThemeColor = computed(() => {
   return (
     (store.templateValues?.themeColor as string) ||
@@ -45,6 +37,10 @@ const currentThemeColor = computed(() => {
 
 const setThemeColor = (hex: string) => {
   store.setTemplateValue("themeColor", hex);
+};
+
+const isPresetActive = (hex: string) => {
+  return currentThemeColor.value.toLowerCase() === hex.toLowerCase();
 };
 
 // 间距预设映射 (紧凑 1 / 标准 2 / 宽松 3)
@@ -204,20 +200,34 @@ onUnmounted(() => {
 
         <!-- 主题色 -->
         <div>
-          <span class="font-bold text-slate-600 block mb-2">主题颜色</span>
-          <div class="flex items-center gap-3">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-bold text-slate-600 block">主题颜色</span>
+            <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold">
+              {{ currentThemeColor }}
+            </span>
+          </div>
+
+          <!-- 15款精选预设颜色 (5列规律排布) -->
+          <div class="grid grid-cols-5 gap-2.5 py-1">
             <button
-              v-for="color in THEME_COLORS"
-              :key="color"
+              v-for="color in THEME_COLOR_PRESETS"
+              :key="color.hex"
               type="button"
-              :title="color"
-              @click="setThemeColor(color)"
-              class="w-7 h-7 rounded-full transition-transform active:scale-90 cursor-pointer"
-              :style="{ backgroundColor: color }"
-              :class="currentThemeColor.toLowerCase() === color.toLowerCase()
-                ? 'ring-2 ring-offset-2 ring-primary scale-110'
+              :title="`${color.name} (${color.hex})`"
+              @click="setThemeColor(color.hex)"
+              class="h-9 rounded-full flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-2xs border border-black/5"
+              :style="{ backgroundColor: color.hex }"
+              :class="isPresetActive(color.hex)
+                ? 'ring-2 ring-offset-2 ring-primary scale-105 shadow-sm'
                 : 'hover:scale-105'"
-            ></button>
+            >
+              <span
+                v-if="isPresetActive(color.hex)"
+                class="material-symbols-outlined text-[16px] text-white drop-shadow"
+              >
+                check
+              </span>
+            </button>
           </div>
         </div>
 

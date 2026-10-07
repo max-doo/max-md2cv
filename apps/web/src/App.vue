@@ -7,6 +7,8 @@ import PreviewPane from "@desktop/components/PreviewPane.vue";
 import WebTopNavBar from "./components/WebTopNavBar.vue";
 import MobileEditorToolbar from "./components/mobile/MobileEditorToolbar.vue";
 import MobilePreviewActions from "./components/mobile/MobilePreviewActions.vue";
+import MobileBottomNav from "./components/mobile/MobileBottomNav.vue";
+import MobileOutlineDrawer from "./components/mobile/MobileOutlineDrawer.vue";
 import MobileAdjustSheet from "./components/mobile/MobileAdjustSheet.vue";
 
 const store = useResumeStore();
@@ -98,6 +100,12 @@ const handleMobileFormat = (
   commands.focusEditor();
 };
 
+const handleOutlineJump = () => {
+  if (store.isMobileViewport) {
+    store.setMobileActiveTab("editor");
+  }
+};
+
 const editorPaneClass = computed(() => {
   if (store.isMobileViewport) {
     return store.mobileActiveTab === "editor"
@@ -132,7 +140,9 @@ const previewPaneClass = computed(() => {
     <section
       class="web-content-shell flex-1 flex flex-col h-full min-w-0 overflow-hidden relative transition-all duration-700"
     >
-      <WebTopNavBar />
+      <WebTopNavBar
+        @open-outline="store.isSidebarOpen = true"
+      />
 
       <main class="web-main-container flex-1 flex min-w-0 overflow-hidden px-6 pb-6 pt-2 gap-4">
         <!-- EditorPane: Always mounted -->
@@ -142,26 +152,7 @@ const previewPaneClass = computed(() => {
         >
           <!-- Mobile compact toolbar / Desktop default toolbar -->
           <template #[store.isMobileViewport?'toolbar':'_desktopToolbar']>
-            <div
-              class="flex h-12 shrink-0 items-center justify-between border-b border-outline-variant/10 bg-surface-container-lowest/70 px-4 backdrop-blur-sm select-none"
-            >
-              <div class="flex items-center gap-1.5 text-xs text-on-surface-variant font-medium">
-                <span
-                  class="w-2 h-2 rounded-full"
-                  :class="store.isDirty ? 'bg-amber-500' : 'bg-emerald-500'"
-                ></span>
-                <span>{{ store.isDirty ? "草稿已修改" : "草稿已就绪" }}</span>
-              </div>
-
-              <button
-                type="button"
-                @click="store.setMobileAdjustSheetOpen(true)"
-                class="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold text-slate-700 bg-surface-container hover:bg-surface-container-high active:scale-95 transition-all cursor-pointer"
-              >
-                <span class="material-symbols-outlined text-[15px] text-primary">tune</span>
-                <span>简历调整</span>
-              </button>
-            </div>
+            <div class="hidden"></div>
           </template>
 
           <!-- Mobile bubble toolbar overlay / Desktop overlay -->
@@ -184,7 +175,7 @@ const previewPaneClass = computed(() => {
                     applyLineFormat: (fmt) => {
                       const mapped =
                         fmt === 'h2'
-                          ? 'heading2'
+                           ? 'heading2'
                           : fmt === 'h3'
                             ? 'heading3'
                             : fmt === 'bullet'
@@ -215,14 +206,10 @@ const previewPaneClass = computed(() => {
             <div class="hidden"></div>
           </template>
 
-          <!-- Mobile action capsule footer / Desktop default footer -->
-          <template
-            #[store.isMobileViewport?'footer':'_desktopFooter']="{
-              isAutoFitting,
-              runSmartOnePage,
-            }"
-          >
+          <!-- Mobile footer / Desktop default footer -->
+          <template #[store.isMobileViewport?'footer':'_desktopFooter']="{ isAutoFitting, runSmartOnePage }">
             <MobilePreviewActions
+              v-if="store.mobileActiveTab === 'preview'"
               :is-auto-fitting="isAutoFitting"
               @open-adjust="store.setMobileAdjustSheetOpen(true)"
               @smart-one-page="runSmartOnePage"
@@ -231,6 +218,21 @@ const previewPaneClass = computed(() => {
         </PreviewPane>
       </main>
     </section>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <MobileBottomNav
+      v-if="store.isMobileViewport"
+      :active-tab="store.mobileActiveTab"
+      @switch-tab="store.setMobileActiveTab"
+    />
+
+    <!-- Mobile Outline Drawer -->
+    <MobileOutlineDrawer
+      v-if="store.isMobileViewport"
+      :visible="store.isSidebarOpen"
+      @close="store.isSidebarOpen = false"
+      @jump="handleOutlineJump"
+    />
 
     <!-- Mobile Adjust Bottom Sheet -->
     <MobileAdjustSheet

@@ -5,6 +5,7 @@ import 'element-plus/es/components/switch/style/css'
 import SoftSelect from '../shared/SoftSelect.vue'
 import { useResumeStore } from '@resume-store'
 import {
+  THEME_COLORS,
   resolvePhotoAdjustments,
   resolveTemplateValues,
   type PhotoAdjustments,
@@ -22,24 +23,6 @@ defineEmits<{
 }>()
 
 const store = useResumeStore()
-
-const THEME_COLORS = [
-  '#302EA3', // 群青紫 (原)
-  '#4c49cc', // 深蓝紫 (原)
-  '#003396', // 藏青 (原)
-  '#1F4E79', // 商务深蓝
-  '#004A99', // 深蔚蓝 (原)
-  '#0050D1', // 宝蓝 (原)
-  '#2477BF', // 经典商务蓝 (原)
-  '#40566F', // 冷静蓝灰
-  '#005451', // 深墨青 (原)
-  '#0F6B66', // 科技青绿
-  '#008080', // 水鸭青 (原)
-  '#355C4D', // 墨绿色
-  '#7A3142', // 勃艮第红
-  '#000000', // 纯黑 (原)
-  '#242424', // 深炭灰 (原)
-] as const
 
 const GROUP_ICONS: Record<string, string> = {
   '基础': 'palette',

@@ -199,7 +199,7 @@ npx skills add max-doo/max-md2cv --skill md2cv --global --copy
 | **[Web Playground](https://md2cv-resume.app.workbuddy.host/)** | 在浏览器中体验编辑、模板和版式调整（已全面支持手机移动端适配） | 当前草稿保存在浏览器本地，支持 Markdown 导入与内容复制，使用浏览器打印另存为 PDF |
 | **CLI** | 在终端或 AI 智能体流程中生成简历文件 | 读取 Markdown，输出 PDF、逐页 PNG，并可返回 JSON 结果 |
 
-无需安装，打开 [Web Playground](https://md2cv-resume.app.workbuddy.host/) 即可在线体验（支持手机移动端自适应、划选文本浮动格式条、智能一页与风格调整抽屉）。Web 的本地运行方法见 [本地开发](#development)。它提供单份草稿体验；需要文件夹工作空间与多版本管理时，使用桌面版。
+无需安装，打开 [Web Playground](https://md2cv-resume.app.workbuddy.host/) 即可在线体验（支持手机移动端自适应：底部导航切换、沉浸式全屏编辑、大纲拖拽抽屉、划选文本浮动格式条、真实 A4 边界预览、智能一页与风格调整抽屉）。Web 的本地运行方法见 [本地开发](#development)。它提供单份草稿体验；需要文件夹工作空间与多版本管理时，使用桌面版。
 
 ### CLI 渲染与智能一页
 

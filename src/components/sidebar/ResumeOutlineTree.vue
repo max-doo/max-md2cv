@@ -140,6 +140,70 @@ const handleDrop = (targetNodeId: string, event: DragEvent) => {
   clearDragState()
 }
 
+const handleTouchStart = (nodeId: string, event: TouchEvent) => {
+  if (event.touches.length !== 1) return
+  draggingNodeId.value = nodeId
+  dropTarget.value = null
+}
+
+const handleTouchMove = (event: TouchEvent) => {
+  if (!draggingNodeId.value) return
+  const touch = event.touches[0]
+  if (!touch) return
+
+  event.preventDefault()
+
+  const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY)
+  if (!elementUnderTouch) return
+
+  const targetItem = elementUnderTouch.closest<HTMLElement>('[data-node-id]')
+  if (!targetItem) return
+
+  const targetNodeId = targetItem.dataset.nodeId
+  const targetParentId = targetItem.dataset.parentId ?? ''
+  const currentParentId = props.parentId ?? ''
+
+  if (!targetNodeId || targetParentId !== currentParentId || targetNodeId === draggingNodeId.value) {
+    return
+  }
+
+  const rect = targetItem.getBoundingClientRect()
+  const insertAfter = touch.clientY > rect.top + rect.height / 2
+
+  dropTarget.value = {
+    nodeId: targetNodeId,
+    insertAfter,
+  }
+}
+
+const handleTouchEnd = () => {
+  if (!draggingNodeId.value) return
+
+  if (dropTarget.value && dropTarget.value.nodeId !== draggingNodeId.value) {
+    const currentIndex = localNodes.value.findIndex((node) => node.id === draggingNodeId.value)
+    const targetIndex = localNodes.value.findIndex((node) => node.id === dropTarget.value?.nodeId)
+
+    if (currentIndex !== -1 && targetIndex !== -1) {
+      const insertAfter = dropTarget.value.insertAfter
+      let nextIndex = targetIndex + (insertAfter ? 1 : 0)
+      if (currentIndex < nextIndex) {
+        nextIndex -= 1
+      }
+
+      handleEnd({
+        oldIndex: currentIndex,
+        newIndex: nextIndex,
+      })
+    }
+  }
+
+  clearDragState()
+}
+
+const handleTouchCancel = () => {
+  clearDragState()
+}
+
 const handleListDragOver = (event: DragEvent) => {
   if (!draggingNodeId.value || localNodes.value.length === 0) {
     return
@@ -187,6 +251,8 @@ const resolveLevel2SectionEmoji = (title: string) => {
     <li v-for="node in localNodes" :key="node.id" class="outline-sortable-item list-none space-y-2">
       <div
         class="flex items-center gap-2"
+        :data-node-id="node.id"
+        :data-parent-id="props.parentId ?? ''"
         :class="{
           'outline-drop-before': dropTarget?.nodeId === node.id && !dropTarget.insertAfter,
           'outline-drop-after': dropTarget?.nodeId === node.id && dropTarget.insertAfter,
@@ -198,12 +264,16 @@ const resolveLevel2SectionEmoji = (title: string) => {
       >
         <button
           type="button"
-          class="outline-drag-handle"
+          class="outline-drag-handle touch-none"
           draggable="true"
           :title="`拖动排序 ${node.title}`"
           @click.stop
           @dragstart="handleDragStart(node.id, $event)"
           @dragend="clearDragState"
+          @touchstart="handleTouchStart(node.id, $event)"
+          @touchmove.prevent="handleTouchMove($event)"
+          @touchend="handleTouchEnd"
+          @touchcancel="handleTouchCancel"
         >
           <span class="material-symbols-outlined text-[18px]">drag_indicator</span>
         </button>
