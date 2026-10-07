@@ -102,7 +102,7 @@ const editorPaneClass = computed(() => {
   if (store.isMobileViewport) {
     return store.mobileActiveTab === "editor"
       ? "w-full h-full flex-1 min-w-0"
-      : "fixed -left-[99999px] top-0 w-screen h-screen opacity-0 pointer-events-none -z-50";
+      : "mobile-pane-offscreen";
   }
   return "web-editor-pane w-[40%] min-w-0";
 });
@@ -111,7 +111,7 @@ const previewPaneClass = computed(() => {
   if (store.isMobileViewport) {
     return store.mobileActiveTab === "preview"
       ? "w-full h-full flex-1 min-w-0"
-      : "fixed -left-[99999px] top-0 w-screen h-screen opacity-0 pointer-events-none -z-50";
+      : "mobile-pane-offscreen";
   }
   return "web-preview-shell w-[60%] min-w-0";
 });

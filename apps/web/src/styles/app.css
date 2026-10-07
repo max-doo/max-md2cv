@@ -518,3 +518,15 @@ body {
   transform: translateY(0);
 }
 
+/* 移动端非活跃视窗保活（离屏保留尺寸，不破坏 CodeMirror 历史与 Paged.js 测量，且不占位） */
+.mobile-pane-offscreen {
+  position: fixed !important;
+  left: -99999px !important;
+  top: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -50 !important;
+}
+
