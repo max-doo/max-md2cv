@@ -480,7 +480,7 @@ body {
 
   /* 移动端安全区底部适配 */
   .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
   }
 }
 

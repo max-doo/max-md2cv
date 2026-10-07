@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from "vue";
+import { ElMessage } from "element-plus";
 import { useResumeStore } from "@resume-store";
 
 const props = defineProps<{
@@ -26,7 +27,7 @@ const handleSelectTemplate = (id: string) => {
 
 // 主题色候选板
 const THEME_COLORS = [
-  "#4e4ccf", // 默认靛蓝
+  "#4c49cc", // 默认靛蓝
   "#0050d1", // 经典蓝
   "#0ea5e9", // 天空蓝
   "#10b981", // 翡翠绿
@@ -38,7 +39,7 @@ const currentThemeColor = computed(() => {
   return (
     (store.templateValues?.themeColor as string) ||
     store.resumeStyle?.themeColor ||
-    "#4e4ccf"
+    "#4c49cc"
   );
 });
 
@@ -85,7 +86,12 @@ const setSpacing = (mode: "compact" | "standard" | "loose") => {
 };
 
 const handleImportPhoto = async () => {
-  await store.importIdPhoto();
+  try {
+    await store.importIdPhoto();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "证件照上传失败，请重试";
+    ElMessage.warning(message);
+  }
 };
 
 const handleRemovePhoto = async () => {
@@ -121,6 +127,7 @@ onUnmounted(() => {
       class="mobile-sheet-panel fixed bottom-0 left-0 right-0 max-h-[85vh] bg-white rounded-t-[28px] z-50 p-5 shadow-2xl flex flex-col safe-area-bottom select-none"
       :class="{ 'mobile-sheet-panel--open': visible, 'pointer-events-none': !visible }"
       :aria-hidden="!visible"
+      :inert="!visible || undefined"
     >
       <!-- 抓手条 -->
       <div class="w-10 h-1 rounded-full bg-slate-200 self-center mb-3"></div>
