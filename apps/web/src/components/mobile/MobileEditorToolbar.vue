@@ -54,7 +54,7 @@ const handleDismiss = () => {
 
 <template>
   <div
-    class="mobile-bubble-toolbar absolute bottom-5 left-3 right-3 z-30 flex items-center justify-between p-1.5 rounded-2xl bg-slate-900/92 backdrop-blur-md shadow-2xl text-white select-none border border-white/10"
+    class="mobile-bubble-toolbar absolute bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] left-3 right-3 z-30 flex items-center justify-between p-1.5 rounded-2xl bg-slate-900/92 backdrop-blur-md shadow-2xl text-white select-none border border-white/10"
     :class="{ 'mobile-bubble-toolbar--visible': visible }"
     @mousedown.prevent
     @touchstart.prevent="onTouchStart"

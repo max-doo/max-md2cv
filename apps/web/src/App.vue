@@ -39,6 +39,9 @@ watch(
         editorPaneRef.value?.requestMeasure();
       });
     } else if (newTab === "preview") {
+      if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
       nextTick(() => {
         previewPaneRef.value?.fitToWidth();
       });
