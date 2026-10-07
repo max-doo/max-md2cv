@@ -1013,6 +1013,19 @@ watch(
     store.clearEditorJumpRequest()
   },
 )
+
+defineExpose({
+  focusEditor,
+  requestMeasure: () => {
+    view?.requestMeasure()
+  },
+  toggleInlineSyntax,
+  applyCurrentLineFormat,
+  insertEmphasisSyntax,
+  toggleLinkSyntax,
+  hasTextSelection,
+  currentLineFormat,
+})
 </script>
 
 <template>
@@ -1025,24 +1038,50 @@ watch(
     @recover-missing-file="handleRecoverMissingFile"
   >
     <template #toolbar>
-      <EditorToolbar
-        :current-line-format="currentLineFormat"
+      <slot
+        name="toolbar"
         :has-active-file="hasActiveFile"
-        :has-copied-markdown="hasCopiedMarkdown"
         :has-text-selection="hasTextSelection"
-        :is-formatting-disabled="isFormattingDisabled"
-        :is-render-view="isRenderView"
-        @apply-line-format="applyCurrentLineFormat"
-        @copy-markdown="copyMarkdown"
-        @insert-command="handleInsertCommand"
-        @insert-emphasis="insertEmphasisSyntax"
-        @toggle-bold="toggleInlineSyntax('**')"
-        @toggle-italic="toggleInlineSyntax('*')"
-        @toggle-view="toggleEditorView"
-      />
+        :current-line-format="currentLineFormat"
+        :apply-line-format="applyCurrentLineFormat"
+        :toggle-bold="() => toggleInlineSyntax('**')"
+        :toggle-italic="() => toggleInlineSyntax('*')"
+        :insert-emphasis="insertEmphasisSyntax"
+        :toggle-link="toggleLinkSyntax"
+        :focus-editor="focusEditor"
+      >
+        <EditorToolbar
+          :current-line-format="currentLineFormat"
+          :has-active-file="hasActiveFile"
+          :has-copied-markdown="hasCopiedMarkdown"
+          :has-text-selection="hasTextSelection"
+          :is-formatting-disabled="isFormattingDisabled"
+          :is-render-view="isRenderView"
+          @apply-line-format="applyCurrentLineFormat"
+          @copy-markdown="copyMarkdown"
+          @insert-command="handleInsertCommand"
+          @insert-emphasis="insertEmphasisSyntax"
+          @toggle-bold="toggleInlineSyntax('**')"
+          @toggle-italic="toggleInlineSyntax('*')"
+          @toggle-view="toggleEditorView"
+        />
+      </slot>
     </template>
 
     <div ref="editorContainer" class="custom-scrollbar h-full w-full"></div>
+
+    <slot
+      name="overlay"
+      :has-active-file="hasActiveFile"
+      :has-text-selection="hasTextSelection"
+      :current-line-format="currentLineFormat"
+      :apply-line-format="applyCurrentLineFormat"
+      :toggle-bold="() => toggleInlineSyntax('**')"
+      :toggle-italic="() => toggleInlineSyntax('*')"
+      :insert-emphasis="insertEmphasisSyntax"
+      :toggle-link="toggleLinkSyntax"
+      :focus-editor="focusEditor"
+    />
   </EditorShell>
 </template>
 
