@@ -21,7 +21,7 @@ const handleExport = async () => {
       class="flex h-14 min-w-0 items-center justify-between gap-2 px-3"
     >
       <!-- Left: Compact Brand -->
-      <div class="flex min-w-0 shrink-0 items-center gap-1.5">
+      <div class="flex min-w-0 shrink items-center gap-1.5">
         <img
           src="/favicon.png"
           alt="小简简历"
@@ -31,24 +31,32 @@ const handleExport = async () => {
       </div>
 
       <!-- Center: Segmented Switcher -->
-      <div class="flex shrink-0 items-center rounded-full border border-outline-variant/10 bg-surface-container-high/60 p-0.5 text-xs">
+      <div
+        role="tablist"
+        aria-label="视图模式切换"
+        class="flex shrink-0 items-center rounded-full border border-outline-variant/10 bg-surface-container-high/60 p-0.5 text-xs shadow-ambient"
+      >
         <button
           type="button"
+          role="tab"
+          :aria-selected="store.mobileActiveTab === 'editor'"
           @click="store.setMobileActiveTab('editor')"
           class="cursor-pointer transition-all"
           :class="store.mobileActiveTab === 'editor'
-            ? 'rounded-full bg-white px-3 py-1 font-bold text-primary shadow-xs'
-            : 'px-3 py-1 text-on-surface-variant hover:text-on-surface'"
+            ? 'rounded-full bg-white px-3 py-1.5 font-bold text-primary shadow-xs'
+            : 'px-3 py-1.5 text-on-surface-variant hover:text-on-surface'"
         >
           编辑
         </button>
         <button
           type="button"
+          role="tab"
+          :aria-selected="store.mobileActiveTab === 'preview'"
           @click="store.setMobileActiveTab('preview')"
           class="cursor-pointer transition-all"
           :class="store.mobileActiveTab === 'preview'
-            ? 'rounded-full bg-white px-3 py-1 font-bold text-primary shadow-xs'
-            : 'px-3 py-1 text-on-surface-variant hover:text-on-surface'"
+            ? 'rounded-full bg-white px-3 py-1.5 font-bold text-primary shadow-xs'
+            : 'px-3 py-1.5 text-on-surface-variant hover:text-on-surface'"
         >
           预览
         </button>
@@ -60,6 +68,7 @@ const handleExport = async () => {
           :href="WEB_REPOSITORY_URL"
           target="_blank"
           rel="noreferrer"
+          aria-label="在 GitHub 点个 Star 支持一下吧！"
           class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-variant"
           title="在 GitHub 点个 Star 支持一下吧！"
         >
@@ -72,7 +81,8 @@ const handleExport = async () => {
           type="button"
           @click="handleExport"
           :disabled="store.isExporting || store.isPreviewRendering || !store.isPreviewReady"
-          class="flex cursor-pointer items-center gap-1 rounded-full bg-primary px-2.5 py-1.5 text-xs font-semibold text-white transition-all active:scale-95 disabled:opacity-50"
+          :aria-busy="store.isExporting"
+          class="flex cursor-pointer items-center gap-1 rounded-full bg-primary px-2.5 py-1.5 text-xs font-semibold text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:pointer-events-none"
         >
           <span
             v-if="store.isExporting"
