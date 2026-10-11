@@ -166,7 +166,15 @@ export const reorderOutlineSiblings = (
   reordered.splice(boundedTargetIndex, 0, movedNode)
 
   const replacement = reordered
-    .map((node) => markdown.slice(node.startOffset, node.endOffset))
+    .map((node, index) => {
+      const section = markdown.slice(node.startOffset, node.endOffset)
+      // An EOF section may have no final newline. Moving it before another
+      // section must not merge that section's heading into its last line.
+      if (index < reordered.length - 1 && !/[\r\n]$/.test(section)) {
+        return section + (markdown.includes('\r\n') ? '\r\n' : '\n')
+      }
+      return section
+    })
     .join('')
 
   return `${markdown.slice(0, regionStart)}${replacement}${markdown.slice(regionEnd)}`

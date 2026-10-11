@@ -5,7 +5,8 @@ import Sidebar from "@desktop/components/Sidebar.vue";
 import EditorPane from "@desktop/components/EditorPane.vue";
 import PreviewPane from "@desktop/components/PreviewPane.vue";
 import WebTopNavBar from "./components/WebTopNavBar.vue";
-import MobileEditorToolbar from "./components/mobile/MobileEditorToolbar.vue";
+import MobileEditorToolbar, { type MobileFormatAction } from "./components/mobile/MobileEditorToolbar.vue";
+import type { LineFormatValue } from "@desktop/components/editor/toolbarOptions";
 import MobilePreviewActions from "./components/mobile/MobilePreviewActions.vue";
 import MobileBottomNav from "./components/mobile/MobileBottomNav.vue";
 import MobileOutlineDrawer from "./components/mobile/MobileOutlineDrawer.vue";
@@ -23,13 +24,23 @@ const handleResize = () => {
   store.updateViewportWidth(window.innerWidth);
 };
 
+const handleEditorSelectionChange = () => {
+  if (!store.isMobileViewport || store.mobileActiveTab !== "editor") return;
+  const selection = document.getSelection();
+  if (selection && !selection.isCollapsed && editorPaneRef.value?.$el.contains(selection.anchorNode)) {
+    isEditorToolbarVisible.value = true;
+  }
+};
+
 onMounted(() => {
   window.addEventListener("resize", handleResize);
+  document.addEventListener("selectionchange", handleEditorSelectionChange);
   store.updateViewportWidth(window.innerWidth);
 });
 
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
+  document.removeEventListener("selectionchange", handleEditorSelectionChange);
 });
 
 watch(
@@ -61,9 +72,9 @@ watch(
 );
 
 const handleMobileFormat = (
-  action: "h2" | "h3" | "bold" | "italic" | "emphasis" | "list" | "quote" | "link",
+  action: MobileFormatAction,
   commands: {
-    applyLineFormat: (format: "h2" | "h3" | "bullet" | "quote" | "paragraph") => void;
+    applyLineFormat: (format: LineFormatValue) => void;
     toggleBold: () => void;
     toggleItalic: () => void;
     insertEmphasis: () => void;
@@ -73,10 +84,10 @@ const handleMobileFormat = (
 ) => {
   switch (action) {
     case "h2":
-      commands.applyLineFormat("h2");
+      commands.applyLineFormat("heading2");
       break;
     case "h3":
-      commands.applyLineFormat("h3");
+      commands.applyLineFormat("heading3");
       break;
     case "bold":
       commands.toggleBold();
@@ -88,7 +99,7 @@ const handleMobileFormat = (
       commands.insertEmphasis();
       break;
     case "list":
-      commands.applyLineFormat("bullet");
+      commands.applyLineFormat("list");
       break;
     case "quote":
       commands.applyLineFormat("quote");
@@ -168,21 +179,12 @@ const previewPaneClass = computed(() => {
             }"
           >
             <MobileEditorToolbar
-              :visible="Boolean(hasTextSelection) && isEditorToolbarVisible"
+              :visible="Boolean(hasTextSelection) && isEditorToolbarVisible && store.mobileActiveTab === 'editor' && !store.isSidebarOpen && !store.isMobileAdjustSheetOpen"
+              :editor-element="editorPaneRef?.$el"
               @format="
                 (action) =>
                   handleMobileFormat(action, {
-                    applyLineFormat: (fmt) => {
-                      const mapped =
-                        fmt === 'h2'
-                           ? 'heading2'
-                          : fmt === 'h3'
-                            ? 'heading3'
-                            : fmt === 'bullet'
-                              ? 'list'
-                              : fmt;
-                      applyLineFormat(mapped as any);
-                    },
+                    applyLineFormat,
                     toggleBold,
                     toggleItalic,
                     insertEmphasis,

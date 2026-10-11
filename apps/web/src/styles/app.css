@@ -503,6 +503,39 @@ body {
 }
 
 /* 浮动选区工具条与抽屉通用动效 */
+.mobile-outline-drawer-wrapper .outline-drag-handle {
+  /* Declare before touchstart: otherwise the browser takes over the gesture
+     and sends touchcancel before the shared tree can finish the reorder. */
+  touch-action: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: var(--color-on-surface-variant);
+}
+
+.mobile-outline-drawer-wrapper .outline-drag-handle:active {
+  background: var(--color-surface-container-high);
+  color: var(--color-primary);
+}
+
+.mobile-outline-drawer-wrapper .outline-row {
+  min-height: 44px;
+}
+
+.mobile-outline-drawer-wrapper .outline-drop-before {
+  box-shadow: 0 -3px 0 -1px var(--color-primary);
+}
+
+.mobile-outline-drawer-wrapper .outline-drop-after {
+  box-shadow: 0 3px 0 -1px var(--color-primary);
+}
+
 .mobile-bubble-toolbar {
   transform: translateY(8px) scale(0.96);
   opacity: 0;

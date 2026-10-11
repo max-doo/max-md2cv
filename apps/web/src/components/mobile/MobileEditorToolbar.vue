@@ -1,18 +1,11 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 
-export type MobileFormatAction =
-  | "h2"
-  | "h3"
-  | "bold"
-  | "italic"
-  | "emphasis"
-  | "list"
-  | "quote"
-  | "link";
+export type MobileFormatAction = "h2" | "h3" | "bold" | "italic" | "emphasis" | "list" | "quote" | "link";
 
-defineProps<{
+const props = defineProps<{
   visible: boolean;
+  editorElement?: HTMLElement;
 }>();
 
 const emit = defineEmits<{
@@ -20,123 +13,93 @@ const emit = defineEmits<{
   (e: "dismiss"): void;
 }>();
 
-const scrollContainer = ref<HTMLElement | null>(null);
-let touchStartX = 0;
-let touchStartScroll = 0;
-let isSwiping = false;
+const actions: { value: MobileFormatAction; label: string; icon: string }[] = [
+  { value: "bold", label: "粗体", icon: "format_bold" },
+  { value: "italic", label: "斜体", icon: "format_italic" },
+  { value: "emphasis", label: "强调", icon: "priority_high" },
+  { value: "h2", label: "二级标题", icon: "format_h2" },
+  { value: "h3", label: "三级标题", icon: "format_h3" },
+  { value: "list", label: "列表", icon: "format_list_bulleted" },
+  { value: "quote", label: "引用", icon: "format_quote" },
+  { value: "link", label: "链接", icon: "link" },
+];
 
-const onTouchStart = (e: TouchEvent) => {
-  touchStartX = e.touches[0]?.clientX ?? 0;
-  touchStartScroll = scrollContainer.value?.scrollLeft ?? 0;
-  isSwiping = false;
+const toolbar = ref<HTMLElement | null>(null);
+const top = ref(0);
+let resizeObserver: ResizeObserver | null = null;
+
+const updatePosition = () => {
+  if (!toolbar.value || !props.editorElement) return;
+  const editorRect = props.editorElement.getBoundingClientRect();
+  const viewport = window.visualViewport;
+  const viewportTop = viewport?.offsetTop ?? 0;
+  const viewportBottom = viewportTop + (viewport?.height ?? window.innerHeight);
+  // Stay above both the keyboard and the bottom navigation, including iOS pan.
+  const bottom = Math.min(editorRect.bottom, viewportBottom);
+  top.value = Math.max(viewportTop + 8, bottom - toolbar.value.offsetHeight - 12);
 };
 
-const onTouchMove = (e: TouchEvent) => {
-  if (!scrollContainer.value) return;
-  const currentX = e.touches[0]?.clientX ?? 0;
-  const deltaX = touchStartX - currentX;
-  if (Math.abs(deltaX) > 6) {
-    isSwiping = true;
-  }
-  scrollContainer.value.scrollLeft = touchStartScroll + deltaX;
-};
+watch(() => [props.visible, props.editorElement], async () => {
+  await nextTick();
+  resizeObserver?.disconnect();
+  if (toolbar.value) resizeObserver?.observe(toolbar.value);
+  if (props.editorElement) resizeObserver?.observe(props.editorElement);
+  updatePosition();
+}, { immediate: true });
 
-const handleAction = (action: MobileFormatAction) => {
-  if (isSwiping) return;
-  emit("format", action);
-};
+onMounted(() => {
+  resizeObserver = new ResizeObserver(updatePosition);
+  if (toolbar.value) resizeObserver.observe(toolbar.value);
+  if (props.editorElement) resizeObserver.observe(props.editorElement);
+  window.addEventListener("resize", updatePosition);
+  window.visualViewport?.addEventListener("resize", updatePosition);
+  window.visualViewport?.addEventListener("scroll", updatePosition);
+  updatePosition();
+});
 
-const handleDismiss = () => {
-  if (isSwiping) return;
-  emit("dismiss");
-};
+onUnmounted(() => {
+  resizeObserver?.disconnect();
+  window.removeEventListener("resize", updatePosition);
+  window.visualViewport?.removeEventListener("resize", updatePosition);
+  window.visualViewport?.removeEventListener("scroll", updatePosition);
+});
 </script>
 
 <template>
-  <div
-    class="mobile-bubble-toolbar absolute bottom-3 left-3 right-3 z-30 flex items-center justify-between p-1.5 rounded-2xl bg-slate-900/92 backdrop-blur-md shadow-2xl text-white select-none border border-white/10"
-    :class="{ 'mobile-bubble-toolbar--visible': visible }"
-    @mousedown.prevent
-    @touchstart.prevent="onTouchStart"
-    @touchmove="onTouchMove"
-  >
+  <Teleport to="body">
     <div
-      ref="scrollContainer"
-      class="flex items-center gap-1 overflow-x-auto hide-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden w-full px-1"
+      v-if="visible"
+      ref="toolbar"
+      role="toolbar"
+      aria-label="选中文字格式"
+      class="mobile-bubble-toolbar mobile-bubble-toolbar--visible fixed left-3 right-3 z-40 flex items-center gap-1 rounded-2xl bg-surface-container-lowest p-1.5 text-on-surface shadow-ambient select-none"
+      :style="{ top: `${top}px` }"
+      @pointerdown.prevent
+      @mousedown.prevent
     >
-      <span class="text-[10px] text-indigo-300 font-bold px-1 shrink-0 uppercase tracking-wider">格式</span>
+      <div class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x">
+        <button
+          v-for="action in actions"
+          :key="action.value"
+          type="button"
+          :aria-label="action.label"
+          :title="action.label"
+          class="flex h-11 min-w-11 shrink-0 items-center justify-center gap-1 rounded-xl px-2 text-xs font-semibold text-on-surface-variant transition-colors hover:bg-surface-container active:bg-primary/10 active:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+          @click="emit('format', action.value)"
+        >
+          <span class="material-symbols-outlined text-[20px]" aria-hidden="true">{{ action.icon }}</span>
+          <span v-if="action.value === 'bold' || action.value === 'italic' || action.value === 'emphasis'">{{ action.label }}</span>
+        </button>
+      </div>
       <button
         type="button"
-        @click="handleAction('h2')"
-        @touchend.prevent="handleAction('h2')"
-        class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 text-xs font-bold shrink-0 transition-colors cursor-pointer"
+        aria-label="收起格式工具条"
+        title="收起格式工具条"
+        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-on-surface-variant transition-colors hover:bg-surface-container active:bg-surface-container-high focus-visible:outline-2 focus-visible:outline-primary"
+        @click="emit('dismiss')"
       >
-        H2
-      </button>
-      <button
-        type="button"
-        @click="handleAction('h3')"
-        @touchend.prevent="handleAction('h3')"
-        class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 text-xs font-bold shrink-0 transition-colors cursor-pointer"
-      >
-        H3
-      </button>
-      <button
-        type="button"
-        @click="handleAction('bold')"
-        @touchend.prevent="handleAction('bold')"
-        class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 text-xs font-bold shrink-0 transition-colors cursor-pointer"
-      >
-        粗体
-      </button>
-      <button
-        type="button"
-        @click="handleAction('italic')"
-        @touchend.prevent="handleAction('italic')"
-        class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 text-xs italic shrink-0 transition-colors cursor-pointer"
-      >
-        斜体
-      </button>
-      <button
-        type="button"
-        @click="handleAction('emphasis')"
-        @touchend.prevent="handleAction('emphasis')"
-        class="px-2 py-1 rounded-lg bg-primary/40 text-primary-fixed hover:bg-primary/60 text-xs font-bold shrink-0 transition-colors cursor-pointer"
-      >
-        强调
-      </button>
-      <button
-        type="button"
-        @click="handleAction('list')"
-        @touchend.prevent="handleAction('list')"
-        class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 text-xs shrink-0 transition-colors cursor-pointer"
-      >
-        • 列表
-      </button>
-      <button
-        type="button"
-        @click="handleAction('quote')"
-        @touchend.prevent="handleAction('quote')"
-        class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 text-xs shrink-0 transition-colors cursor-pointer"
-      >
-        “ 引用
-      </button>
-      <button
-        type="button"
-        @click="handleAction('link')"
-        @touchend.prevent="handleAction('link')"
-        class="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 text-xs shrink-0 transition-colors cursor-pointer"
-      >
-        链接
-      </button>
-      <button
-        type="button"
-        @click="handleDismiss"
-        @touchend.prevent="handleDismiss"
-        class="px-2 py-1 rounded-lg bg-white/5 text-slate-400 hover:text-white text-xs shrink-0 ml-auto transition-colors cursor-pointer"
-      >
-        ✕
+        <span class="material-symbols-outlined text-[20px]" aria-hidden="true">close</span>
       </button>
     </div>
-  </div>
+  </Teleport>
 </template>

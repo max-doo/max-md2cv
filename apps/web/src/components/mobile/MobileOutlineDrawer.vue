@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
+import { onMounted, onUnmounted, watch } from "vue";
 import ResumeOutlinePanel from "@desktop/components/sidebar/ResumeOutlinePanel.vue";
+import { useResumeStore } from "@resume-store";
 
 const props = defineProps<{
   visible: boolean;
@@ -8,13 +9,18 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "jump", nodeId: string): void;
+  (e: "jump"): void;
 }>();
 
-const handleJump = (nodeId: string) => {
-  emit("jump", nodeId);
-  emit("close");
-};
+const store = useResumeStore();
+
+// The shared panel sends jumps to the store rather than emitting a component event.
+watch(() => store.editorJumpRequest?.token, (token) => {
+  if (props.visible && token !== undefined) {
+    emit("jump");
+    emit("close");
+  }
+}, { flush: "sync" });
 
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === "Escape" && props.visible) {
@@ -56,7 +62,7 @@ onUnmounted(() => {
         <button
           type="button"
           @click="emit('close')"
-          class="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+          class="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-600 transition-colors cursor-pointer"
           title="关闭大纲"
         >
           <span class="material-symbols-outlined text-[20px]">close</span>
@@ -66,14 +72,13 @@ onUnmounted(() => {
       <!-- 提示条 -->
       <div class="px-4 py-2 bg-slate-50/80 border-b border-slate-100/60 text-[11px] text-slate-500 flex items-center gap-1.5">
         <span class="material-symbols-outlined text-[14px] text-slate-400">drag_indicator</span>
-        <span>可上下拖拽模块排序，点击快速跳转</span>
+        <span>按住左侧手柄上下排序，点击标题跳转</span>
       </div>
 
       <!-- 大纲内容 -->
-      <div class="flex-1 overflow-y-auto p-3">
+      <div class="min-h-0 flex-1 overflow-y-auto p-3">
         <ResumeOutlinePanel
           :hide-document-title="true"
-          @jump="handleJump"
         />
       </div>
     </aside>

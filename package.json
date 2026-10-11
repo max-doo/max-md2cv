@@ -14,6 +14,7 @@
     "dev:web": "npm run dev --workspace @max-md2cv/web",
     "build:web": "npm run build --workspace @max-md2cv/web",
     "preview:web": "npm run preview --workspace @max-md2cv/web",
+    "test:web:mobile": "node scripts/test-web-mobile.mjs",
     "tauri": "tauri",
     "dev:cli": "npm run build:renderer --workspace @max-md2cv/cli && npm run build:node --workspace @max-md2cv/cli && npm run build:assets --workspace @max-md2cv/cli",
     "build:cli": "npm run build --workspace @max-md2cv/cli",

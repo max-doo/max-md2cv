@@ -64,6 +64,7 @@ This file defines project rules for agents working in this repository.
 - Shared browser renderer: `packages/resume-renderer/src`
 - CLI package: `apps/cli`
 - CLI/renderer/pack tests: `scripts/test-cli-e2e.mjs`, `scripts/test-cli-renderer.mjs`, `scripts/test-cli-pack.mjs`
+- Web mobile interaction checks: `scripts/test-web-mobile.mjs` (run against the Web dev server with `npm run test:web:mobile`)
 - Agent Skill and bundled format/install references: `skills/md2cv`
 - Shared theme and utilities: `src/assets/tailwind.css`
 - Desktop store entry: `src/stores/resume.ts`
